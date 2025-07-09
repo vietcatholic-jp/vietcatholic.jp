@@ -1,0 +1,406 @@
+export type UserRole = 'participant' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin';
+export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | 'shikoku' | 'tohoku' | 'hokkaido';
+export type GenderType = 'male' | 'female' | 'other';
+export type AgeGroupType = 'under_18' | '18_25' | '26_35' | '36_50' | 'over_50';
+export type ShirtSizeType = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
+export type RegistrationStatus = 'pending' | 'paid' | 'cancelled' | 'confirmed';
+
+// NEW: Event participation roles
+export type EventParticipationRole = 
+  | 'participant'           // Regular attendee
+  | 'volunteer_media'       // Media team volunteer
+  | 'volunteer_logistics'   // Logistics team volunteer
+  | 'volunteer_liturgy'     // Liturgy team volunteer
+  | 'volunteer_security'    // Security team volunteer
+  | 'volunteer_registration'// Registration desk volunteer
+  | 'volunteer_catering'    // Catering team volunteer
+  | 'organizer_core'        // Core organizing committee
+  | 'organizer_regional'    // Regional organizer
+  | 'speaker'               // Speaker/presenter
+  | 'performer';            // Performer (choir, band, etc.)
+
+export interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  avatar_url?: string;
+  region?: RegionType;
+  role: UserRole;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventConfig {
+  id: string;
+  name: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  base_price: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Registration {
+  id: string;
+  user_id: string;
+  event_config_id?: string;
+  invoice_code: string;
+  status: RegistrationStatus;
+  total_amount: number;
+  participant_count: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  user?: User;
+  registrants?: Registrant[];
+  receipts?: Receipt[];
+  tickets?: Ticket[];
+}
+
+export interface Registrant {
+  id: string;
+  registration_id: string;
+  email?: string;  // Optional for additional registrants
+  saint_name?: string;
+  full_name: string;
+  gender: GenderType;
+  age_group: AgeGroupType;
+  province?: string;  // Optional for additional registrants
+  diocese?: string;   // Optional for additional registrants
+  address?: string;   // Optional for additional registrants
+  facebook_link?: string;
+  phone?: string;     // Optional for additional registrants
+  shirt_size: ShirtSizeType;
+  event_role?: EventParticipationRole;
+  is_primary?: boolean;  // Marks the main registrant
+  notes?: string;
+  portrait_url?: string;
+  group_id?: string;
+  created_at: string;
+  updated_at: string;
+  group?: Group;
+  ticket?: Ticket;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  region?: RegionType;
+  max_participants?: number;
+  criteria?: Record<string, string | number | boolean>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Receipt {
+  id: string;
+  registration_id: string;
+  file_path: string;
+  file_name: string;
+  file_size?: number;
+  content_type?: string;
+  uploaded_at: string;
+}
+
+export interface Ticket {
+  id: string;
+  registrant_id: string;
+  qr_code: string;
+  frame_url?: string;
+  ticket_url?: string;
+  generated_at: string;
+}
+
+export interface TicketFrame {
+  id: string;
+  name: string;
+  description?: string;
+  frame_url: string;
+  is_default: boolean;
+  region?: RegionType;
+  created_at: string;
+}
+
+export interface AgendaItem {
+  id: string;
+  event_config_id?: string;
+  title: string;
+  description?: string;
+  start_time: string;
+  end_time: string;
+  venue?: string;
+  session_type?: string;
+  notes?: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Form types
+export interface OnboardingData {
+  region: RegionType;
+  role: UserRole;
+}
+
+export interface RegistrantFormData {
+  email?: string;  // Optional for additional registrants
+  saint_name?: string;
+  full_name: string;
+  gender: GenderType;
+  age_group: AgeGroupType;
+  province?: string;  // Optional for additional registrants
+  diocese?: string;   // Optional for additional registrants
+  address?: string;   // Optional for additional registrants
+  facebook_link?: string;
+  phone?: string;     // Optional for additional registrants
+  shirt_size: ShirtSizeType;
+  event_role: EventParticipationRole;
+  is_primary?: boolean;
+  notes?: string;
+}
+
+export interface RegistrationFormData {
+  registrants: RegistrantFormData[];
+  notes?: string;
+}
+
+// Database response types
+export interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: User;
+        Insert: Omit<User, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      event_configs: {
+        Row: EventConfig;
+        Insert: Omit<EventConfig, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<EventConfig, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      registrations: {
+        Row: Registration;
+        Insert: Omit<Registration, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Registration, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      registrants: {
+        Row: Registrant;
+        Insert: Omit<Registrant, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Registrant, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      groups: {
+        Row: Group;
+        Insert: Omit<Group, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Group, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      receipts: {
+        Row: Receipt;
+        Insert: Omit<Receipt, 'id' | 'uploaded_at'>;
+        Update: Partial<Omit<Receipt, 'id' | 'uploaded_at'>>;
+      };
+      tickets: {
+        Row: Ticket;
+        Insert: Omit<Ticket, 'id' | 'generated_at'>;
+        Update: Partial<Omit<Ticket, 'id' | 'generated_at'>>;
+      };
+      ticket_frames: {
+        Row: TicketFrame;
+        Insert: Omit<TicketFrame, 'id' | 'created_at'>;
+        Update: Partial<Omit<TicketFrame, 'id' | 'created_at'>>;
+      };
+      agenda_items: {
+        Row: AgendaItem;
+        Insert: Omit<AgendaItem, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<AgendaItem, 'id' | 'created_at' | 'updated_at'>>;
+      };
+    };
+  };
+}
+
+// Constants
+export const REGIONS: { value: RegionType; label: string }[] = [
+  { value: 'kanto', label: 'Kanto' },
+  { value: 'kansai', label: 'Kansai' },
+  { value: 'chubu', label: 'Chubu' },
+  { value: 'kyushu', label: 'Kyushu' },
+  { value: 'chugoku', label: 'Chugoku' },
+  { value: 'shikoku', label: 'Shikoku' },
+  { value: 'tohoku', label: 'Tohoku' },
+  { value: 'hokkaido', label: 'Hokkaido' },
+];
+
+export const ROLES: { value: UserRole; label: string }[] = [
+  { value: 'participant', label: 'Participant' },
+  { value: 'event_organizer', label: 'Event Organizer' },
+  { value: 'group_leader', label: 'Group Leader' },
+];
+
+export const EVENT_PARTICIPATION_ROLES: { value: EventParticipationRole; label: string; description: string }[] = [
+  { value: 'participant', label: 'Người tham gia', description: 'Tham gia như người dự sự kiện thông thường' },
+  { value: 'volunteer_media', label: 'Ban Truyền thông', description: 'Chụp ảnh, quay video, social media' },
+  { value: 'volunteer_logistics', label: 'Ban Hậu cần', description: 'Chuẩn bị sân khấu, vận chuyển, setup' },
+  { value: 'volunteer_liturgy', label: 'Ban Phụng vụ', description: 'Hỗ trợ các nghi thức tôn giáo' },
+  { value: 'volunteer_security', label: 'Ban An ninh', description: 'Đảm bảo an toàn và trật tự' },
+  { value: 'volunteer_registration', label: 'Ban Đăng ký', description: 'Hỗ trợ check-in và đăng ký tại chỗ' },
+  { value: 'volunteer_catering', label: 'Ban Ẩm thực', description: 'Chuẩn bị và phục vụ đồ ăn uống' },
+  { value: 'organizer_core', label: 'Ban Tổ chức chính', description: 'Thành viên ban tổ chức cốt lõi' },
+  { value: 'organizer_regional', label: 'Ban Tổ chức khu vực', description: 'Đại diện tổ chức từ các khu vực' },
+  { value: 'speaker', label: 'Diễn giả', description: 'Thuyết trình, chia sẻ kinh nghiệm' },
+  { value: 'performer', label: 'Ban sinh hoạt', description: 'Ca sĩ, nhạc sĩ, vũ đoàn, etc.' },
+];
+
+export const GENDERS: { value: GenderType; label: string }[] = [
+  { value: 'male', label: 'Nam' },
+  { value: 'female', label: 'Nữ' },
+  { value: 'other', label: 'Khác' },
+];
+
+export const AGE_GROUPS: { value: AgeGroupType; label: string }[] = [
+  { value: 'under_18', label: 'Dưới 18 tuổi' },
+  { value: '18_25', label: '18-25 tuổi' },
+  { value: '26_35', label: '26-35 tuổi' },
+  { value: '36_50', label: '36-50 tuổi' },
+  { value: 'over_50', label: 'Trên 50 tuổi' },
+];
+
+export const SHIRT_SIZES: { value: ShirtSizeType; label: string }[] = [
+  { value: 'XS', label: 'XS' },
+  { value: 'S', label: 'S' },
+  { value: 'M', label: 'M' },
+  { value: 'L', label: 'L' },
+  { value: 'XL', label: 'XL' },
+  { value: 'XXL', label: 'XXL' },
+];
+
+// Province to Diocese mapping
+export const PROVINCE_DIOCESE_MAPPING: { [key: string]: string } = {
+  // Hokkaido
+  'Hokkaido': 'Giáo phận Sapporo',
+  
+  // Miyagi, Aomori, Fukushima, Iwate
+  'Miyagi': 'Giáo phận Sendai',
+  'Aomori': 'Giáo phận Sendai',
+  'Fukushima': 'Giáo phận Sendai',
+  'Iwate': 'Giáo phận Sendai',
+  
+  // Niigata, Yamagata, Akita
+  'Niigata': 'Giáo phận Niigata',
+  'Yamagata': 'Giáo phận Niigata',
+  'Akita': 'Giáo phận Niigata',
+  
+  // Saitama, Tochigi, Gunma, Ibaraki
+  'Saitama': 'Giáo phận Saitama',
+  'Tochigi': 'Giáo phận Saitama',
+  'Gunma': 'Giáo phận Saitama',
+  'Ibaraki': 'Giáo phận Saitama',
+  
+  // Tokyo, Chiba
+  'Tokyo': 'Tổng giáo phận Tokyo',
+  'Chiba': 'Tổng giáo phận Tokyo',
+  
+  // Kanagawa, Shizuoka, Nagano, Yamanashi
+  'Kanagawa': 'Giáo phận Yokohama',
+  'Shizuoka': 'Giáo phận Yokohama',
+  'Nagano': 'Giáo phận Yokohama',
+  'Yamanashi': 'Giáo phận Yokohama',
+  
+  // Aichi, Ishikawa, Toyama, Gifu, Fukui
+  'Aichi': 'Giáo phận Nagoya',
+  'Ishikawa': 'Giáo phận Nagoya',
+  'Toyama': 'Giáo phận Nagoya',
+  'Gifu': 'Giáo phận Nagoya',
+  'Fukui': 'Giáo phận Nagoya',
+  
+  // Kyoto, Shiga, Nara, Mie
+  'Kyoto': 'Giáo phận Kyoto',
+  'Shiga': 'Giáo phận Kyoto',
+  'Nara': 'Giáo phận Kyoto',
+  'Mie': 'Giáo phận Kyoto',
+  
+  // Osaka, Hyogo, Wakayama, Kagawa, Ehime, Tokushima, Kochi
+  'Osaka': 'Tổng giáo phận Osaka-Takamatsu',
+  'Hyogo': 'Tổng giáo phận Osaka-Takamatsu',
+  'Wakayama': 'Tổng giáo phận Osaka-Takamatsu',
+  'Kagawa': 'Tổng giáo phận Osaka-Takamatsu',
+  'Ehime': 'Tổng giáo phận Osaka-Takamatsu',
+  'Tokushima': 'Tổng giáo phận Osaka-Takamatsu',
+  'Kochi': 'Tổng giáo phận Osaka-Takamatsu',
+
+  // Hiroshima, Okayama, Tottori, Yamaguchi, Shimane
+  'Hiroshima': 'Giáo phận Hiroshima',
+  'Okayama': 'Giáo phận Hiroshima',
+  'Tottori': 'Giáo phận Hiroshima',
+  'Yamaguchi': 'Giáo phận Hiroshima',
+  'Shimane': 'Giáo phận Hiroshima',
+  
+  // Fukuoka, Saga, Kumamoto
+  'Fukuoka': 'Giáo phận Fukuoka',
+  'Saga': 'Giáo phận Fukuoka',
+  'Kumamoto': 'Giáo phận Fukuoka',
+  
+  // Nagasaki
+  'Nagasaki': 'Tổng giáo phận Nagasaki',
+  
+  // Oita, Miyazaki
+  'Oita': 'Giáo phận Oita',
+  'Miyazaki': 'Giáo phận Oita',
+  
+  // Kagoshima
+  'Kagoshima': 'Giáo phận Kagoshima',
+  
+  // Okinawa
+  'Okinawa': 'Giáo phận Naha',
+};
+
+export const JAPANESE_PROVINCES: { value: string; label: string }[] = [
+  { value: 'Hokkaido', label: 'Hokkaido (北海道)' },
+  { value: 'Aomori', label: 'Aomori (青森県)' },
+  { value: 'Iwate', label: 'Iwate (岩手県)' },
+  { value: 'Miyagi', label: 'Miyagi (宮城県)' },
+  { value: 'Akita', label: 'Akita (秋田県)' },
+  { value: 'Yamagata', label: 'Yamagata (山形県)' },
+  { value: 'Fukushima', label: 'Fukushima (福島県)' },
+  { value: 'Ibaraki', label: 'Ibaraki (茨城県)' },
+  { value: 'Tochigi', label: 'Tochigi (栃木県)' },
+  { value: 'Gunma', label: 'Gunma (群馬県)' },
+  { value: 'Saitama', label: 'Saitama (埼玉県)' },
+  { value: 'Chiba', label: 'Chiba (千葉県)' },
+  { value: 'Tokyo', label: 'Tokyo (東京都)' },
+  { value: 'Kanagawa', label: 'Kanagawa (神奈川県)' },
+  { value: 'Niigata', label: 'Niigata (新潟県)' },
+  { value: 'Toyama', label: 'Toyama (富山県)' },
+  { value: 'Ishikawa', label: 'Ishikawa (石川県)' },
+  { value: 'Fukui', label: 'Fukui (福井県)' },
+  { value: 'Yamanashi', label: 'Yamanashi (山梨県)' },
+  { value: 'Nagano', label: 'Nagano (長野県)' },
+  { value: 'Gifu', label: 'Gifu (岐阜県)' },
+  { value: 'Shizuoka', label: 'Shizuoka (静岡県)' },
+  { value: 'Aichi', label: 'Aichi (愛知県)' },
+  { value: 'Mie', label: 'Mie (三重県)' },
+  { value: 'Shiga', label: 'Shiga (滋賀県)' },
+  { value: 'Kyoto', label: 'Kyoto (京都府)' },
+  { value: 'Osaka', label: 'Osaka (大阪府)' },
+  { value: 'Hyogo', label: 'Hyogo (兵庫県)' },
+  { value: 'Nara', label: 'Nara (奈良県)' },
+  { value: 'Wakayama', label: 'Wakayama (和歌山県)' },
+  { value: 'Tottori', label: 'Tottori (鳥取県)' },
+  { value: 'Shimane', label: 'Shimane (島根県)' },
+  { value: 'Okayama', label: 'Okayama (岡山県)' },
+  { value: 'Hiroshima', label: 'Hiroshima (広島県)' },
+  { value: 'Yamaguchi', label: 'Yamaguchi (山口県)' },
+  { value: 'Tokushima', label: 'Tokushima (徳島県)' },
+  { value: 'Kagawa', label: 'Kagawa (香川県)' },
+  { value: 'Ehime', label: 'Ehime (愛媛県)' },
+  { value: 'Kochi', label: 'Kochi (高知県)' },
+  { value: 'Fukuoka', label: 'Fukuoka (福岡県)' },
+  { value: 'Saga', label: 'Saga (佐賀県)' },
+  { value: 'Nagasaki', label: 'Nagasaki (長崎県)' },
+  { value: 'Kumamoto', label: 'Kumamoto (熊本県)' },
+  { value: 'Oita', label: 'Oita (大分県)' },
+  { value: 'Miyazaki', label: 'Miyazaki (宮崎県)' },
+  { value: 'Kagoshima', label: 'Kagoshima (鹿児島県)' },
+  { value: 'Okinawa', label: 'Okinawa (沖縄県)' },
+];

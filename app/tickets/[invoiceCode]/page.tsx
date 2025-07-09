@@ -1,0 +1,200 @@
+import { notFound, redirect } from "next/navigation";
+import { getServerUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Navbar } from "@/components/navbar";
+import { TicketGenerator } from "@/components/tickets/ticket-generator";
+import { PortraitUpload } from "@/components/tickets/portrait-upload";
+import { Registrant } from "@/lib/types";
+import { 
+  QrCode, 
+  User,
+  Calendar,
+  MapPin
+} from "lucide-react";
+
+interface TicketsPageProps {
+  params: Promise<{
+    invoiceCode: string;
+  }>;
+}
+
+export default async function TicketsPage({ params }: TicketsPageProps) {
+  const { invoiceCode } = await params;
+  const user = await getServerUser();
+  
+  if (!user) {
+    redirect('/auth/login');
+  }
+
+  const supabase = await createClient();
+
+  // Get registration details
+  const { data: registration, error } = await supabase
+    .from('registrations')
+    .select(`
+      *,
+      registrants(*),
+      receipts(*)
+    `)
+    .eq('invoice_code', invoiceCode)
+    .eq('user_id', user.id)
+    .single();
+
+  if (error || !registration) {
+    notFound();
+  }
+
+  // Only allow access if payment is confirmed
+  if (registration.status !== 'paid' && registration.status !== 'confirmed') {
+    redirect(`/payment/${invoiceCode}`);
+  }
+
+  // Get existing tickets
+  const { data: tickets } = await supabase
+    .from('tickets')
+    .select('*, registrant:registrants(*)')
+    .in('registrant_id', registration.registrants?.map((r: Registrant) => r.id) || []);
+
+  return (
+    <main className="min-h-screen bg-background">
+      <Navbar />
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold mb-4">
+              Vé tham gia Đại hội 2025
+            </h1>
+            <p className="text-muted-foreground">
+              Mã đăng ký: <span className="font-mono font-medium">{registration.invoice_code}</span>
+            </p>
+            <Badge className="mt-2">Đã xác nhận thanh toán</Badge>
+          </div>
+
+          {/* Event Info */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Thông tin sự kiện
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Đại hội Công giáo Việt Nam 2025</p>
+                    <p className="text-sm text-muted-foreground">Ngày diễn ra sẽ được thông báo</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Địa điểm</p>
+                    <p className="text-sm text-muted-foreground">Sẽ được thông báo sớm</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">{registration.participant_count} người tham gia</p>
+                    <p className="text-sm text-muted-foreground">Đã đăng ký thành công</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Participants and Tickets */}
+          <div className="space-y-6">
+            {registration.registrants?.map((registrant: Registrant, index: number) => {
+              const existingTicket = tickets?.find(t => t.registrant_id === registrant.id);
+              
+              return (
+                <Card key={registrant.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <User className="h-5 w-5" />
+                        Người tham gia {index + 1}: {registrant.full_name}
+                        {registrant.saint_name && (
+                          <span className="text-muted-foreground">({registrant.saint_name})</span>
+                        )}
+                      </div>
+                      {existingTicket ? (
+                        <Badge className="bg-green-500">Đã có vé</Badge>
+                      ) : (
+                        <Badge variant="secondary">Chưa có vé</Badge>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Participant Info */}
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Email:</span>
+                            <p className="font-medium">{registrant.email}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Giới tính:</span>
+                            <p className="font-medium">
+                              {registrant.gender === 'male' ? 'Nam' : 
+                               registrant.gender === 'female' ? 'Nữ' : 'Khác'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Độ tuổi:</span>
+                            <p className="font-medium">{registrant.age_group}</p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Size áo:</span>
+                            <p className="font-medium">{registrant.shirt_size}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-muted-foreground">Giáo phận:</span>
+                            <p className="font-medium">{registrant.diocese}</p>
+                          </div>
+                        </div>
+
+                        {/* Portrait Upload */}
+                        {!registrant.portrait_url && (
+                          <PortraitUpload
+                            registrantId={registrant.id}
+                            onUploadComplete={() => window.location.reload()}
+                          />
+                        )}
+                      </div>
+
+                      {/* Ticket Generation */}
+                      <div>
+                        {registrant.portrait_url ? (
+                          <TicketGenerator
+                            registrant={registrant}
+                            existingTicket={existingTicket}
+                          />
+                        ) : (
+                          <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
+                            <QrCode className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">
+                              Vui lòng upload ảnh chân dung để tạo vé
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

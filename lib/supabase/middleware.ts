@@ -1,18 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
+import { Database } from "../types";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
 
-  // If the env vars are not set, skip middleware check. You can remove this once you setup the project.
+  // If the env vars are not set, skip middleware check
   if (!hasEnvVars) {
     return supabaseResponse;
   }
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -35,25 +36,69 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
-  // IMPORTANT: DO NOT REMOVE auth.getUser()
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone();
+  const url = request.nextUrl.clone();
+  const pathname = request.nextUrl.pathname;
+
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/',
+    '/auth/login',
+    '/auth/sign-up',
+    '/auth/confirm',
+    '/auth/callback',
+    '/auth/error',
+    '/auth/forgot-password',
+    '/auth/sign-up-success',
+    '/auth/update-password',
+    '/register', // Public registration page
+    '/agenda', // Public agenda
+  ];
+
+  // Check if current route is public
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
+
+  // If user is not authenticated and trying to access protected route
+  if (!user && !isPublicRoute) {
     url.pathname = "/auth/login";
+    url.searchParams.set('redirectTo', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // If user is authenticated, get their profile for role-based routing
+  if (user && !isPublicRoute) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role, region')
+      .eq('id', user.id)
+      .single();
+
+    // Check role-based access for admin routes
+    if (pathname.startsWith('/admin')) {
+      if (!profile || !['regional_admin', 'super_admin'].includes(profile.role)) {
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+
+      // Regional admins can only access their region or general admin
+      if (
+        profile.role === 'regional_admin' && 
+        pathname.startsWith('/admin/super') 
+      ) {
+        url.pathname = "/admin";
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+
+  // If authenticated user tries to access auth pages, redirect to dashboard
+  if (user && pathname.startsWith('/auth') && pathname !== '/auth/callback') {
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
