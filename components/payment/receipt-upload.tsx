@@ -105,7 +105,7 @@ export function ReceiptUpload({
         body: JSON.stringify({
           invoiceCode,
           receiptUrl: uploadedData[0].url, // Use first uploaded file
-          amount: 5000, // This should be calculated based on registration
+          amount: 6000, // This should be calculated based on registration
           notes: uploadedData.length > 1 ? `Multiple files uploaded: ${uploadedData.map(d => d.fileName).join(', ')}` : undefined,
         }),
       });

@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       .eq("is_active", true)
       .single();
 
-    const basePrice = eventConfig?.base_price || 50000; // Default 50,000 yen
+    const basePrice = eventConfig?.base_price || 6000; // Default 50,000 yen
     
     // Generate invoice code using the existing function
     const { data: invoiceResult } = await supabase.rpc('generate_invoice_code');

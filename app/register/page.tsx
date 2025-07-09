@@ -50,7 +50,7 @@ export default async function RegisterPage() {
                   <div>
                     <h4 className="font-medium mb-2">Phí tham gia</h4>
                     <p className="text-sm text-muted-foreground">
-                      ¥5000 cho mỗi người tham gia (áp dụng cho tất cả vai trò)
+                      ¥6000 cho mỗi người tham gia (áp dụng cho tất cả vai trò)
                     </p>
                   </div>
                   
