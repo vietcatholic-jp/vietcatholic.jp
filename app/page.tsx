@@ -28,7 +28,7 @@ export default async function Home() {
             Đại Hội Công Giáo
           </h1>
           <p className="text-2xl md:text-3xl text-gray-700 mb-4 font-light">
-            Việt Nam tại Nhật Bản 2025
+            Việt Nam tại Nhật Bản 14-15/09/2025
           </p>
           <div className="text-xl text-blue-600 mb-8 font-medium">
             🙏 &ldquo;Những Người Hành Hương Hy Vọng&rdquo; 🙏

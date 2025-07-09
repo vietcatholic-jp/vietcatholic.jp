@@ -2,19 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminStats } from "@/components/admin/admin-stats";
 import { RegistrationsList } from "@/components/admin/registrations-list";
 import { ExportButton } from "@/components/admin/export-button";
+import { UserManagement } from "@/components/admin/user-management";
+import { EventConfigManager } from "@/components/admin/event-config-manager";
 import { 
   Users, 
   FileText, 
   CreditCard,
-  Loader2
+  Loader2,
+  Settings,
+  UserCheck,
+  BarChart3
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
-import { Registration } from "@/lib/types";
+import { Registration, UserRole, RegionType } from "@/lib/types";
 
 interface AdminData {
   stats: {
@@ -25,6 +32,10 @@ interface AdminData {
   };
   recentRegistrations: Registration[];
   regionalStats?: { region: string; count: number }[];
+  userProfile?: {
+    role: UserRole;
+    region?: RegionType;
+  };
 }
 
 export function AdminDashboard() {
@@ -71,6 +82,9 @@ export function AdminDashboard() {
     );
   }
 
+  const userRole = data.userProfile?.role || 'participant';
+  const userRegion = data.userProfile?.region;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-7xl mx-auto">
@@ -79,7 +93,7 @@ export function AdminDashboard() {
           <div>
             <h1 className="text-3xl font-bold">Quản trị hệ thống</h1>
             <p className="text-muted-foreground mt-2">
-              Quản lý đăng ký Đại hội Công giáo Việt Nam 2025
+              Quản lý Đại hội Công giáo Việt Nam 2025 - {userRole === 'super_admin' ? 'Quản trị viên tối cao' : 'Quản trị viên khu vực'}
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -95,91 +109,175 @@ export function AdminDashboard() {
           pendingRegistrations={data.stats.pendingRegistrations}
         />
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Quản lý đăng ký
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-2">
-                Xem và quản lý tất cả đăng ký
-              </p>
-              <Link href="#registrations">
-                <button className="w-full px-3 py-2 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90">
-                  Xem danh sách
-                </button>
-              </Link>
-            </CardContent>
-          </Card>
+        {/* Role-based Tabs */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Tổng quan
+            </TabsTrigger>
+            <TabsTrigger value="registrations" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Đăng ký
+            </TabsTrigger>
+            {(userRole === 'super_admin' || userRole === 'regional_admin') && (
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4" />
+                Người dùng
+              </TabsTrigger>
+            )}
+            {userRole === 'super_admin' && (
+              <TabsTrigger value="events" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Sự kiện
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Thanh toán
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                Xác nhận thanh toán
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-2">
-                Duyệt hóa đơn thanh toán
-              </p>
-              <Link href="#payments">
-                <button className="w-full px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">
-                  Duyệt thanh toán
-                </button>
-              </Link>
-            </CardContent>
-          </Card>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Quản lý đăng ký
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Xem và quản lý tất cả đăng ký
+                  </p>
+                  <Button 
+                    variant="default" 
+                    className="w-full"
+                    onClick={() => {
+                      const tabsElement = document.querySelector('[data-state="active"][value="registrations"]');
+                      if (tabsElement) {
+                        (tabsElement as HTMLElement).click();
+                      }
+                    }}
+                  >
+                    Xem danh sách
+                  </Button>
+                </CardContent>
+              </Card>
 
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Quản lý chương trình
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-2">
-                Cập nhật chương trình sự kiện
-              </p>
-              <Link href="/agenda">
-                <button className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-                  Quản lý agenda
-                </button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Xác nhận thanh toán
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Duyệt hóa đơn thanh toán
+                  </p>
+                  <Button 
+                    variant="default" 
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    onClick={() => {
+                      const tabsElement = document.querySelector('[data-state="active"][value="payments"]');
+                      if (tabsElement) {
+                        (tabsElement as HTMLElement).click();
+                      }
+                    }}
+                  >
+                    Duyệt thanh toán
+                  </Button>
+                </CardContent>
+              </Card>
 
-        {/* Regional Stats (for super admin) */}
-        {data.regionalStats && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Thống kê theo khu vực</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {data.regionalStats.map((stat: { region: string; count: number }) => (
-                  <div key={stat.region} className="text-center">
-                    <div className="font-semibold text-lg">{stat.count}</div>
-                    <div className="text-sm text-muted-foreground capitalize">
-                      {stat.region.replace('_', ' ')}
-                    </div>
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Quản lý chương trình
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Cập nhật chương trình sự kiện
+                  </p>
+                  <Link href="/agenda">
+                    <Button variant="default" className="w-full bg-blue-600 hover:bg-blue-700">
+                      Quản lý agenda
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Regional Stats (for super admin) */}
+            {data.regionalStats && userRole === 'super_admin' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thống kê theo khu vực</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {data.regionalStats.map((stat: { region: string; count: number }) => (
+                      <div key={stat.region} className="text-center">
+                        <div className="font-semibold text-lg">{stat.count}</div>
+                        <div className="text-sm text-muted-foreground capitalize">
+                          {stat.region.replace('_', ' ')}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-        {/* Recent Registrations */}
-        <section id="registrations">
-          <RegistrationsList registrations={data.recentRegistrations} userRole="super_admin" />
-        </section>
+          {/* Registrations Tab */}
+          <TabsContent value="registrations">
+            <RegistrationsList 
+              registrations={data.recentRegistrations} 
+              userRole={userRole}
+            />
+          </TabsContent>
+
+          {/* User Management Tab */}
+          {(userRole === 'super_admin' || userRole === 'regional_admin') && (
+            <TabsContent value="users">
+              <UserManagement 
+                currentUserRole={userRole}
+                currentUserRegion={userRegion}
+              />
+            </TabsContent>
+          )}
+
+          {/* Event Configuration Tab */}
+          {userRole === 'super_admin' && (
+            <TabsContent value="events">
+              <EventConfigManager currentUserRole={userRole} />
+            </TabsContent>
+          )}
+
+          {/* Payment Management Tab */}
+          <TabsContent value="payments">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Quản lý thanh toán
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Tính năng quản lý thanh toán sẽ được triển khai trong phiên bản tiếp theo.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

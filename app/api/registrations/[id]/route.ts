@@ -27,11 +27,11 @@ const UpdateRegistrationSchema = z.object({
 // PUT - Update registration
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const {id} = await params;
+    const { id } = await context.params;
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -173,11 +173,11 @@ export async function PUT(
 // DELETE - Delete registration
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const {id} = await params;
+    const { id } = await context.params;
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -274,9 +274,10 @@ export async function DELETE(
 // GET - Get single registration
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const supabase = await createClient();
     
     // Get the authenticated user
@@ -285,7 +286,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const registrationId = params.id;
+    const { id } = params;
 
     // Get registration with all related data
     const { data: registration, error: regError } = await supabase
@@ -296,7 +297,7 @@ export async function GET(
         receipts(*),
         user:users(email, full_name, region)
       `)
-      .eq("id", registrationId)
+      .eq("id", id)
       .single();
 
     if (regError || !registration) {

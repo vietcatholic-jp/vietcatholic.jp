@@ -29,7 +29,7 @@ export function EventInfo() {
             <CardContent>
               <div className="text-3xl font-bold text-blue-700 mb-1">2025</div>
               <p className="text-sm text-blue-600 font-medium">
-                📅 Thông tin chi tiết sẽ được cập nhật sớm
+                📅 Ngày 14 & 15 tháng 9, 2025
               </p>
             </CardContent>
           </Card>
@@ -44,7 +44,10 @@ export function EventInfo() {
             <CardContent>
               <div className="text-3xl font-bold text-green-700 mb-1">🗾 Nhật Bản</div>
               <p className="text-sm text-green-600 font-medium">
-                🏛️ Venue sẽ được thông báo sớm
+                📍 Kamiozuki, Hanado, Kanagawa (〒257-0005)
+              </p>
+              <p className="text-sm text-green-600 font-medium">
+                <a href="https://maps.app.goo.gl/YbZy9rFzni7ztTMv6" className="text-blue-600 hover:underline">Google map</a>
               </p>
             </CardContent>
           </Card>

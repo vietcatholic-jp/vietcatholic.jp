@@ -11,30 +11,22 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
+    // Check if user has admin permissions
     const { data: profile } = await supabase
       .from("users")
       .select("role, region")
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["super_admin", "regional_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "group_leader", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Get statistics
-    let registrationQuery = supabase.from("registrations").select("*", { count: 'exact', head: true });
-    let confirmationQuery = supabase.from("registrations").select("*", { count: 'exact', head: true }).eq("status", "confirmed");
-    let pendingQuery = supabase.from("registrations").select("*", { count: 'exact', head: true }).eq("status", "pending_payment");
-    let participantQuery = supabase.from("registrants").select("*", { count: 'exact', head: true });
-
-    // Regional admins see only their region
-    if (profile.role === "regional_admin") {
-      registrationQuery = registrationQuery.eq("registrants.region", profile.region);
-      confirmationQuery = confirmationQuery.eq("registrants.region", profile.region);
-      pendingQuery = pendingQuery.eq("registrants.region", profile.region);
-      participantQuery = participantQuery.eq("region", profile.region);
-    }
+    const registrationQuery = supabase.from("registrations").select("*", { count: 'exact', head: true });
+    const confirmationQuery = supabase.from("registrations").select("*", { count: 'exact', head: true }).eq("status", "confirmed");
+    const pendingQuery = supabase.from("registrations").select("*", { count: 'exact', head: true }).eq("status", "pending");
+    const participantQuery = supabase.from("registrants").select("*", { count: 'exact', head: true });
 
     const [totalRegistrations, confirmedRegistrations, pendingRegistrations, totalParticipants] = await Promise.all([
       registrationQuery,
@@ -43,19 +35,22 @@ export async function GET() {
       participantQuery
     ]);
 
-    // Get recent registrations
+    // Get recent registrations with role-based filtering
     let recentQuery = supabase
       .from("registrations")
       .select(`
         *,
         registrants(count),
-        user:users(email)
+        user:users(email, full_name, region)
       `)
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(20);
 
-    if (profile.role === "regional_admin") {
-      recentQuery = recentQuery.eq("registrants.region", profile.region);
+    // Filter based on user role and region
+    if (profile.role === "regional_admin" && profile.region) {
+      recentQuery = recentQuery.eq("user.region", profile.region);
+    } else if ((profile.role === "group_leader" || profile.role === "event_organizer") && profile.region) {
+      recentQuery = recentQuery.eq("user.region", profile.region);
     }
 
     const { data: recentRegistrations } = await recentQuery;
@@ -64,12 +59,13 @@ export async function GET() {
     let regionalStats = null;
     if (profile.role === "super_admin") {
       const { data: regions } = await supabase
-        .from("registrants")
+        .from("users")
         .select("region")
+        .not("region", "is", null)
         .order("region");
 
       if (regions) {
-        const regionCounts = regions.reduce((acc: Record<string, number>, curr) => {
+        const regionCounts = regions.reduce((acc: Record<string, number>, curr: { region: string }) => {
           acc[curr.region] = (acc[curr.region] || 0) + 1;
           return acc;
         }, {});
@@ -90,6 +86,10 @@ export async function GET() {
       },
       recentRegistrations: recentRegistrations || [],
       regionalStats,
+      userProfile: {
+        role: profile.role,
+        region: profile.region
+      },
     });
 
   } catch (error) {

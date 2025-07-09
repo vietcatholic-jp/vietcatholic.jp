@@ -307,20 +307,25 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
                 )}
 
                 {/* Quick Actions for admins */}
-                {(userRole === 'regional_admin' || userRole === 'super_admin') && (
+                {(['regional_admin', 'super_admin', 'group_leader', 'event_organizer'].includes(userRole)) && (
                   <div className="mt-3 flex items-center gap-2">
-                    {registration.status === 'pending' && (
+                    {registration.status === 'pending' && (userRole === 'regional_admin' || userRole === 'super_admin') && (
                       <Button size="sm" variant="outline" className="text-green-600 hover:text-green-700">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Xác nhận thanh toán
                       </Button>
                     )}
-                    {registration.status !== 'cancelled' && (
+                    {registration.status !== 'cancelled' && (userRole === 'regional_admin' || userRole === 'super_admin') && (
                       <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
                         <XCircle className="h-3 w-3 mr-1" />
                         Hủy đăng ký
                       </Button>
                     )}
+                    {/* View action for all admin roles */}
+                    <Button size="sm" variant="outline">
+                      <Eye className="h-3 w-3 mr-1" />
+                      Xem chi tiết
+                    </Button>
                   </div>
                 )}
               </div>

@@ -21,12 +21,13 @@ export function PaymentInstructions({ amount, invoiceCode }: PaymentInstructions
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const bankInfo = {
-    bankName: "みずほ銀行 (Mizuho Bank)",
-    branchName: "渋谷支店 (Shibuya Branch)",
+    bankName: "ゆうちょ銀行 (Yucho Bank)",
+    branchName: "二四八(ニヨンハチ）",
     accountType: "普通 (Futsu/Regular)",
-    accountNumber: "1234567",
-    accountName: "ダイホイコウギョウ (Daihoi Kougyou)",
-    swiftCode: "MHCBJPJT",
+    code: "12440",
+    accountNumber: "35579601",
+    accountName: "在日カトリックベトナム青年会",
+    swiftCode: "",
   };
 
   const copyToClipboard = async (text: string, field: string) => {
@@ -84,7 +85,7 @@ export function PaymentInstructions({ amount, invoiceCode }: PaymentInstructions
 
             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <div>
-                <p className="text-sm text-muted-foreground">Chi nhánh</p>
+                <p className="text-sm text-muted-foreground">Chi nhánh(店名:)</p>
                 <p className="font-medium">{bankInfo.branchName}</p>
               </div>
               <Button
@@ -109,7 +110,9 @@ export function PaymentInstructions({ amount, invoiceCode }: PaymentInstructions
 
             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <div>
-                <p className="text-sm text-muted-foreground">Số tài khoản</p>
+                <p className="text-sm text-muted-foreground">Mã (記号:)</p>
+                <p className="font-medium font-mono">{bankInfo.code}</p>
+                <p className="text-sm text-muted-foreground">Số tài khoản (番号:)</p>
                 <p className="font-medium font-mono">{bankInfo.accountNumber}</p>
               </div>
               <Button
