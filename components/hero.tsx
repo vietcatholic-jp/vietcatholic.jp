@@ -1,44 +1,30 @@
-import { NextLogo } from "./next-logo";
-import { SupabaseLogo } from "./supabase-logo";
-
 export function Hero() {
   return (
     <div className="flex flex-col gap-16 items-center">
       <div className="flex gap-8 justify-center items-center">
-        <a
-          href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <SupabaseLogo />
-        </a>
-        <span className="border-l rotate-45 h-6" />
-        <a href="https://nextjs.org/" target="_blank" rel="noreferrer">
-          <NextLogo />
-        </a>
+        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+          <span className="text-primary font-bold text-2xl">2025</span>
+        </div>
+        <h1 className="sr-only">Đại hội Công giáo Việt Nam tại Nhật Bản 2025</h1>
+        <div className="text-3xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
+          Đại hội{" "}
+          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Công giáo Việt Nam
+          </span>{" "}
+          tại Nhật Bản 2025
+        </div>
       </div>
-      <h1 className="sr-only">Supabase and Next.js Starter Template</h1>
-      <p className="text-3xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
-        The fastest way to build apps with{" "}
-        <a
-          href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-          target="_blank"
-          className="font-bold hover:underline"
-          rel="noreferrer"
-        >
-          Supabase
-        </a>{" "}
-        and{" "}
-        <a
-          href="https://nextjs.org/"
-          target="_blank"
-          className="font-bold hover:underline"
-          rel="noreferrer"
-        >
-          Next.js
-        </a>
-      </p>
-      <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent my-8" />
+      <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 via-50% to-transparent" />
+      <div className="flex flex-col gap-8 max-w-4xl mx-auto text-center">
+        <h2 className="text-xl lg:text-2xl font-light">
+          <span className="bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
+            Cùng nhau xây dựng cộng đồng Công giáo Việt Nam tại Nhật Bản vững mạnh và đoàn kết
+          </span>
+        </h2>
+        <p className="text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto">
+          Tham gia Đại hội để gặp gỡ, chia sẻ kinh nghiệm và cùng nhau phát triển đời sống đức tin trong cộng đồng người Việt tại Nhật Bản.
+        </p>
+      </div>
     </div>
   );
 }

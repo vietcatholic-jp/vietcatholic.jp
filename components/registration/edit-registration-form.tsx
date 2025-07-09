@@ -1,0 +1,471 @@
+"use client";
+
+import { useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Trash2, Users, Save, X } from "lucide-react";
+import { 
+  GENDERS, 
+  AGE_GROUPS, 
+  SHIRT_SIZES,
+  EventParticipationRole,
+  EVENT_PARTICIPATION_ROLES,
+  JAPANESE_PROVINCES,
+  PROVINCE_DIOCESE_MAPPING,
+  Registration
+} from "@/lib/types";
+import { toast } from "sonner";
+
+const RegistrantSchema = z.object({
+  id: z.string().optional(),
+  email: z.string().email().optional(),
+  saint_name: z.string().optional(),
+  full_name: z.string().min(1, "Họ và tên là bắt buộc"),
+  gender: z.enum(['male', 'female', 'other'] as const),
+  age_group: z.enum(['under_18', '18_25', '26_35', '36_50', 'over_50'] as const),
+  province: z.string().optional(),
+  diocese: z.string().optional(),
+  address: z.string().optional(),
+  facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const),
+  event_role: z.string() as z.ZodType<EventParticipationRole>,
+  is_primary: z.boolean(),
+  notes: z.string().optional(),
+});
+
+const FormSchema = z.object({
+  registrants: z.array(RegistrantSchema).min(1, "Phải có ít nhất 1 người tham gia"),
+  notes: z.string().optional(),
+});
+
+type FormData = z.infer<typeof FormSchema>;
+
+interface EditRegistrationFormProps {
+  registration: Registration;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+export function EditRegistrationForm({ registration, onSave, onCancel }: EditRegistrationFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      registrants: registration.registrants?.map(r => ({
+        id: r.id,
+        email: r.email || "",
+        saint_name: r.saint_name || "",
+        full_name: r.full_name,
+        gender: r.gender,
+        age_group: r.age_group,
+        province: r.province || "",
+        diocese: r.diocese || "",
+        address: r.address || "",
+        facebook_link: r.facebook_link || "",
+        phone: r.phone || "",
+        shirt_size: r.shirt_size,
+        event_role: r.event_role || "participant",
+        is_primary: r.is_primary || false,
+        notes: r.notes || "",
+      })) || [],
+      notes: registration.notes || "",
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "registrants",
+  });
+
+  const registrants = watch("registrants");
+
+  const handleProvinceChange = (index: number, selectedProvince: string) => {
+    setValue(`registrants.${index}.province` as const, selectedProvince);
+    if (selectedProvince && PROVINCE_DIOCESE_MAPPING[selectedProvince]) {
+      setValue(`registrants.${index}.diocese` as const, PROVINCE_DIOCESE_MAPPING[selectedProvince]);
+    }
+  };
+
+  const addRegistrant = () => {
+    append({
+      saint_name: "",
+      full_name: "",
+      gender: "male" as const,
+      age_group: "26_35" as const,
+      province: "",
+      diocese: "",
+      address: "",
+      facebook_link: "",
+      phone: "",
+      shirt_size: "M" as const,
+      event_role: "participant",
+      is_primary: false,
+      notes: "",
+    });
+  };
+
+  const onSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(`/api/registrations/${registration.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Update failed');
+      }
+
+      toast.success("Cập nhật đăng ký thành công!");
+      onSave();
+      
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra trong quá trình cập nhật.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Chỉnh sửa đăng ký</h2>
+            <p className="text-muted-foreground">
+              Mã đăng ký: <span className="font-medium">#{registration.invoice_code}</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={onCancel}>
+              <X className="h-4 w-4 mr-2" />
+              Hủy
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Registrants */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Thông tin người tham gia ({registrants.length})
+              </CardTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addRegistrant}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Thêm người
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            {fields.map((field, index) => {
+              const isPrimary = registrants[index]?.is_primary;
+              
+              return (
+                <div key={field.id} className="border rounded-lg p-6 relative">
+                  {registrants.length > 1 && !isPrimary && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => remove(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                  
+                  <h4 className="font-medium mb-4">
+                    {isPrimary ? `Người đăng ký chính` : `Tham dự viên ${index + 1}`}
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Primary registrant gets full form */}
+                    {isPrimary && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.email`}>Email *</Label>
+                          <Input
+                            id={`registrants.${index}.email`}
+                            {...register(`registrants.${index}.email`)}
+                            placeholder="example@email.com"
+                          />
+                          {errors.registrants?.[index]?.email && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.email?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.phone`}>Số điện thoại *</Label>
+                          <Input
+                            id={`registrants.${index}.phone`}
+                            {...register(`registrants.${index}.phone`)}
+                            placeholder="090-1234-5678"
+                          />
+                          {errors.registrants?.[index]?.phone && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.phone?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.province`}>Tỉnh/Phủ *</Label>
+                          <select
+                            id={`registrants.${index}.province`}
+                            {...register(`registrants.${index}.province`)}
+                            onChange={(e) => handleProvinceChange(index, e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Chọn tỉnh/phủ</option>
+                            {JAPANESE_PROVINCES.map((province) => (
+                              <option key={province.value} value={province.value}>
+                                {province.label}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.registrants?.[index]?.province && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.province?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.diocese`}>Giáo phận *</Label>
+                          <Input
+                            id={`registrants.${index}.diocese`}
+                            {...register(`registrants.${index}.diocese`)}
+                            placeholder="Tự động điền khi chọn tỉnh"
+                            readOnly
+                            className="bg-muted"
+                          />
+                          {errors.registrants?.[index]?.diocese && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.diocese?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`registrants.${index}.address`}>Địa chỉ *</Label>
+                          <Input
+                            id={`registrants.${index}.address`}
+                            {...register(`registrants.${index}.address`)}
+                            placeholder="Địa chỉ hiện tại tại Nhật Bản"
+                          />
+                          {errors.registrants?.[index]?.address && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.address?.message}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Common fields for all registrants */}
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.saint_name`}>Tên Thánh</Label>
+                      <Input
+                        id={`registrants.${index}.saint_name`}
+                        {...register(`registrants.${index}.saint_name`)}
+                        placeholder="Tên thánh bảo trợ"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.full_name`}>Họ và Tên *</Label>
+                      <Input
+                        id={`registrants.${index}.full_name`}
+                        {...register(`registrants.${index}.full_name`)}
+                        placeholder="Nguyễn Văn A"
+                      />
+                      {errors.registrants?.[index]?.full_name && (
+                        <p className="text-sm text-destructive">
+                          {errors.registrants[index]?.full_name?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.gender`}>Giới tính *</Label>
+                      <select
+                        id={`registrants.${index}.gender`}
+                        {...register(`registrants.${index}.gender`)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Chọn giới tính</option>
+                        {GENDERS.map((gender) => (
+                          <option key={gender.value} value={gender.value}>
+                            {gender.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.registrants?.[index]?.gender && (
+                        <p className="text-sm text-destructive">
+                          {errors.registrants[index]?.gender?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.age_group`}>Độ tuổi *</Label>
+                      <select
+                        id={`registrants.${index}.age_group`}
+                        {...register(`registrants.${index}.age_group`)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Chọn độ tuổi</option>
+                        {AGE_GROUPS.map((age) => (
+                          <option key={age.value} value={age.value}>
+                            {age.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.registrants?.[index]?.age_group && (
+                        <p className="text-sm text-destructive">
+                          {errors.registrants[index]?.age_group?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.shirt_size`}>Size áo *</Label>
+                      <select
+                        id={`registrants.${index}.shirt_size`}
+                        {...register(`registrants.${index}.shirt_size`)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Chọn size</option>
+                        {SHIRT_SIZES.map((size) => (
+                          <option key={size.value} value={size.value}>
+                            {size.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.registrants?.[index]?.shirt_size && (
+                        <p className="text-sm text-destructive">
+                          {errors.registrants[index]?.shirt_size?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.event_role`}>Vai trò *</Label>
+                      <select
+                        id={`registrants.${index}.event_role`}
+                        {...register(`registrants.${index}.event_role`)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Chọn vai trò</option>
+                        {EVENT_PARTICIPATION_ROLES.map((role) => (
+                          <option key={role.value} value={role.value}>
+                            {role.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.registrants?.[index]?.event_role && (
+                        <p className="text-sm text-destructive">
+                          {errors.registrants[index]?.event_role?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.facebook_link`}>Link Facebook</Label>
+                      <Input
+                        id={`registrants.${index}.facebook_link`}
+                        {...register(`registrants.${index}.facebook_link`)}
+                        placeholder="https://facebook.com/username"
+                      />
+                      {errors.registrants?.[index]?.facebook_link && (
+                        <p className="text-sm text-destructive">
+                          {errors.registrants[index]?.facebook_link?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Ghi chú</Label>
+                      <Textarea
+                        id={`registrants.${index}.notes`}
+                        {...register(`registrants.${index}.notes`)}
+                        placeholder="Ý kiến đóng góp hoặc yêu cầu đặc biệt"
+                        className="min-h-[80px]"
+                      />
+                    </div>
+
+                    {/* Hidden fields */}
+                    <input type="hidden" {...register(`registrants.${index}.is_primary`)} />
+                    {registrants[index]?.id && (
+                      <input type="hidden" {...register(`registrants.${index}.id`)} />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        {/* General Notes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Ghi chú chung</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              {...register("notes")}
+              placeholder="Ghi chú chung cho toàn bộ đăng ký (nếu có)"
+              className="min-h-[100px]"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Submit */}
+        <div className="flex justify-center">
+          <Button 
+            type="submit" 
+            size="lg" 
+            disabled={isSubmitting}
+            className="min-w-[200px]"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
