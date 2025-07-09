@@ -178,7 +178,7 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
       <Card>
         <CardContent className="text-center py-8">
           <p className="text-muted-foreground">
-            Chỉ quản trị viên tối cao mới có thể quản lý cấu hình sự kiện
+            Chỉ Quản trị viên mới có thể quản lý cấu hình sự kiện
           </p>
         </CardContent>
       </Card>

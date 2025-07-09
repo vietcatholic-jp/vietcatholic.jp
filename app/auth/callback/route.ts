@@ -39,16 +39,37 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const isLocalEnv = process.env.NODE_ENV === "development";
-      
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      } else {
-        return NextResponse.redirect(`${origin}${next}`);
-      }
+      // Get the correct base URL for redirect
+      const getRedirectUrl = () => {
+        // Check for custom site URL environment variable
+        if (process.env.NEXT_PUBLIC_SITE_URL) {
+          return process.env.NEXT_PUBLIC_SITE_URL;
+        }
+        
+        // Check for Vercel URL
+        if (process.env.VERCEL_URL) {
+          return `https://${process.env.VERCEL_URL}`;
+        }
+        
+        // Check forwarded headers (common in production)
+        const forwardedHost = request.headers.get("x-forwarded-host");
+        const forwardedProto = request.headers.get("x-forwarded-proto");
+        if (forwardedHost) {
+          const protocol = forwardedProto || "https";
+          return `${protocol}://${forwardedHost}`;
+        }
+        
+        // Development fallback
+        if (process.env.NODE_ENV === "development") {
+          return origin;
+        }
+        
+        // Last resort fallback
+        return origin;
+      };
+
+      const redirectUrl = getRedirectUrl();
+      return NextResponse.redirect(`${redirectUrl}${next}`);
     }
   }
 

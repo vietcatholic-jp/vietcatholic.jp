@@ -39,7 +39,7 @@ const roleLabels: Record<UserRole, string> = {
   'event_organizer': 'Tổ chức sự kiện', 
   'group_leader': 'Trưởng nhóm',
   'regional_admin': 'Quản trị viên khu vực',
-  'super_admin': 'Quản trị viên tối cao'
+  'super_admin': 'Quản trị viên'
 };
 
 const regionLabels: Record<RegionType, string> = {

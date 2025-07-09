@@ -93,7 +93,7 @@ export function AdminDashboard() {
           <div>
             <h1 className="text-3xl font-bold">Quản trị hệ thống</h1>
             <p className="text-muted-foreground mt-2">
-              Quản lý Đại hội Công giáo Việt Nam 2025 - {userRole === 'super_admin' ? 'Quản trị viên tối cao' : 'Quản trị viên khu vực'}
+              Quản lý Đại hội Công giáo Việt Nam 2025 - {userRole === 'super_admin' ? 'Quản trị viên' : 'Quản trị viên khu vực'}
             </p>
           </div>
           <div className="flex items-center gap-4">
