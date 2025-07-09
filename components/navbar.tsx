@@ -1,44 +1,77 @@
-import Link from "next/link";
-import { ThemeSwitcher } from "./theme-switcher";
-import { AuthButton } from "./auth-button";
-import { getServerUser } from "@/lib/auth";
+"use client";
 
-export async function Navbar() {
-  const user = await getServerUser();
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { Menu, X, Cross, Sparkles } from "lucide-react";
+import { ThemeSwitcher } from "./theme-switcher";
+import { ClientAuthButton } from "./client-auth-button";
+import { Button } from "./ui/button";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
+
+export function Navbar() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
-    <nav className="w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="w-full border-b border-border bg-gradient-to-r from-blue-50 via-white to-purple-50 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo / Brand */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">DH</span>
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <Cross className="h-5 w-5 text-white" />
               </div>
-              <span className="font-semibold text-lg">Đại hội 2025</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg bg-gradient-to-r from-blue-700 to-purple-600 bg-clip-text text-transparent">
+                  Đại hội 2025
+                </span>
+                <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  Pilgrims of Hope
+                </span>
+              </div>
             </Link>
             
-            {/* Navigation Links */}
+            {/* Desktop Navigation Links */}
             {user && (
               <div className="hidden md:flex items-center gap-6">
                 <Link 
                   href="/dashboard" 
-                  className="text-sm font-medium transition-colors hover:text-primary"
+                  className="text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg"
                 >
-                  Dashboard
+                  🏠 Trang cá nhân
                 </Link>
                 <Link 
                   href="/register" 
-                  className="text-sm font-medium transition-colors hover:text-primary"
+                  className="text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg"
                 >
-                  Đăng ký
+                  📝 Đăng ký
                 </Link>
                 <Link 
                   href="/agenda" 
-                  className="text-sm font-medium transition-colors hover:text-primary"
+                  className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
                 >
-                  Chương trình
+                  📅 Chương trình
                 </Link>
               </div>
             )}
@@ -46,10 +79,67 @@ export async function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-4">
-            <ThemeSwitcher />
-            <AuthButton />
+            <div className="hidden md:flex items-center gap-4">
+              <ThemeSwitcher />
+              <ClientAuthButton />
+            </div>
+            
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {isMenuOpen && (
+          <div className="md:hidden absolute left-0 right-0 top-16 bg-white border-b border-border shadow-lg">
+            <div className="container mx-auto px-4 py-4 space-y-3">
+              {user && (
+                <>
+                  <Link 
+                    href="/dashboard" 
+                    className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-3 rounded-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    🏠 Trang cá nhân
+                  </Link>
+                  <Link 
+                    href="/register" 
+                    className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-3 rounded-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    📝 Đăng ký
+                  </Link>
+                  <Link 
+                    href="/agenda" 
+                    className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    📅 Chương trình
+                  </Link>
+                  <div className="border-t pt-3 mt-3">
+                    <div className="flex items-center justify-between px-3">
+                      <ThemeSwitcher />
+                      <ClientAuthButton />
+                    </div>
+                  </div>
+                </>
+              )}
+              {!user && (
+                <div className="flex items-center justify-between px-3">
+                  <ThemeSwitcher />
+                  <ClientAuthButton />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

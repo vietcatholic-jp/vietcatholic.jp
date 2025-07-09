@@ -206,7 +206,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                   )}
                   
                   <h4 className="font-medium mb-4">
-                    {isPrimary ? `Người đăng ký chính` : `Người tham gia ${index + 1}`}
+                    {isPrimary ? `Người đăng ký chính` : `Tham dự viên ${index + 1}`}
                   </h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

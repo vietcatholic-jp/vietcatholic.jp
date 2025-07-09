@@ -22,9 +22,6 @@ export default async function RegisterPage() {
             <h1 className="text-3xl font-bold mb-4">
               Đăng ký tham gia Đại hội 2025
             </h1>
-            <p className="text-muted-foreground text-lg">
-              Chọn vai trò và điền thông tin để hoàn tất đăng ký
-            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -53,7 +50,7 @@ export default async function RegisterPage() {
                   <div>
                     <h4 className="font-medium mb-2">Phí tham gia</h4>
                     <p className="text-sm text-muted-foreground">
-                      ¥50,000 cho mỗi người tham gia (áp dụng cho tất cả vai trò)
+                      ¥5000 cho mỗi người tham gia (áp dụng cho tất cả vai trò)
                     </p>
                   </div>
                   

@@ -128,7 +128,7 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
   });
 
   const registrants = watch("registrants");
-  const basePrice = 50000; // Base price in JPY per person
+  const basePrice = 5000; // Base price in JPY per person
   const totalAmount = registrants.length * basePrice;
 
   const handleRoleSelection = (role: EventParticipationRole) => {
@@ -224,6 +224,23 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
   // Step 2: Registration Form
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Progress indicator */}
+      <div className="flex items-center justify-center space-x-4 mb-6">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">
+            1
+          </div>
+          <span className="text-sm text-gray-500">Chọn vai trò</span>
+        </div>
+        <div className="h-px bg-gray-300 w-8"></div>
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+            2
+          </div>
+          <span className="text-sm font-medium text-primary">Điền thông tin</span>
+        </div>
+      </div>
+
       <div className="mb-6">
         <Button
           type="button"
