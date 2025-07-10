@@ -16,12 +16,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -35,6 +35,25 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
+    // Validation
+    if (!fullName.trim()) {
+      setError("Họ và tên là bắt buộc");
+      setIsLoading(false);
+      return;
+    }
+
+    if (fullName.trim().length < 2) {
+      setError("Họ và tên phải có ít nhất 2 ký tự");
+      setIsLoading(false);
+      return;
+    }
+
+    if (/\d/.test(fullName)) {
+      setError("Họ và tên không được chứa số");
+      setIsLoading(false);
+      return;
+    }
+
     if (password !== repeatPassword) {
       setError("Mật khẩu không khớp");
       setIsLoading(false);
@@ -47,6 +66,9 @@ export function SignUpForm({
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          data: {
+            full_name: fullName.trim(),
+          },
         },
       });
       if (error) throw error;
@@ -58,7 +80,7 @@ export function SignUpForm({
     }
   };
 
-  const handleOAuthSignUp = async (provider: 'google' | 'facebook') => {
+  const handleOAuthSignUp = async (provider: 'google') => {
     const supabase = createClient();
     setError(null);
 
@@ -67,10 +89,6 @@ export function SignUpForm({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-          // For Facebook, request additional profile information
-          ...(provider === 'facebook' && {
-            scopes: 'public_profile',
-          }),
         },
       });
       if (error) throw error;
@@ -99,15 +117,9 @@ export function SignUpForm({
                   <FcGoogle className="h-4 w-4 mr-2" />
                   Đăng ký bằng Google
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleOAuthSignUp('facebook')}
-                >
-                  <FaFacebook className="h-4 w-4 mr-2 text-blue-600" />
-                  Đăng ký bằng Facebook
-                </Button>
+                <p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  💡 <strong>Khuyến nghị:</strong> Sử dụng Google để đăng ký thuận tiện và nhanh chóng hơn!
+                </p>
               </div>
               
               <div className="relative">
@@ -119,6 +131,18 @@ export function SignUpForm({
                     Hoặc tiếp tục với
                   </span>
                 </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="fullName">Họ và tên</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Nguyễn Văn A"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
               </div>
 
               <div className="grid gap-2">

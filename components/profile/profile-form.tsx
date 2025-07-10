@@ -9,13 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Save, Eye, EyeOff } from "lucide-react";
-import { REGIONS, User } from "@/lib/types";
+import { JAPANESE_PROVINCES, User } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Họ và tên là bắt buộc"),
-  region: z.enum(['kanto', 'kansai', 'chubu', 'kyushu', 'chugoku', 'shikoku', 'tohoku', 'hokkaido'] as const).optional(),
+  province: z.string().optional(),
+  facebook_url: z.string().url("URL Facebook không hợp lệ").optional().or(z.literal("")),
 });
 
 const passwordSchema = z.object({
@@ -55,7 +56,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       full_name: profile.full_name || '',
-      region: profile.region,
+      province: profile.province || '',
+      facebook_url: profile.facebook_url || '',
     }
   });
 
@@ -71,15 +73,19 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const onSubmitProfile = async (data: ProfileFormData) => {
     setIsSaving(true);
     try {
+      // Uppercase the full name when saving
+      const upperCaseName = data.full_name.toUpperCase();
+      
       const response = await fetch('/api/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName: data.full_name.split(' ')[0] || '',
-          lastName: data.full_name.split(' ').slice(1).join(' ') || '',
-          region: data.region,
+          firstName: upperCaseName.split(' ')[0] || '',
+          lastName: upperCaseName.split(' ').slice(1).join(' ') || '',
+          province: data.province,
+          facebook_url: data.facebook_url,
         }),
       });
 
@@ -163,22 +169,37 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="region">Khu vực</Label>
+              <Label htmlFor="province">Tỉnh/Phủ</Label>
               <select
-                id="region"
-                {...registerProfile("region")}
+                id="province"
+                {...registerProfile("province")}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">Chọn khu vực</option>
-                {REGIONS.map((region) => (
-                  <option key={region.value} value={region.value}>
-                    {region.label}
+                <option value="">Chọn tỉnh/phủ</option>
+                {JAPANESE_PROVINCES.map((province) => (
+                  <option key={province.value} value={province.value}>
+                    {province.label}
                   </option>
                 ))}
               </select>
-              {profileErrors.region && (
+              {profileErrors.province && (
                 <p className="text-sm text-destructive">
-                  {profileErrors.region.message}
+                  {profileErrors.province.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="facebook_url">Facebook URL</Label>
+              <Input
+                id="facebook_url"
+                type="url"
+                {...registerProfile("facebook_url")}
+                placeholder="https://facebook.com/yourprofile"
+              />
+              {profileErrors.facebook_url && (
+                <p className="text-sm text-destructive">
+                  {profileErrors.facebook_url.message}
                 </p>
               )}
             </div>

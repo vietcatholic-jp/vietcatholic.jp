@@ -5,7 +5,7 @@ create extension if not exists "uuid-ossp";
 create type user_role as enum ('participant', 'event_organizer','group_leader', 'regional_admin', 'super_admin');
 create type region_type as enum ('kanto', 'kansai', 'chubu', 'kyushu', 'chugoku', 'shikoku', 'tohoku', 'hokkaido');
 create type gender_type as enum ('male', 'female', 'other');
-create type age_group_type as enum ('under_18', '18_25', '26_35', '36_50', 'over_50');
+create type age_group_type as enum ('under_12','12_17', '18_25', '26_35', '36_50', 'over_50');
 create type shirt_size_type as enum ('XS', 'S', 'M', 'L', 'XL', 'XXL');
 create type registration_status as enum (
   'pending',          -- Initial registration, waiting for payment

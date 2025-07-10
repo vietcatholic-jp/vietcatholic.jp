@@ -10,9 +10,26 @@ export async function AuthButton() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let displayName = user?.email?.slice(0, 4) || '';
+
+  if (user) {
+    // Try to get user profile for full name
+    const { data: profile } = await supabase
+      .from('users')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.full_name && profile.full_name.trim()) {
+      displayName = profile.full_name;
+    } else {
+      displayName = user.email?.slice(0, 4) || '';
+    }
+  }
+
   return user ? (
     <div className="flex items-center gap-4">
-      Xin chào, {user.email?.slice(0, 4)}!
+      Xin chào, {displayName}!
       <LogoutButton />
     </div>
   ) : (

@@ -6,12 +6,15 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { CancelRequestForm } from "./cancel-request-form";
 
 interface RegistrationActionsProps {
   registrationId: string;
   invoiceCode: string;
   status: string;
   registrantIds: string[];
+  totalAmount: number;
+  participantCount: number;
   eventConfig?: {
     cancellation_deadline?: string;
   } | null;
@@ -22,11 +25,13 @@ export function RegistrationActions({
   invoiceCode, 
   status, 
   registrantIds,
+  totalAmount,
+  participantCount,
   eventConfig
 }: RegistrationActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
   const [hasTickets, setHasTickets] = useState(false);
+  const [showCancelForm, setShowCancelForm] = useState(false);
   const router = useRouter();
 
   // Check if any registrants have tickets
@@ -49,33 +54,7 @@ export function RegistrationActions({
   }, [registrantIds]);
 
   const handleCancel = async () => {
-    if (!confirm(`Bạn có chắc chắn muốn hủy đăng ký #${invoiceCode}? Thao tác này không thể hoàn tác.`)) {
-      return;
-    }
-
-    setIsCancelling(true);
-    
-    try {
-      const response = await fetch(`/api/registrations/${registrationId}/cancel`, {
-        method: 'POST',
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Cancel failed');
-      }
-
-      toast.success("Hủy đăng ký thành công!");
-      router.refresh();
-      setTimeout(() => window.location.reload(), 500);
-      
-    } catch (error) {
-      console.error('Cancel error:', error);
-      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra khi hủy đăng ký");
-    } finally {
-      setIsCancelling(false);
-    }
+    setShowCancelForm(true);
   };
 
   // Check if cancellation is allowed based on event config
@@ -132,7 +111,7 @@ export function RegistrationActions({
 
   const showCancelButton = () => {
     // Show cancel button for paid statuses
-    const cancellableStatuses = ['report_paid', 'confirm_paid'];
+    const cancellableStatuses = ['report_paid', 'confirmed'];
     return cancellableStatuses.includes(status) && canCancel();
   };
 
@@ -174,10 +153,9 @@ export function RegistrationActions({
           variant="outline"
           className="text-orange-600 hover:text-orange-700 text-xs"
           onClick={handleCancel}
-          disabled={isCancelling}
         >
           <XCircle className="h-3 w-3 mr-1" />
-          {isCancelling ? 'Đang hủy...' : 'Hủy đăng ký'}
+          Yêu cầu hủy
         </Button>
       )}
       {showDeleteButton() && (
@@ -192,6 +170,22 @@ export function RegistrationActions({
           {isDeleting ? 'Đang xóa...' : 'Xóa'}
         </Button>
       )}
+
+      {/* Cancel Request Form Dialog */}
+      <CancelRequestForm
+        registration={{
+          id: registrationId,
+          invoice_code: invoiceCode,
+          total_amount: totalAmount,
+          participant_count: participantCount
+        }}
+        isOpen={showCancelForm}
+        onClose={() => setShowCancelForm(false)}
+        onSuccess={() => {
+          router.refresh();
+          setTimeout(() => window.location.reload(), 500);
+        }}
+      />
     </>
   );
 }

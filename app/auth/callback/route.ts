@@ -22,8 +22,7 @@ export async function GET(request: NextRequest) {
       if (!existingProfile) {
         // Create user profile from OAuth data
         // Construct full name from OAuth data
-        const fullName = data.user.user_metadata?.name ||
-                        `${data.user.user_metadata?.given_name || ''} ${data.user.user_metadata?.family_name || ''}`.trim() ||
+        const fullName = data.user.user_metadata?.name || `${data.user.user_metadata?.given_name || ''} ${data.user.user_metadata?.family_name || ''}`.trim() ||
                         data.user.email?.split('@')[0] || '';
 
         const { error: profileError } = await supabase
