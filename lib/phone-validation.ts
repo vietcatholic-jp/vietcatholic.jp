@@ -29,10 +29,12 @@ export function isValidJapanesePhoneNumber(phone: string): boolean {
   // Mobile prefixes (070, 080, 090, etc.) must be 11 digits
   // Landline prefixes must be 10 digits
   
+  // Check for 11-digit mobile numbers
   if (numbersOnly.length === 11 && numbersOnly.startsWith('0')) {
     return true; // 11 digits mobile
   }
-  
+
+  // Check for 10-digit landline numbers
   if (numbersOnly.length === 10 && numbersOnly.startsWith('0')) {
     // Make sure it's not a truncated mobile number
     if (numbersOnly.startsWith('070') || numbersOnly.startsWith('080') || numbersOnly.startsWith('090')) {
