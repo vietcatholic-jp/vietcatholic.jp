@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { useAdminData } from "@/components/admin/admin-context";
 import { Truck, Plus, Users, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { TransportationGroup } from "@/lib/types";
+import { TransportationGroup, getRegionFromProvince } from "@/lib/types";
+import { CreateTransportationGroupForm } from "./create-transportation-group-form";
 
 export function AdminTransportation() {
   const { data, isLoading } = useAdminData();
   const [transportGroups, setTransportGroups] = useState<TransportationGroup[]>([]);
   const [isLoadingTransport, setIsLoadingTransport] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   useEffect(() => {
     fetchTransportationGroups();
@@ -19,7 +21,7 @@ export function AdminTransportation() {
 
   const fetchTransportationGroups = async () => {
     try {
-      const response = await fetch('/api/admin/transportation');
+      const response = await fetch('/api/admin/transportation-groups');
       if (!response.ok) {
         throw new Error('Failed to fetch transportation groups');
       }
@@ -44,10 +46,10 @@ export function AdminTransportation() {
   const confirmedRegistrations = data.recentRegistrations.filter(
     reg => reg.status === 'confirmed' && 
     (userRole === 'super_admin' || 
-     reg.registrants?.some(registrant => 
+     (userRegion && reg.registrants?.some(registrant => 
        // Check if any registrant has province in the user's region
-       registrant.province && userRegion
-     ))
+       registrant.province && getRegionFromProvince(registrant.province) === userRegion
+     )))
   );
 
   return (
@@ -60,7 +62,7 @@ export function AdminTransportation() {
             Tạo và quản lý các nhóm di chuyển cho người tham dự đã xác nhận
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Tạo nhóm mới
         </Button>
@@ -221,6 +223,16 @@ export function AdminTransportation() {
           )}
         </CardContent>
       </Card>
+
+      {/* Create Transportation Group Form */}
+      <CreateTransportationGroupForm
+        isOpen={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+        onSuccess={() => {
+          setShowCreateForm(false);
+          fetchTransportationGroups();
+        }}
+      />
     </div>
   );
 }

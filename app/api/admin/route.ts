@@ -1,5 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { getRegionFromProvince } from "@/lib/types";
+
+interface DatabaseRegistrant {
+  province?: string;
+  [key: string]: unknown;
+}
+
+interface DatabaseRegistration {
+  user?: {
+    region?: string;
+    [key: string]: unknown;
+  };
+  registrants?: DatabaseRegistrant[];
+  [key: string]: unknown;
+}
 
 export async function GET() {
   try {
@@ -41,19 +56,43 @@ export async function GET() {
       .select(`
         *,
         registrants(*),
-        user:users(email, full_name, region)
+        user:users(email, full_name, region, province)
       `)
       .order("created_at", { ascending: false })
       .limit(20);
 
     // Filter based on user role and region
     if (profile.role === "regional_admin" && profile.region) {
+      // Regional admin: see registrations from users in their region OR 
+      // registrations where registrants have provinces in their region
       recentQuery = recentQuery.eq("user.region", profile.region);
-    } else if ((profile.role === "group_leader" || profile.role === "event_organizer") && profile.region) {
+    } else if (profile.role === "group_leader") {
+      // Group leader: only see confirmed registrations from their region
+      // where registrants have organizer_regional or similar group-related roles
+      recentQuery = recentQuery
+        .eq("user.region", profile.region)
+        .eq("status", "confirmed");
+    } else if (profile.role === "event_organizer" && profile.region) {
+      // Event organizer: see all registrations from their region
       recentQuery = recentQuery.eq("user.region", profile.region);
     }
 
     const { data: recentRegistrations } = await recentQuery;
+
+    // Apply additional filtering for regional admins based on province-to-region mapping
+    let filteredRegistrations = recentRegistrations || [];
+    if (profile.role === "regional_admin" && profile.region) {
+      filteredRegistrations = filteredRegistrations.filter((registration: DatabaseRegistration) => {
+        // Include if user is in the same region
+        if (registration.user?.region === profile.region) {
+          return true;
+        }
+        // Also include if any registrant has a province that maps to this region
+        return registration.registrants?.some((registrant: DatabaseRegistrant) => 
+          registrant.province && getRegionFromProvince(registrant.province) === profile.region
+        );
+      });
+    }
 
     // Get regional breakdown (super admin only)
     let regionalStats = null;
@@ -97,7 +136,7 @@ export async function GET() {
         pendingRegistrations: pendingRegistrations.count || 0,
         totalParticipants: totalParticipants.count || 0,
       },
-      recentRegistrations: recentRegistrations || [],
+      recentRegistrations: filteredRegistrations,
       regionalStats,
       provinceStats,
       dioceseStats,
