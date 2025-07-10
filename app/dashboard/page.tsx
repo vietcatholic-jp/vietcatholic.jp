@@ -28,6 +28,13 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
 
+  // Get active event config
+  const { data: eventConfig } = await supabase
+    .from('event_configs')
+    .select('*')
+    .eq('is_active', true)
+    .single();
+
   // Get user's registrations with full registrant details
   const { data: registrations } = await supabase
     .from('registrations')
@@ -234,6 +241,7 @@ export default async function DashboardPage({
                     <RegistrationCard 
                       key={registration.id} 
                       registration={registration} 
+                      eventConfig={eventConfig}
                       isLast={index === registrations.length - 1}
                     />
                   ))}

@@ -3,7 +3,15 @@ export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | '
 export type GenderType = 'male' | 'female' | 'other';
 export type AgeGroupType = 'under_18' | '18_25' | '26_35' | '36_50' | 'over_50';
 export type ShirtSizeType = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
-export type RegistrationStatus = 'pending' | 'paid' | 'cancelled' | 'confirmed';
+export type RegistrationStatus = 
+  | 'pending'          // Initial registration, waiting for payment
+  | 'report_paid'      // User uploaded payment receipt
+  | 'confirm_paid'     // Admin confirmed payment is correct
+  | 'payment_rejected' // Admin rejected payment
+  | 'cancelled'        // Registration cancelled
+  | 'confirmed'        // Fully confirmed, tickets can be generated
+  | 'checked_in'       // Participant checked in at event
+  | 'checked_out';     // Participant checked out from event
 
 // NEW: Event participation roles
 export type EventParticipationRole = 

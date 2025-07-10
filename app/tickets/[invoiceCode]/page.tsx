@@ -47,7 +47,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
   }
 
   // Only allow access if payment is confirmed
-  if (registration.status !== 'paid' && registration.status !== 'confirmed') {
+  if (registration.status !== 'confirmed' && registration.status !== 'checked_in') {
     redirect(`/payment/${invoiceCode}`);
   }
 
