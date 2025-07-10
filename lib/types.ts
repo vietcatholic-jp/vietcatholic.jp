@@ -429,6 +429,77 @@ export const PROVINCE_DIOCESE_MAPPING: { [key: string]: string } = {
   'Okinawa': 'Giáo phận Naha',
 };
 
+// Province to Region mapping for Japan
+export const PROVINCE_REGION_MAPPING: { [key: string]: RegionType } = {
+  // Hokkaido region
+  'Hokkaido': 'hokkaido',
+  
+  // Tohoku region
+  'Aomori': 'tohoku',
+  'Iwate': 'tohoku',
+  'Miyagi': 'tohoku',
+  'Akita': 'tohoku',
+  'Yamagata': 'tohoku',
+  'Fukushima': 'tohoku',
+  
+  // Kanto region
+  'Ibaraki': 'kanto',
+  'Tochigi': 'kanto',
+  'Gunma': 'kanto',
+  'Saitama': 'kanto',
+  'Chiba': 'kanto',
+  'Tokyo': 'kanto',
+  'Kanagawa': 'kanto',
+  
+  // Chubu region
+  'Niigata': 'chubu',
+  'Toyama': 'chubu',
+  'Ishikawa': 'chubu',
+  'Fukui': 'chubu',
+  'Yamanashi': 'chubu',
+  'Nagano': 'chubu',
+  'Gifu': 'chubu',
+  'Shizuoka': 'chubu',
+  'Aichi': 'chubu',
+  
+  // Kansai (Kinki) region
+  'Mie': 'kansai',
+  'Shiga': 'kansai',
+  'Kyoto': 'kansai',
+  'Osaka': 'kansai',
+  'Hyogo': 'kansai',
+  'Nara': 'kansai',
+  'Wakayama': 'kansai',
+  
+  // Chugoku region
+  'Tottori': 'chugoku',
+  'Shimane': 'chugoku',
+  'Okayama': 'chugoku',
+  'Hiroshima': 'chugoku',
+  'Yamaguchi': 'chugoku',
+  
+  // Shikoku region
+  'Tokushima': 'shikoku',
+  'Kagawa': 'shikoku',
+  'Ehime': 'shikoku',
+  'Kochi': 'shikoku',
+  
+  // Kyushu region
+  'Fukuoka': 'kyushu',
+  'Saga': 'kyushu',
+  'Nagasaki': 'kyushu',
+  'Kumamoto': 'kyushu',
+  'Oita': 'kyushu',
+  'Miyazaki': 'kyushu',
+  'Kagoshima': 'kyushu',
+  'Okinawa': 'kyushu',
+};
+
+// Helper function to get region from province
+export function getRegionFromProvince(province: string): RegionType | null {
+  return PROVINCE_REGION_MAPPING[province] || null;
+}
+
 export const JAPANESE_PROVINCES: { value: string; label: string }[] = [
   { value: 'Hokkaido', label: 'Hokkaido (北海道)' },
   { value: 'Aomori', label: 'Aomori (青森県)' },
