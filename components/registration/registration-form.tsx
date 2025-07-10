@@ -22,9 +22,9 @@ import {
 import { toast } from "sonner";
 import { RoleSelection } from "./role-selection";
 
-// Primary registrant schema (full details)
+// Primary registrant schema (full details) - make email optional if facebook link provided
 const primaryRegistrantSchema = z.object({
-  email: z.string().email("Email không hợp lệ"),
+  email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
   saint_name: z.string().optional(),
   full_name: z.string().min(1, "Họ và tên là bắt buộc"),
   gender: z.enum(['male', 'female', 'other'] as const, {
@@ -37,18 +37,27 @@ const primaryRegistrantSchema = z.object({
   diocese: z.string().min(1, "Giáo phận là bắt buộc"),
   address: z.string().min(1, "Địa chỉ là bắt buộc"),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
-  phone: z.string().min(1, "Số điện thoại là bắt buộc"),
+  phone: z.string().min(10, "Số điện thoại phải có ít nhất 10 số").regex(/^\+?[0-9\s\-\(\)]+$/, "Số điện thoại không hợp lệ"),
   shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
   notes: z.string().optional(),
+}).refine((data) => {
+  // If no facebook link, email is required
+  if (!data.facebook_link || data.facebook_link === "") {
+    return data.email && data.email !== "";
+  }
+  return true;
+}, {
+  message: "Email là bắt buộc nếu không có Facebook link",
+  path: ["email"],
 });
 
 // Additional registrant schema (simplified) - make optional fields truly optional
 const additionalRegistrantSchema = z.object({
-  email: z.string().email("Email không hợp lệ").optional(),
+  email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
   saint_name: z.string().optional(),
   full_name: z.string().min(1, "Họ và tên là bắt buộc"),
   gender: z.enum(['male', 'female', 'other'] as const, {
@@ -61,7 +70,10 @@ const additionalRegistrantSchema = z.object({
   diocese: z.string().optional(),
   address: z.string().optional(),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  phone: z.string().optional().refine((val) => {
+    if (!val || val === "") return true;
+    return val.length >= 10 && /^\+?[0-9\s\-\(\)]+$/.test(val);
+  }, "Số điện thoại không hợp lệ"),
   shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
   }),
@@ -83,9 +95,10 @@ type FormData = z.infer<typeof formSchema>;
 interface RegistrationFormProps {
   userEmail?: string;
   userName?: string;
+  userFacebookUrl?: string;
 }
 
-export function RegistrationForm({ userEmail, userName }: RegistrationFormProps) {
+export function RegistrationForm({ userEmail, userName, userFacebookUrl }: RegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<'role-selection' | 'registration'>('role-selection');
   const [selectedRole, setSelectedRole] = useState<EventParticipationRole>('participant');
@@ -110,7 +123,7 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
           province: "",
           diocese: "",
           address: "",
-          facebook_link: "",
+          facebook_link: userFacebookUrl || "",
           phone: "",
           shirt_size: "M" as const,
           event_role: "participant",
@@ -309,16 +322,22 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                     {isPrimary && (
                       <>
                         <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.email`}>Email *</Label>
+                          <Label htmlFor={`registrants.${index}.email`}>
+                            Email {userFacebookUrl ? "(Tùy chọn nếu có Facebook)" : "*"}
+                          </Label>
                           <Input
                             id={`registrants.${index}.email`}
                             {...register(`registrants.${index}.email`)}
                             placeholder="example@email.com"
-                            disabled={!!userEmail}
                           />
                           {errors.registrants?.[index]?.email && (
                             <p className="text-sm text-destructive">
                               {errors.registrants[index]?.email?.message}
+                            </p>
+                          )}
+                          {userFacebookUrl && (
+                            <p className="text-xs text-muted-foreground">
+                              Email là tùy chọn vì bạn đã đăng nhập bằng Facebook
                             </p>
                           )}
                         </div>
@@ -335,6 +354,9 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                               {errors.registrants[index]?.phone?.message}
                             </p>
                           )}
+                          <p className="text-xs text-muted-foreground">
+                            Ít nhất 10 số, có thể bao gồm +, dấu cách, dấu gạch ngang
+                          </p>
                         </div>
 
                         <div className="space-y-2">
@@ -407,11 +429,15 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                         id={`registrants.${index}.full_name`}
                         {...register(`registrants.${index}.full_name`)}
                         placeholder="Nguyễn Văn A"
-                        disabled={isPrimary && !!userName}
                       />
                       {errors.registrants?.[index]?.full_name && (
                         <p className="text-sm text-destructive">
                           {errors.registrants[index]?.full_name?.message}
+                        </p>
+                      )}
+                      {isPrimary && userName && (
+                        <p className="text-xs text-muted-foreground">
+                          Tên từ tài khoản: {userName}. Bạn có thể chỉnh sửa nếu cần.
                         </p>
                       )}
                     </div>

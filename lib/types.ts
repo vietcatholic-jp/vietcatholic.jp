@@ -24,6 +24,7 @@ export interface User {
   email: string;
   full_name?: string;
   avatar_url?: string;
+  facebook_url?: string;
   region?: RegionType;
   role: UserRole;
   created_at: string;
