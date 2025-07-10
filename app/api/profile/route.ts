@@ -1,17 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
 
 const ProfileUpdateSchema = z.object({
-  firstName: z.string().min(1).optional(),
-  lastName: z.string().min(1).optional(),
-  phone: z.string()
-    .optional()
-    .transform((val) => val ? cleanPhoneNumber(val) : val)
-    .refine((val) => !val || isValidJapanesePhoneNumber(val), {
-      message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
-    }),
+  full_name: z.string().min(1).optional(),
+  phone: z.string().optional(),
   region: z.enum([
     'kanto', 'kansai', 'chubu', 'kyushu', 'chugoku', 'shikoku', 'tohoku', 'hokkaido'
   ]).optional(),
@@ -70,7 +63,7 @@ export async function PATCH(request: NextRequest) {
     const { data: profile, error } = await supabase
       .from("users")
       .update({
-        full_name: validated.firstName && validated.lastName,
+        full_name: validated.full_name,
         phone: validated.phone,
         region: validated.region,
         role: validated.role,
