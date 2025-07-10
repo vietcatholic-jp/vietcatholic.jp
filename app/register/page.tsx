@@ -30,6 +30,7 @@ export default async function RegisterPage() {
               <RegistrationForm 
                 userEmail={user.email || undefined}
                 userName={profile?.full_name || user.user_metadata?.name || undefined}
+                userFacebookUrl={profile?.facebook_url || undefined}
               />
             </div>
 

@@ -119,30 +119,28 @@ export function RegistrationCard({ registration, isLast }: RegistrationCardProps
           
           {registration.status === 'pending' && (
             <Link href={`/payment/${registration.invoice_code}`}>
-              <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
+              <Button size="sm" variant="outline" className="text-xs">
                 <CreditCard className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Thanh toán</span>
-                <span className="sm:hidden">Thanh toán</span>
+                Thanh toán
               </Button>
             </Link>
           )}
           
           {(registration.status === 'paid' || registration.status === 'confirmed') && (
             <Link href={`/tickets/${registration.invoice_code}`}>
-              <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
+              <Button size="sm" variant="outline" className="text-xs">
                 <QrCode className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Xem vé</span>
-                <span className="sm:hidden">Vé</span>
+                <span className="hidden xs:inline">Xem vé</span>
+                <span className="xs:hidden">Vé</span>
               </Button>
             </Link>
           )}
 
           {(registration.status === 'confirmed') && (
             <Link href={`/register/${registration.id}`}>
-              <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
+              <Button size="sm" variant="outline" className="text-xs">
                 <Eye className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Chi tiết</span>
-                <span className="sm:hidden">Chi tiết</span>
+                Chi tiết
               </Button>
             </Link>
           )}

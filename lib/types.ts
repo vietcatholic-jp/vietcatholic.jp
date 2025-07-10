@@ -38,6 +38,7 @@ export interface EventConfig {
   start_date?: string;
   end_date?: string;
   base_price: number;
+  cancellation_deadline?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
