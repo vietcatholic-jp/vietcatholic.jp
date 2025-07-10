@@ -20,7 +20,7 @@ export default async function RegisterPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-4">
-              Đăng ký tham gia Đại hội 2025
+              Đăng ký tham gia Đại Hội Toàn Quốc 2025
             </h1>
           </div>
 

@@ -66,7 +66,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold mb-4">
-              Vé tham gia Đại hội 2025
+              Vé tham gia ĐẠI HỘI TOÀN QUỐC NĂM THÁNH 2025
             </h1>
             <p className="text-muted-foreground">
               Mã đăng ký: <span className="font-mono font-medium">{registration.invoice_code}</span>
