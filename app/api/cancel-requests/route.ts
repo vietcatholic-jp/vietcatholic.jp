@@ -20,7 +20,7 @@ const CancelRequestSchema = z.object({
   }
   return true;
 }, {
-  message: 'Bank information is required for refund requests',
+  message: 'Tài khoản ngân hàng là bắt buộc đối với yêu cầu hoàn tiền',
   path: ['bank_account_number']
 });
 
@@ -47,16 +47,16 @@ export async function POST(request: NextRequest) {
 
     if (regError || !registration) {
       return NextResponse.json(
-        { error: 'Registration not found or access denied' },
+        { error: 'Không tìm thấy đăng ký hoặc quyền truy cập bị từ chối' },
         { status: 404 }
       );
     }
 
     // Check if registration can be cancelled
-    const cancellableStatuses = ['pending', 'report_paid', 'confirm_paid', 'payment_rejected'];
+    const cancellableStatuses = ['pending', 'confirmed', 'report_paid','confirm_paid'];
     if (!cancellableStatuses.includes(registration.status)) {
       return NextResponse.json(
-        { error: 'Registration cannot be cancelled in current status' },
+        { error: 'Không thể huỷ đăng ký trong trạng thái hiện tại' },
         { status: 400 }
       );
     }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     if (existingRequest) {
       return NextResponse.json(
-        { error: 'A cancel request is already pending for this registration' },
+        { error: 'Đã có yêu cầu huỷ đang chờ xử lý cho đăng ký này' },
         { status: 400 }
       );
     }
@@ -82,23 +82,23 @@ export async function POST(request: NextRequest) {
       const { error: updateError } = await supabase
         .from('registrations')
         .update({
-          status: 'cancelled',
-          notes: `Donation: ${validated.reason}`,
+          status: 'donation',
+          notes: `Quyên góp: ${validated.reason}`,
           updated_at: new Date().toISOString(),
         })
         .eq('id', validated.registration_id);
 
       if (updateError) {
-        console.error('Error updating registration for donation:', updateError);
+        console.error('Lỗi cập nhật đăng ký cho quyên góp:', updateError);
         return NextResponse.json(
-          { error: 'Failed to process donation' },
+          { error: 'Không thể xử lý quyên góp' },
           { status: 500 }
         );
       }
 
       return NextResponse.json({
         success: true,
-        message: 'Thank you for your donation! Registration has been cancelled.',
+        message: 'Cảm ơn bạn đã đóng góp cho sự kiện. Đăng ký của bạn đã được huỷ.',
         type: 'donation'
       }, { status: 201 });
     }
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     if (createError) {
       console.error('Error creating cancel request:', createError);
       return NextResponse.json(
-        { error: 'Failed to create cancel request' },
+        { error: 'Không thể tạo yêu cầu huỷ' },
         { status: 500 }
       );
     }
@@ -131,8 +131,8 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabase
       .from('registrations')
       .update({
-        status: 'cancelled',
-        notes: `Cancel request submitted: ${validated.reason}`,
+        status: 'cancel_pending',
+        notes: `Lý do huỷ: ${validated.reason}`,
         updated_at: new Date().toISOString(),
       })
       .eq('id', validated.registration_id);
@@ -144,20 +144,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ...cancelRequest,
-      message: 'Cancel request submitted successfully. We will process your refund within 3-5 business days.',
+      message: 'Yêu cầu huỷ đã được gửi thành công. Chúng tôi sẽ xử lý hoàn tiền sau ngày 15 tháng 9 trong vòng 7 ngày làm việc.',
       type: 'refund'
     }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
+	  console.error('Validation error:', error);
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Yêu cầu không hợp lệ', details: error.errors },
         { status: 400 }
       );
     }
 
     console.error('Error creating cancel request:', error);
     return NextResponse.json(
-      { error: 'Failed to create cancel request' },
+      { error: 'Không thể tạo yêu cầu huỷ' },
       { status: 500 }
     );
   }

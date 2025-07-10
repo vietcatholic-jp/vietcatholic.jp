@@ -60,10 +60,10 @@ export function RegistrationActions({
   // Check if cancellation is allowed based on event config
   const canCancel = () => {
     // Can cancel if status allows cancellation
-    const cancellableStatuses = ['pending', 'report_paid', 'confirm_paid', 'payment_rejected'];
-    if (!cancellableStatuses.includes(status)) {
-      return false;
-    }
+    //const cancellableStatuses = ['pending', 'report_paid', 'confirm_paid', 'payment_rejected'];
+    //if (!cancellableStatuses.includes(status)) {
+    //  return false;
+    //}
 
     // Check cancellation deadline if exists
     if (eventConfig?.cancellation_deadline) {
@@ -76,6 +76,7 @@ export function RegistrationActions({
 
     return !hasTickets;
   };
+
   const handleDelete = async () => {
     if (!confirm(`Bạn có chắc chắn muốn xóa đăng ký #${invoiceCode}?`)) {
       return;
