@@ -1,6 +1,7 @@
 "use client";
 
 import { RegistrationsList } from "@/components/admin/registrations-list";
+import { GroupLeaderRegistrations } from "@/components/admin/group-leader-registrations";
 import { useAdminData } from "@/components/admin/admin-context";
 
 export function AdminRegistrations() {
@@ -12,6 +13,12 @@ export function AdminRegistrations() {
 
   const userRole = data.userProfile?.role || 'participant';
 
+  // Group leaders get a specialized view
+  if (userRole === 'group_leader') {
+    return <GroupLeaderRegistrations />;
+  }
+
+  // Other admin roles get the standard registrations list
   return (
     <RegistrationsList 
       registrations={data.recentRegistrations} 
