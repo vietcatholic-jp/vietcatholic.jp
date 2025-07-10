@@ -85,9 +85,8 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
       </div>
 
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Chào mừng đến với Đại hội Công giáo!</h2>
         <p className="text-muted-foreground">
-          Bạn tham gia sự kiện với vai trò gì? Điều này giúp chúng tôi chuẩn bị tốt hơn cho bạn.
+          Bạn tham gia sự kiện với vai trò gì?
         </p>
       </div>
 

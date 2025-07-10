@@ -47,7 +47,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
   }
 
   // Only allow access if payment is confirmed
-  if (registration.status !== 'paid' && registration.status !== 'confirmed') {
+  if (registration.status !== 'confirmed' && registration.status !== 'checked_in') {
     redirect(`/payment/${invoiceCode}`);
   }
 
@@ -66,7 +66,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold mb-4">
-              Vé tham gia Đại hội 2025
+              Vé tham gia ĐẠI HỘI TOÀN QUỐC NĂM THÁNH 2025
             </h1>
             <p className="text-muted-foreground">
               Mã đăng ký: <span className="font-mono font-medium">{registration.invoice_code}</span>
@@ -166,7 +166,6 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
                         {!registrant.portrait_url && (
                           <PortraitUpload
                             registrantId={registrant.id}
-                            onUploadComplete={() => window.location.reload()}
                           />
                         )}
                       </div>

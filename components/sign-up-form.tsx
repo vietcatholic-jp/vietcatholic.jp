@@ -67,6 +67,10 @@ export function SignUpForm({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          // For Facebook, request additional profile information
+          ...(provider === 'facebook' && {
+            scopes: 'public_profile',
+          }),
         },
       });
       if (error) throw error;

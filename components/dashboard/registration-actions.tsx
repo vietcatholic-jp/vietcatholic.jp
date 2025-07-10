@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Settings, Trash2 } from "lucide-react";
+import { Settings, Trash2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -12,15 +12,20 @@ interface RegistrationActionsProps {
   invoiceCode: string;
   status: string;
   registrantIds: string[];
+  eventConfig?: {
+    cancellation_deadline?: string;
+  } | null;
 }
 
 export function RegistrationActions({ 
   registrationId, 
   invoiceCode, 
   status, 
-  registrantIds 
+  registrantIds,
+  eventConfig
 }: RegistrationActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [hasTickets, setHasTickets] = useState(false);
   const router = useRouter();
 
@@ -43,6 +48,55 @@ export function RegistrationActions({
     checkTickets();
   }, [registrantIds]);
 
+  const handleCancel = async () => {
+    if (!confirm(`Bạn có chắc chắn muốn hủy đăng ký #${invoiceCode}? Thao tác này không thể hoàn tác.`)) {
+      return;
+    }
+
+    setIsCancelling(true);
+    
+    try {
+      const response = await fetch(`/api/registrations/${registrationId}/cancel`, {
+        method: 'POST',
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Cancel failed');
+      }
+
+      toast.success("Hủy đăng ký thành công!");
+      router.refresh();
+      setTimeout(() => window.location.reload(), 500);
+      
+    } catch (error) {
+      console.error('Cancel error:', error);
+      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra khi hủy đăng ký");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  // Check if cancellation is allowed based on event config
+  const canCancel = () => {
+    // Can cancel if status allows cancellation
+    const cancellableStatuses = ['pending', 'report_paid', 'confirm_paid', 'payment_rejected'];
+    if (!cancellableStatuses.includes(status)) {
+      return false;
+    }
+
+    // Check cancellation deadline if exists
+    if (eventConfig?.cancellation_deadline) {
+      const deadline = new Date(eventConfig.cancellation_deadline);
+      const now = new Date();
+      if (now > deadline) {
+        return false;
+      }
+    }
+
+    return !hasTickets;
+  };
   const handleDelete = async () => {
     if (!confirm(`Bạn có chắc chắn muốn xóa đăng ký #${invoiceCode}?`)) {
       return;
@@ -76,29 +130,68 @@ export function RegistrationActions({
     }
   };
 
-  // Only show actions for pending registrations without tickets
-  if (status !== 'pending' || hasTickets) {
+  const showCancelButton = () => {
+    // Show cancel button for paid statuses
+    const cancellableStatuses = ['report_paid', 'confirm_paid'];
+    return cancellableStatuses.includes(status) && canCancel();
+  };
+
+  // Show actions based on registration status and user permissions
+  const showEditButton = () => {
+    // Allow editing for pending and payment_rejected status (before payment is confirmed)
+    if (status === 'pending' || status === 'payment_rejected') {
+      return !hasTickets;
+    }
+    return false;
+  };
+
+  const showDeleteButton = () => {
+    // Allow deletion for pending and payment_rejected status only
+    if (status === 'pending' || status === 'payment_rejected') {
+      return !hasTickets;
+    }
+    return false;
+  };
+
+  // Don't show any actions if user can't modify the registration
+  if (!showEditButton() && !showDeleteButton() && !showCancelButton()) {
     return null;
   }
 
   return (
     <>
-      <Link href={`/register/${registrationId}`}>
-        <Button size="sm" variant="outline">
-          <Settings className="h-3 w-3 mr-1" />
-          Chỉnh sửa
+      {showEditButton() && (
+        <Link href={`/register/${registrationId}`}>
+          <Button size="sm" variant="outline" className="text-xs">
+            <Settings className="h-3 w-3 mr-1" />
+            Chỉnh sửa
+          </Button>
+        </Link>
+      )}
+      {showCancelButton() && (
+        <Button 
+          size="sm" 
+          variant="outline"
+          className="text-orange-600 hover:text-orange-700 text-xs"
+          onClick={handleCancel}
+          disabled={isCancelling}
+        >
+          <XCircle className="h-3 w-3 mr-1" />
+          {isCancelling ? 'Đang hủy...' : 'Hủy đăng ký'}
         </Button>
-      </Link>
-      <Button 
-        size="sm" 
-        variant="outline"
-        className="text-red-600 hover:text-red-700"
-        onClick={handleDelete}
-        disabled={isDeleting}
-      >
-        <Trash2 className="h-3 w-3 mr-1" />
-        {isDeleting ? 'Đang xóa...' : 'Xóa'}
-      </Button>
+      )}
+      {showDeleteButton() && (
+        <Button 
+          size="sm" 
+          variant="outline"
+          className="text-red-600 hover:text-red-700 text-xs"
+          onClick={handleDelete}
+          disabled={isDeleting}
+        >
+          <Trash2 className="h-3 w-3 mr-1" />
+          {isDeleting ? 'Đang xóa...' : 'Xóa'}
+        </Button>
+      )}
     </>
   );
 }
