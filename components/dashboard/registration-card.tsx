@@ -43,11 +43,14 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-50 border-green-200 text-green-800';
+      case 'donation': return 'bg-green-50 border-green-200 text-green-800';
       case 'confirm_paid': return 'bg-blue-50 border-blue-200 text-blue-800';
       case 'report_paid': return 'bg-purple-50 border-purple-200 text-purple-800';
       case 'pending': return 'bg-amber-50 border-amber-200 text-amber-800';
       case 'payment_rejected': return 'bg-red-50 border-red-200 text-red-800';
       case 'cancelled': return 'bg-red-50 border-red-200 text-red-800';
+      case 'cancel_pending': return 'bg-red-50 border-red-200 text-red-800';
+      case 'cancel_accepted': return 'bg-red-50 border-red-200 text-red-800';
       case 'checked_in': return 'bg-emerald-50 border-emerald-200 text-emerald-800';
       case 'checked_out': return 'bg-gray-50 border-gray-200 text-gray-800';
       default: return 'bg-gray-50 border-gray-200 text-gray-800';
@@ -62,6 +65,9 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
       case 'pending': return <Clock className="h-4 w-4" />;
       case 'payment_rejected': return <XCircle className="h-4 w-4" />;
       case 'cancelled': return <XCircle className="h-4 w-4" />;
+      case 'cancel_pending': return <Clock className="h-4 w-4" />;
+      case 'cancel_accepted': return <CheckCircle className="h-4 w-4" />;
+      case 'donation': return <CreditCard className="h-4 w-4" />;
       case 'checked_in': return <CheckCircle className="h-4 w-4" />;
       case 'checked_out': return <CheckCircle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
@@ -74,8 +80,12 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
       case 'report_paid': return 'Chờ xác nhận từ admin';
       case 'confirm_paid': return 'Đã xác nhận thanh toán';
       case 'payment_rejected': return 'Thanh toán bị từ chối';
-      case 'confirmed': return 'Đã xác nhận';
+      case 'donation': return 'Huỷ và quyên góp';
       case 'cancelled': return 'Đã hủy';
+      case 'cancel_pending': return 'Yêu cầu hủy đang chờ xử lý';
+      case 'cancel_accepted': return 'Yêu cầu hủy đã được chấp nhận';
+      case 'cancel_rejected': return 'Yêu cầu hủy đã bị từ chối';
+      case 'confirmed': return 'Đã xác nhận';
       case 'checked_in': return 'Đã check-in';
       case 'checked_out': return 'Đã check-out';
       default: return status;
@@ -88,17 +98,17 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
         {/* Header - Always visible */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium ${getStatusColor(registration.status)}`}>
-              {getStatusIcon(registration.status)}
-              <span className="hidden sm:inline">{getStatusText(registration.status)}</span>
-            </div>
             <div className="min-w-0 flex-1">
               <div className="font-mono text-sm font-medium text-muted-foreground">
-                #{registration.invoice_code}
+                {registration.invoice_code}
               </div>
               <div className="text-xs text-muted-foreground">
                 {new Date(registration.created_at).toLocaleDateString('vi-VN')}
               </div>
+            </div>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium ${getStatusColor(registration.status)}`}>
+              {getStatusIcon(registration.status)}
+              <span className="inline">{getStatusText(registration.status)}</span>
             </div>
           </div>
           <Button

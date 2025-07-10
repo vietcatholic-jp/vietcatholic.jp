@@ -12,7 +12,11 @@ create type registration_status as enum (
   'report_paid',      -- User uploaded payment receipt
   'confirm_paid',     -- Admin confirmed payment is correct
   'payment_rejected', -- Admin rejected payment
+  'donation',         -- User chose to donate instead of cancelling
   'cancelled',        -- Registration cancelled
+  'cancel_pending',   -- Cancellation request pending admin review
+  'cancel_accepted',  -- Admin accepted cancellation
+  'cancel_rejected',  -- Admin rejected cancellation
   'confirmed',        -- Fully confirmed, tickets can be generated
   'checked_in',       -- Participant checked in at event
   'checked_out'       -- Participant checked out from event

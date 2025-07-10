@@ -92,6 +92,7 @@ export function CancelRequestForm({
       const submitData = {
         registration_id: data.registration_id,
         reason: data.reason,
+		request_type: data.request_type,
         ...(data.request_type === 'refund' && {
           bank_account_number: data.bank_account_number,
           bank_name: data.bank_name,
@@ -110,7 +111,7 @@ export function CancelRequestForm({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit cancel request');
+        throw new Error(result.error || 'Yêu cầu hủy đăng ký không thành công');
       }
 
       if (data.request_type === 'donation') {
