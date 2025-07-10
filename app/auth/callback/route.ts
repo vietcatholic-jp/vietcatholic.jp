@@ -20,17 +20,21 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (!existingProfile) {
-        // Create user profile from OAuth data
+        // Create user profile from OAuth data or email signup
+        // Construct full name from various sources
+        const fullName = data.user.user_metadata?.full_name ||
+                        data.user.user_metadata?.name ||
+                        `${data.user.user_metadata?.given_name || ''} ${data.user.user_metadata?.family_name || ''}`.trim() ||
+                        data.user.email?.split('@')[0] || '';
+
         const { error: profileError } = await supabase
           .from("users")
           .insert({
             id: data.user.id,
             email: data.user.email,
-            full_name: data.user.user_metadata?.full_name || '',
+            full_name: fullName,
             avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture,
-            facebook_url: null, // No longer using Facebook auth
             role: 'participant', // Default role
-            onboarding_completed: false,
           });
 
         if (profileError) {
