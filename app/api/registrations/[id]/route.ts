@@ -96,7 +96,7 @@ export async function PUT(
       .eq("is_active", true)
       .single();
 
-    const basePrice = eventConfig?.base_price || 50000;
+    const basePrice = eventConfig?.base_price || 6000;
 
     // Update registration record
     const { error: updateRegError } = await supabase

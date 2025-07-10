@@ -128,7 +128,7 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
   });
 
   const registrants = watch("registrants");
-  const basePrice = 5000; // Base price in JPY per person
+  const basePrice = 6000; // Base price in JPY per person
   const totalAmount = registrants.length * basePrice;
 
   const handleRoleSelection = (role: EventParticipationRole) => {
