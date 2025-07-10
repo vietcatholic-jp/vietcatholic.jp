@@ -10,7 +10,8 @@ export function LogoutButton() {
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/auth/login");
+    // Redirect to homepage after logout
+    router.push("/");
   };
 
   return <Button onClick={logout}>Đăng xuất</Button>;

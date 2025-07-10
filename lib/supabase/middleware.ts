@@ -54,17 +54,36 @@ export async function updateSession(request: NextRequest) {
     '/auth/forgot-password',
     '/auth/sign-up-success',
     '/auth/update-password',
-    '/register', // Public registration page
-    '/agenda', // Public agenda
+  ];
+
+  // Protected routes that require authentication
+  const protectedRoutes = [
+    '/dashboard',
+    '/profile',
+    '/register',
+    '/agenda',
+    '/admin',
   ];
 
   // Check if current route is public
-  const isPublicRoute = publicRoutes.some(route => 
+  const isPublicRoute = publicRoutes.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
+  );
+
+  // Check if current route is protected
+  const isProtectedRoute = protectedRoutes.some(route =>
     pathname === route || pathname.startsWith(route + '/')
   );
 
   // If user is not authenticated and trying to access protected route
-  if (!user && !isPublicRoute) {
+  if (!user && isProtectedRoute) {
+    url.pathname = "/auth/login";
+    url.searchParams.set('redirectTo', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // If user is not authenticated and trying to access non-public route
+  if (!user && !isPublicRoute && !isProtectedRoute) {
     url.pathname = "/auth/login";
     url.searchParams.set('redirectTo', pathname);
     return NextResponse.redirect(url);
