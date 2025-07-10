@@ -8,7 +8,7 @@ const RegistrantSchema = z.object({
   saint_name: z.string().optional(),
   full_name: z.string().min(1),
   gender: z.enum(['male', 'female', 'other']),
-  age_group: z.enum(['under_18', '18_25', '26_35', '36_50', 'over_50']),
+  age_group: z.enum(['under_12', '12_17', '18_25', '26_35', '36_50', 'over_50']),
   province: z.string().optional(),
   diocese: z.string().optional(),
   address: z.string().optional(),

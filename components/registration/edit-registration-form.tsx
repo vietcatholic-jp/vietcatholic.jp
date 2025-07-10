@@ -455,9 +455,8 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                           {errors.registrants[index]?.facebook_link?.message}
                         </p>
                       )}
-                      {isPrimary && (
+                      {isPrimary && !registrants?.[index]?.facebook_link && (
                         <div className="text-xs text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
-                          <strong>----required for primary register----</strong><br/>
                           Link facebook được lấy ở phần cài đặt trong trang cá nhân → 
                           Bấm vào dấu ... bên cạnh nút chỉnh sửa trang cá nhân → Kéo xuống phía dưới cùng, bạn sẽ thấy chữ copy link, bấm vào đó để sao chép → dán vào đây.
                         </div>

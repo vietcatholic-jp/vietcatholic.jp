@@ -130,6 +130,8 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
             invoiceCode={registration.invoice_code}
             status={registration.status}
             registrantIds={registration.registrants?.map((r: Registrant) => r.id) || []}
+            totalAmount={registration.total_amount}
+            participantCount={registration.participant_count}
             eventConfig={eventConfig}
           />
           

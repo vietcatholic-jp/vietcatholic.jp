@@ -231,6 +231,68 @@ export interface Database {
   };
 }
 
+export interface CancelRequest {
+  id: string;
+  registration_id: string;
+  user_id: string;
+  reason: string;
+  bank_account_number: string;
+  bank_name: string;
+  account_holder_name: string;
+  refund_amount: number;
+  status: 'pending' | 'approved' | 'rejected' | 'processed';
+  processed_at?: string;
+  processed_by?: string;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+  registration?: Registration;
+  user?: User;
+}
+
+export interface TransportationGroup {
+  id: string;
+  name: string;
+  region: RegionType;
+  departure_location: string;
+  departure_time: string;
+  arrival_location?: string;
+  capacity: number;
+  current_count: number;
+  vehicle_type?: string;
+  contact_person?: string;
+  contact_phone?: string;
+  notes?: string;
+  status: 'active' | 'full' | 'cancelled';
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  creator?: User;
+  registrations?: TransportationRegistration[];
+}
+
+export interface TransportationRegistration {
+  id: string;
+  transportation_group_id: string;
+  registrant_id: string;
+  registered_by: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  special_needs?: string;
+  created_at: string;
+  transportation_group?: TransportationGroup;
+  registrant?: Registrant;
+  registered_by_user?: User;
+}
+
+export interface PaymentStats {
+  totalReceived: number;
+  pendingPayments: number;
+  cancelRequests: number;
+  refundsPending: number;
+  totalRefunded: number;
+}
+
 // Constants
 export const REGIONS: { value: RegionType; label: string }[] = [
   { value: 'kanto', label: 'Kanto' },
