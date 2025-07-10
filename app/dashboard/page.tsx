@@ -45,9 +45,6 @@ export default async function DashboardPage({
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
-  if (registrations) {
-    console.log('Registrations:', registrations[0]?.receipts);
-  }
 
   // Handle error messages from redirects
   const resolvedSearchParams = await searchParams;

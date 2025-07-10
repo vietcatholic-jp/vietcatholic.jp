@@ -70,24 +70,6 @@ export async function signInWithGoogle() {
   return data;
 }
 
-export async function signInWithFacebook() {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'facebook',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-      scopes: 'public_profile',
-    },
-  });
-
-  if (error) {
-    throw new AuthError(error.message, error.message);
-  }
-
-  return data;
-}
-
 export async function signOut() {
   const supabase = createClient();
   

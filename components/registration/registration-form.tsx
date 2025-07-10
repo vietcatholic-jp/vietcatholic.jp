@@ -59,7 +59,7 @@ const additionalRegistrantSchema = z.object({
   gender: z.enum(['male', 'female', 'other'] as const, {
     required_error: "Vui lòng chọn giới tính"
   }),
-  age_group: z.enum(['under_18', '18_25', '26_35', '36_50', 'over_50'] as const, {
+  age_group: z.enum(['under_12', '12_17', '18_25', '26_35', '36_50', 'over_50'] as const, {
     required_error: "Vui lòng chọn độ tuổi"
   }),
   province: z.string().optional(),
@@ -135,7 +135,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           saint_name: "",
           full_name: userName || "",
           gender: "male" as const,
-          age_group: "26_35" as const,
+          age_group: "18_25" as const,
           province: "",
           diocese: "",
           shirt_size: "M" as const,
@@ -160,7 +160,10 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
   const registrants = watch("registrants");
   const basePrice = eventConfig?.base_price || 6000; // Dynamic price from event config
-  const totalAmount = registrants.length * basePrice;
+  const totalAmount = registrants.reduce((total, registrant) => {
+    const price = registrant.age_group === 'under_12' ? basePrice * 0.5 : basePrice;
+    return total + price;
+  }, 0);
 
   const handleRoleSelection = (role: EventParticipationRole) => {
     setSelectedRole(role);
@@ -478,7 +481,9 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                     </div>
 
                     <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.facebook_link`}>Link Facebook</Label>
+                          <Label htmlFor={`registrants.${index}.facebook_link`}>
+                            Link Facebook {isPrimary ? "*" : ""}
+                          </Label>
                           <Input
                             id={`registrants.${index}.facebook_link`}
                             {...register(`registrants.${index}.facebook_link`)}
@@ -491,8 +496,14 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           )}
                           {isPrimary && userFacebookUrl && (
                             <p className="text-xs text-muted-foreground">
-                              Tự động điền từ tài khoản Facebook của bạn
+                              Tự động điền từ tài khoản của bạn
                             </p>
+                          )}
+                          {isPrimary && !userFacebookUrl && (
+                            <div className="text-xs text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                              Link facebook được lấy ở phần cài đặt trong trang cá nhân → 
+                              Bấm vào dấu ... bên cạnh nút chỉnh sửa trang cá nhân → Kéo xuống phía dưới cùng, bạn sẽ thấy chữ copy link, bấm vào đó để sao chép → dán vào đây.
+                            </div>
                           )}
                         </div>
 
@@ -620,10 +631,27 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                 <span>Số người tham gia:</span>
                 <span className="font-medium">{registrants.length}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Chi phí mỗi người:</span>
-                <span className="font-medium">¥{basePrice.toLocaleString()}</span>
-              </div>
+              {/* Show breakdown by age group */}
+              {registrants.some(r => r.age_group === 'under_12') && (
+                <div className="text-sm space-y-1 pl-4 border-l-2 border-blue-200">
+                  <div className="flex justify-between">
+                    <span>Trẻ em dưới 12 tuổi ({registrants.filter(r => r.age_group === 'under_12').length} người):</span>
+                    <span>¥{(basePrice * 0.5).toLocaleString()}/người</span>
+                  </div>
+                  {registrants.some(r => r.age_group !== 'under_12') && (
+                    <div className="flex justify-between">
+                      <span>Từ 12 tuổi trở lên ({registrants.filter(r => r.age_group !== 'under_12').length} người):</span>
+                      <span>¥{basePrice.toLocaleString()}/người</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {!registrants.some(r => r.age_group === 'under_12') && (
+                <div className="flex justify-between">
+                  <span>Chi phí mỗi người:</span>
+                  <span className="font-medium">¥{basePrice.toLocaleString()}</span>
+                </div>
+              )}
               <div className="border-t pt-2">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Tổng chi phí:</span>

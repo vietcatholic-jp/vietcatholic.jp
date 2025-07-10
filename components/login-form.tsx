@@ -16,7 +16,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
 
 export function LoginForm({
   className,
@@ -42,13 +41,13 @@ export function LoginForm({
       if (error) throw error;
       router.push("/dashboard");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
+  const handleOAuthLogin = async (provider: 'google') => {
     const supabase = createClient();
     setError(null);
 
@@ -57,15 +56,11 @@ export function LoginForm({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-          // For Facebook, request additional profile information
-          ...(provider === 'facebook' && {
-            scopes: 'public_profile',
-          }),
         },
       });
       if (error) throw error;
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     }
   };
 
@@ -73,9 +68,9 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Đăng nhập</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Nhập email của bạn để đăng nhập vào tài khoản
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,17 +84,11 @@ export function LoginForm({
                   onClick={() => handleOAuthLogin('google')}
                 >
                   <FcGoogle className="h-4 w-4 mr-2" />
-                  Continue with Google
+                  Tiếp tục với Google
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleOAuthLogin('facebook')}
-                >
-                  <FaFacebook className="h-4 w-4 mr-2 text-blue-600" />
-                  Continue with Facebook
-                </Button>
+                <p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  💡 <strong>Khuyến nghị:</strong> Sử dụng Google để đăng nhập thuận tiện và nhanh chóng hơn!
+                </p>
               </div>
               
               <div className="relative">
@@ -108,7 +97,7 @@ export function LoginForm({
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
+                    Hoặc tiếp tục với
                   </span>
                 </div>
               </div>
@@ -126,12 +115,12 @@ export function LoginForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Mật khẩu</Label>
                   <Link
                     href="/auth/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    Quên mật khẩu?
                   </Link>
                 </div>
                 <Input
@@ -144,16 +133,16 @@ export function LoginForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
+              Chưa có tài khoản?{" "}
               <Link
                 href="/auth/sign-up"
                 className="underline underline-offset-4"
               >
-                Sign up
+                Đăng ký
               </Link>
             </div>
           </form>

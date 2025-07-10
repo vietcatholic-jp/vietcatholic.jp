@@ -16,7 +16,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
 
 export function SignUpForm({
   className,
@@ -36,7 +35,7 @@ export function SignUpForm({
     setError(null);
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match");
+      setError("Mật khẩu không khớp");
       setIsLoading(false);
       return;
     }
@@ -52,13 +51,13 @@ export function SignUpForm({
       if (error) throw error;
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOAuthSignUp = async (provider: 'google' | 'facebook') => {
+  const handleOAuthSignUp = async (provider: 'google') => {
     const supabase = createClient();
     setError(null);
 
@@ -67,15 +66,11 @@ export function SignUpForm({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-          // For Facebook, request additional profile information
-          ...(provider === 'facebook' && {
-            scopes: 'public_profile',
-          }),
         },
       });
       if (error) throw error;
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     }
   };
 
@@ -83,8 +78,8 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardTitle className="text-2xl">Đăng ký</CardTitle>
+          <CardDescription>Tạo tài khoản mới</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
@@ -97,17 +92,11 @@ export function SignUpForm({
                   onClick={() => handleOAuthSignUp('google')}
                 >
                   <FcGoogle className="h-4 w-4 mr-2" />
-                  Đăng nhập bằng Google
+                  Đăng ký bằng Google
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleOAuthSignUp('facebook')}
-                >
-                  <FaFacebook className="h-4 w-4 mr-2 text-blue-600" />
-                  Đăng nhập bằng Facebook
-                </Button>
+                <p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  💡 <strong>Khuyến nghị:</strong> Sử dụng Google để đăng ký thuận tiện và nhanh chóng hơn!
+                </p>
               </div>
               
               <div className="relative">
@@ -158,7 +147,7 @@ export function SignUpForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+                {isLoading ? "Đang tạo tài khoản..." : "Đăng ký"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">

@@ -28,7 +28,7 @@ const RegistrantSchema = z.object({
   saint_name: z.string().optional(),
   full_name: z.string().min(1, "Họ và tên là bắt buộc"),
   gender: z.enum(['male', 'female', 'other'] as const),
-  age_group: z.enum(['under_18', '18_25', '26_35', '36_50', 'over_50'] as const),
+  age_group: z.enum(['under_12', '12_17', '18_25', '26_35', '36_50', 'over_50'] as const),
   province: z.string().optional(),
   diocese: z.string().optional(),
   address: z.string().optional(),
@@ -454,6 +454,13 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                         <p className="text-sm text-destructive">
                           {errors.registrants[index]?.facebook_link?.message}
                         </p>
+                      )}
+                      {isPrimary && (
+                        <div className="text-xs text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                          <strong>----required for primary register----</strong><br/>
+                          Link facebook được lấy ở phần cài đặt trong trang cá nhân → 
+                          Bấm vào dấu ... bên cạnh nút chỉnh sửa trang cá nhân → Kéo xuống phía dưới cùng, bạn sẽ thấy chữ copy link, bấm vào đó để sao chép → dán vào đây.
+                        </div>
                       )}
                     </div>
 

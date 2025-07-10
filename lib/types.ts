@@ -1,7 +1,7 @@
 export type UserRole = 'participant' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin';
 export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | 'shikoku' | 'tohoku' | 'hokkaido';
 export type GenderType = 'male' | 'female' | 'other';
-export type AgeGroupType = 'under_18' | '18_25' | '26_35' | '36_50' | 'over_50';
+export type AgeGroupType = 'under_12' | '12_17' | '18_25' | '26_35' | '36_50' | 'over_50';
 export type ShirtSizeType = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
 export type RegistrationStatus = 
   | 'pending'          // Initial registration, waiting for payment
@@ -34,6 +34,7 @@ export interface User {
   avatar_url?: string;
   facebook_url?: string;
   region?: RegionType;
+  province?: string;
   role: UserRole;
   created_at: string;
   updated_at: string;
@@ -269,7 +270,8 @@ export const GENDERS: { value: GenderType; label: string }[] = [
 ];
 
 export const AGE_GROUPS: { value: AgeGroupType; label: string }[] = [
-  { value: 'under_18', label: 'Dưới 18 tuổi' },
+  { value: 'under_12', label: 'Dưới 12 tuổi' },
+  { value: '12_17', label: '12-17 tuổi' },
   { value: '18_25', label: '18-25 tuổi' },
   { value: '26_35', label: '26-35 tuổi' },
   { value: '36_50', label: '36-50 tuổi' },
