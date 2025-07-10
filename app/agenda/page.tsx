@@ -95,7 +95,7 @@ export default async function AgendaPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-4">
-              Chương trình Đại hội 2025
+              Chương trình ĐẠI HỘI TOÀN QUỐC NĂM THÁNH 2025
             </h1>
             <p className="text-muted-foreground text-lg">
               Lịch trình chi tiết các hoạt động trong Đại hội

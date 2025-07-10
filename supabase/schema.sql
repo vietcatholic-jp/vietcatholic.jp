@@ -7,7 +7,16 @@ create type region_type as enum ('kanto', 'kansai', 'chubu', 'kyushu', 'chugoku'
 create type gender_type as enum ('male', 'female', 'other');
 create type age_group_type as enum ('under_18', '18_25', '26_35', '36_50', 'over_50');
 create type shirt_size_type as enum ('XS', 'S', 'M', 'L', 'XL', 'XXL');
-create type registration_status as enum ('pending', 'paid', 'cancelled', 'confirmed');
+create type registration_status as enum (
+  'pending',          -- Initial registration, waiting for payment
+  'report_paid',      -- User uploaded payment receipt
+  'confirm_paid',     -- Admin confirmed payment is correct
+  'payment_rejected', -- Admin rejected payment
+  'cancelled',        -- Registration cancelled
+  'confirmed',        -- Fully confirmed, tickets can be generated
+  'checked_in',       -- Participant checked in at event
+  'checked_out'       -- Participant checked out from event
+);
 
 -- Event participation roles
 create type event_participation_role as enum (
@@ -300,7 +309,7 @@ declare
   exists_code boolean;
 begin
   loop
-    code := 'INV-' || to_char(now(), 'YYYY') || '-' || lpad(floor(random() * 999999)::text, 6, '0');
+    code := to_char(now(), 'YYYY') || '-' || lpad(floor(random() * 999999)::text, 6, '0');
     select exists(select 1 from public.registrations where invoice_code = code) into exists_code;
     if not exists_code then
       exit;
@@ -349,8 +358,11 @@ SELECT
   r.event_role,
   COUNT(*) as total_count,
   COUNT(CASE WHEN reg.status = 'confirmed' THEN 1 END) as confirmed_count,
-  COUNT(CASE WHEN reg.status = 'paid' THEN 1 END) as paid_count,
-  COUNT(CASE WHEN reg.status = 'pending' THEN 1 END) as pending_count
+  COUNT(CASE WHEN reg.status = 'confirm_paid' THEN 1 END) as confirm_paid_count,
+  COUNT(CASE WHEN reg.status = 'report_paid' THEN 1 END) as report_paid_count,
+  COUNT(CASE WHEN reg.status = 'pending' THEN 1 END) as pending_count,
+  COUNT(CASE WHEN reg.status = 'payment_rejected' THEN 1 END) as payment_rejected_count,
+  COUNT(CASE WHEN reg.status = 'checked_in' THEN 1 END) as checked_in_count
 FROM public.registrants r
 JOIN public.registrations reg ON reg.id = r.registration_id
 GROUP BY r.event_role
@@ -392,7 +404,7 @@ BEGIN
     END as role_label,
     COUNT(*) as total_count,
     COUNT(CASE WHEN reg.status = 'confirmed' THEN 1 END) as confirmed_count,
-    COUNT(CASE WHEN reg.status = 'paid' THEN 1 END) as paid_count,
+    COUNT(CASE WHEN reg.status IN ('report_paid', 'confirm_paid') THEN 1 END) as paid_count,
     COUNT(CASE WHEN reg.status = 'pending' THEN 1 END) as pending_count
   FROM public.registrants r
   JOIN public.registrations reg ON reg.id = r.registration_id

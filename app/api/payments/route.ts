@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Registration not found" }, { status: 404 });
     }
 
-    if (registration.status !== "pending_payment") {
-      return NextResponse.json({ error: "Registration is not pending payment" }, { status: 400 });
+    if (registration.status !== "pending") {
+      return NextResponse.json({ error: "Registration is not pending" }, { status: 400 });
     }
 
     // Create receipt record
@@ -43,10 +43,8 @@ export async function POST(request: NextRequest) {
       .from("receipts")
       .insert({
         registration_id: registration.id,
-        receipt_url: validated.receiptUrl,
-        amount: validated.amount,
-        notes: validated.notes,
-        status: "pending_verification",
+        file_path: validated.receiptUrl,
+        file_name: validated.receiptUrl.split('/').pop() || "receipt.jpg",
       })
       .select()
       .single();
@@ -59,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Update registration status
     const { error: updateError } = await supabase
       .from("registrations")
-      .update({ status: "payment_submitted" })
+      .update({ status: "report_paid" })
       .eq("id", registration.id);
 
     if (updateError) {
@@ -108,54 +106,53 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { receiptId, status, adminNotes } = await request.json();
+    const { registrationId, status, adminNotes } = await request.json();
 
-    if (!["approved", "rejected"].includes(status)) {
+    if (!["confirm_paid", "payment_rejected"].includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    // Update receipt status
-    const { data: receipt, error: receiptError } = await supabase
-      .from("receipts")
-      .update({
-        status,
-        admin_notes: adminNotes,
-        verified_at: status === "approved" ? new Date().toISOString() : null,
-        verified_by: user.id,
-      })
-      .eq("id", receiptId)
-      .select()
+    // Find the registration to update
+    const { data: registration, error: regError } = await supabase
+      .from("registrations")
+      .select("*")
+      .eq("id", registrationId)
       .single();
 
-    if (receiptError) {
-      console.error("Receipt update error:", receiptError);
-      return NextResponse.json({ error: "Failed to update receipt" }, { status: 500 });
+    if (regError || !registration) {
+      return NextResponse.json({ error: "Registration not found" }, { status: 404 });
+    }
+
+    if (registration.status !== "report_paid") {
+      return NextResponse.json({ error: "Registration is not in report_paid status" }, { status: 400 });
     }
 
     // Update registration status
-    const newRegStatus = status === "approved" ? "confirmed" : "payment_rejected";
+    const newRegStatus = status === "confirm_paid" ? "confirmed" : "payment_rejected";
     const { error: regUpdateError } = await supabase
       .from("registrations")
-      .update({ status: newRegStatus })
-      .eq("id", receipt.registration_id);
+      .update({ 
+        status: newRegStatus,
+        notes: adminNotes || registration.notes 
+      })
+      .eq("id", registrationId);
 
     if (regUpdateError) {
       console.error("Registration status update error:", regUpdateError);
+      return NextResponse.json({ error: "Failed to update registration" }, { status: 500 });
     }
 
-    // If approved, generate tickets
-    if (status === "approved") {
+    // If confirmed, generate tickets
+    if (status === "confirm_paid") {
       const { data: registrants } = await supabase
         .from("registrants")
         .select("*")
-        .eq("registration_id", receipt.registration_id);
+        .eq("registration_id", registrationId);
 
       if (registrants) {
         const ticketsData = registrants.map(registrant => ({
           registrant_id: registrant.id,
-          registration_id: receipt.registration_id,
-          ticket_code: `TKT-${Date.now()}-${registrant.id}`,
-          status: "active",
+          qr_code: `QR-${Date.now()}-${registrant.id}`,
         }));
 
         await supabase.from("tickets").insert(ticketsData);
@@ -164,8 +161,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      receipt,
-      message: `Payment ${status} successfully` 
+      message: `Payment ${status === "confirm_paid" ? "confirmed" : "rejected"} successfully` 
     });
 
   } catch (error) {

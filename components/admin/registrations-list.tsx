@@ -47,14 +47,22 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'paid':
-        return <Badge className="bg-green-500">Đã thanh toán</Badge>;
+      case 'confirmed':
+        return <Badge className="bg-green-500">Đã xác nhận</Badge>;
+      case 'confirm_paid':
+        return <Badge className="bg-blue-500">Đã xác nhận thanh toán</Badge>;
+      case 'report_paid':
+        return <Badge className="bg-purple-500">Đã gửi biên lai</Badge>;
       case 'pending':
         return <Badge variant="secondary">Chờ thanh toán</Badge>;
-      case 'confirmed':
-        return <Badge className="bg-blue-500">Đã xác nhận</Badge>;
+      case 'payment_rejected':
+        return <Badge variant="destructive">Thanh toán bị từ chối</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Đã hủy</Badge>;
+      case 'checked_in':
+        return <Badge className="bg-emerald-500">Đã check-in</Badge>;
+      case 'checked_out':
+        return <Badge className="bg-gray-500">Đã check-out</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

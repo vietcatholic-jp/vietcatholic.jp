@@ -43,7 +43,7 @@ export function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg bg-gradient-to-r from-blue-700 to-purple-600 bg-clip-text text-transparent">
-                  Đại hội 2025
+                  Đại hội Năm Thánh 2025
                 </span>
                 <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
