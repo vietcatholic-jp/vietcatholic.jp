@@ -21,27 +21,19 @@ export async function GET(request: NextRequest) {
 
       if (!existingProfile) {
         // Create user profile from OAuth data
-        // Construct Facebook URL if user logged in with Facebook
-        let facebookUrl = null;
-        if (data.user.app_metadata?.provider === 'facebook') {
-          // Facebook provides the profile link or we can construct it from the provider_id
-          facebookUrl = data.user.user_metadata?.link || 
-                       (data.user.user_metadata?.provider_id 
-                         ? `https://facebook.com/${data.user.user_metadata.provider_id}` 
-                         : null);
-        }
+        // Construct full name from OAuth data
+        const fullName = data.user.user_metadata?.name ||
+                        `${data.user.user_metadata?.given_name || ''} ${data.user.user_metadata?.family_name || ''}`.trim() ||
+                        data.user.email?.split('@')[0] || '';
 
         const { error: profileError } = await supabase
           .from("users")
           .insert({
             id: data.user.id,
             email: data.user.email,
-            first_name: data.user.user_metadata?.given_name || data.user.user_metadata?.name?.split(' ')[0] || '',
-            last_name: data.user.user_metadata?.family_name || data.user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+            full_name: fullName,
             avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture,
-            facebook_url: facebookUrl,
             role: 'participant', // Default role
-            onboarding_completed: false,
           });
 
         if (profileError) {
