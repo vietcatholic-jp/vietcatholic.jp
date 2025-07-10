@@ -9,6 +9,8 @@ const ProfileUpdateSchema = z.object({
   region: z.enum([
     'kanto', 'kansai', 'chubu', 'kyushu', 'chugoku', 'shikoku', 'tohoku', 'hokkaido'
   ]).optional(),
+  province: z.string().optional(),
+  facebook_url: z.string().url().optional().or(z.literal("")),
   role: z.enum([
     'participant', 'event_organizer','group_leader', 'regional_admin', 'super_admin'
   ]).optional(),
@@ -64,9 +66,11 @@ export async function PATCH(request: NextRequest) {
     const { data: profile, error } = await supabase
       .from("users")
       .update({
-        full_name: validated.firstName && validated.lastName,
+        full_name: validated.firstName && validated.lastName ? `${validated.firstName} ${validated.lastName}` : undefined,
         phone: validated.phone,
         region: validated.region,
+        province: validated.province,
+        facebook_url: validated.facebook_url,
         role: validated.role,
         date_of_birth: validated.dateOfBirth,
         occupation: validated.occupation,

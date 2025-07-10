@@ -26,8 +26,7 @@ export async function GET(request: NextRequest) {
           .insert({
             id: data.user.id,
             email: data.user.email,
-            first_name: data.user.user_metadata?.given_name || data.user.user_metadata?.name?.split(' ')[0] || '',
-            last_name: data.user.user_metadata?.family_name || data.user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+            full_name: data.user.user_metadata?.full_name || '',
             avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture,
             facebook_url: null, // No longer using Facebook auth
             role: 'participant', // Default role

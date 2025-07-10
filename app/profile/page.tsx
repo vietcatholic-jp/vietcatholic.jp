@@ -4,7 +4,7 @@ import { Navbar } from "@/components/navbar";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, MapPin, Shield } from "lucide-react";
+import { User, Mail, MapPin, Shield, Facebook } from "lucide-react";
 
 export default async function ProfilePage() {
   const user = await getServerUser();
@@ -62,10 +62,24 @@ export default async function ProfilePage() {
                       <span className="text-sm">{profile.email}</span>
                     </div>
                     
-                    {profile.region && (
+                    {profile.province && (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm capitalize">{profile.region}</span>
+                        <span className="text-sm">{profile.province}</span>
+                      </div>
+                    )}
+                    
+                    {profile.facebook_url && (
+                      <div className="flex items-center gap-2">
+                        <Facebook className="h-4 w-4 text-muted-foreground" />
+                        <a 
+                          href={profile.facebook_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Facebook
+                        </a>
                       </div>
                     )}
                     
