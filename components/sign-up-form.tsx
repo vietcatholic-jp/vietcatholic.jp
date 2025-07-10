@@ -21,6 +21,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -34,6 +35,25 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
+    // Validation
+    if (!fullName.trim()) {
+      setError("Họ và tên là bắt buộc");
+      setIsLoading(false);
+      return;
+    }
+
+    if (fullName.trim().length < 2) {
+      setError("Họ và tên phải có ít nhất 2 ký tự");
+      setIsLoading(false);
+      return;
+    }
+
+    if (/\d/.test(fullName)) {
+      setError("Họ và tên không được chứa số");
+      setIsLoading(false);
+      return;
+    }
+
     if (password !== repeatPassword) {
       setError("Mật khẩu không khớp");
       setIsLoading(false);
@@ -46,6 +66,9 @@ export function SignUpForm({
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          data: {
+            full_name: fullName.trim(),
+          },
         },
       });
       if (error) throw error;
@@ -108,6 +131,18 @@ export function SignUpForm({
                     Hoặc tiếp tục với
                   </span>
                 </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="fullName">Họ và tên</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Nguyễn Văn A"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
               </div>
 
               <div className="grid gap-2">

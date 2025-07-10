@@ -8,10 +8,7 @@ import { PaymentInstructions } from "@/components/payment/payment-instructions";
 import { ReceiptUpload } from "@/components/payment/receipt-upload";
 import { Registrant } from "@/lib/types";
 import { 
-  FileText, 
-  Users,
-  Calendar,
-  MapPin
+  FileText,
 } from "lucide-react";
 
 interface PaymentPageProps {
@@ -108,30 +105,6 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
                       <p className="text-sm mt-1">{registration.notes}</p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Event Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Thông tin sự kiện
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Đại hội Công giáo Việt Nam tại Nhật Bản 2025</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Địa điểm sẽ được thông báo</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Dành cho cộng đồng Công giáo Việt Nam</span>
-                  </div>
                 </CardContent>
               </Card>
 

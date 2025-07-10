@@ -21,6 +21,7 @@ import {
   Registration
 } from "@/lib/types";
 import { toast } from "sonner";
+import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
 
 const RegistrantSchema = z.object({
   id: z.string().optional(),
@@ -32,8 +33,13 @@ const RegistrantSchema = z.object({
   province: z.string().optional(),
   diocese: z.string().optional(),
   address: z.string().optional(),
-  facebook_link: z.string().optional(),
-  phone: z.string().optional(),
+  facebook_link: z.string().optional().or(z.literal("")),
+  phone: z.string()
+    .optional()
+    .transform((val) => val ? cleanPhoneNumber(val) : val)
+    .refine((val) => !val || isValidJapanesePhoneNumber(val), {
+      message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
+    }),
   shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
@@ -455,9 +461,8 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                           {errors.registrants[index]?.facebook_link?.message}
                         </p>
                       )}
-                      {isPrimary && (
+                      {isPrimary && !registrants?.[index]?.facebook_link && (
                         <div className="text-xs text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
-                          <strong>----required for primary register----</strong><br/>
                           Link facebook được lấy ở phần cài đặt trong trang cá nhân → 
                           Bấm vào dấu ... bên cạnh nút chỉnh sửa trang cá nhân → Kéo xuống phía dưới cùng, bạn sẽ thấy chữ copy link, bấm vào đó để sao chép → dán vào đây.
                         </div>

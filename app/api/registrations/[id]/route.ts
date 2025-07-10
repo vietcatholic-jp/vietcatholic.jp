@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { EventParticipationRole } from "@/lib/types";
+import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
 
 const UpdateRegistrationSchema = z.object({
   registrants: z.array(z.object({
@@ -10,12 +11,17 @@ const UpdateRegistrationSchema = z.object({
     saint_name: z.string().optional(),
     full_name: z.string().min(1),
     gender: z.enum(['male', 'female', 'other']),
-    age_group: z.enum(['under_18', '18_25', '26_35', '36_50', 'over_50']),
+    age_group: z.enum(['under_12','12_17', '18_25', '26_35', '36_50', 'over_50']),
     province: z.string().optional(),
     diocese: z.string().optional(),
     address: z.string().optional(),
     facebook_link: z.string().url().optional().or(z.literal("")),
-    phone: z.string().optional(),
+    phone: z.string()
+      .optional()
+      .transform((val) => val ? cleanPhoneNumber(val) : val)
+      .refine((val) => !val || isValidJapanesePhoneNumber(val), {
+        message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
+      }),
     shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL']),
     event_role: z.string() as z.ZodType<EventParticipationRole>,
     is_primary: z.boolean(),

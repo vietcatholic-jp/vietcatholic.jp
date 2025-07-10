@@ -34,22 +34,46 @@ export function LoginForm({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
-      router.push("/dashboard");
+
+      // Wait for session to be properly established
+      if (data.session) {
+        // Set up a one-time listener for auth state change to ensure session is synced
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN' && session) {
+            subscription.unsubscribe();
+            // Small delay to ensure middleware has processed the session
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 100);
+          }
+        });
+
+        // Fallback: if auth state change doesn't fire within 2 seconds, redirect anyway
+        setTimeout(() => {
+          subscription.unsubscribe();
+          router.push("/dashboard");
+        }, 2000);
+      } else {
+        // If no session data, redirect immediately (shouldn't happen but safety net)
+        router.push("/dashboard");
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
-    } finally {
       setIsLoading(false);
     }
+    // Note: setIsLoading(false) is intentionally not in finally block
+    // because we want to keep loading state until redirect happens
   };
 
   const handleOAuthLogin = async (provider: 'google') => {
     const supabase = createClient();
     setError(null);
+    setIsLoading(true);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -59,8 +83,10 @@ export function LoginForm({
         },
       });
       if (error) throw error;
+      // OAuth will redirect to external provider, so we don't need to handle loading state here
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
+      setIsLoading(false);
     }
   };
 
