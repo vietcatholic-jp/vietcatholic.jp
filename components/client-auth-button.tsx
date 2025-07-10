@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
 interface UserProfile {
@@ -14,6 +15,7 @@ export function ClientAuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
@@ -53,6 +55,8 @@ export function ClientAuthButton() {
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    // Redirect to homepage after logout
+    router.push("/");
   };
 
   if (loading) {
