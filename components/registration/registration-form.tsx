@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Users, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Users, ArrowLeft, Calendar, AlertCircle } from "lucide-react";
 import { 
   GENDERS, 
   AGE_GROUPS, 
@@ -17,15 +17,15 @@ import {
   EventParticipationRole,
   EVENT_PARTICIPATION_ROLES,
   JAPANESE_PROVINCES,
-  PROVINCE_DIOCESE_MAPPING
+  PROVINCE_DIOCESE_MAPPING,
+  EventConfig
 } from "@/lib/types";
 import { toast } from "sonner";
 import { RoleSelection } from "./role-selection";
 import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
 
-// Primary registrant schema (full details)
+// Primary registrant schema (full details) - facebook_link is required for primary
 const primaryRegistrantSchema = z.object({
-  email: z.string().email("Email không hợp lệ"),
   saint_name: z.string().optional(),
   full_name: z.string().min(1, "Họ và tên là bắt buộc"),
   gender: z.enum(['male', 'female', 'other'] as const, {
@@ -50,11 +50,21 @@ const primaryRegistrantSchema = z.object({
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
   notes: z.string().optional(),
+  // Facebook link is required for primary registrant
+  facebook_link: z.string().url("Link Facebook không hợp lệ").min(1, "Link Facebook là bắt buộc cho người đăng ký chính"),
+  // Optional contact fields
+  email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
+  phone: z.string()
+        .min(1, PHONE_VALIDATION_MESSAGES.REQUIRED)
+        .transform(cleanPhoneNumber)
+        .refine(isValidJapanesePhoneNumber, {
+            message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
+        }),
+  address: z.string().optional(),
 });
 
-// Additional registrant schema (simplified) - make optional fields truly optional
+// Additional registrant schema (simplified) - all optional except core required fields
 const additionalRegistrantSchema = z.object({
-  email: z.string().email("Email không hợp lệ").optional(),
   saint_name: z.string().optional(),
   full_name: z.string().min(1, "Họ và tên là bắt buộc"),
   gender: z.enum(['male', 'female', 'other'] as const, {
@@ -79,6 +89,16 @@ const additionalRegistrantSchema = z.object({
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
   notes: z.string().optional(),
+  // Optional contact fields
+  email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
+    phone: z.string()
+        .min(1, PHONE_VALIDATION_MESSAGES.REQUIRED)
+        .transform(cleanPhoneNumber)
+        .refine(isValidJapanesePhoneNumber, {
+            message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
+        }),
+  address: z.string().optional(),
+  facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
 });
 
 // Combined schema - simpler approach
@@ -94,12 +114,32 @@ type FormData = z.infer<typeof formSchema>;
 interface RegistrationFormProps {
   userEmail?: string;
   userName?: string;
+  userFacebookUrl?: string;
 }
 
-export function RegistrationForm({ userEmail, userName }: RegistrationFormProps) {
+export function RegistrationForm({ userEmail, userName, userFacebookUrl }: RegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<'role-selection' | 'registration'>('role-selection');
   const [selectedRole, setSelectedRole] = useState<EventParticipationRole>('participant');
+  const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
+
+  // Fetch active event config
+  useEffect(() => {
+    const fetchEventConfig = async () => {
+      try {
+        const response = await fetch('/api/admin/events');
+        if (response.ok) {
+          const { events } = await response.json();
+          const activeEvent = events?.find((event: EventConfig) => event.is_active);
+          setEventConfig(activeEvent || null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch event config:', error);
+      }
+    };
+
+    fetchEventConfig();
+  }, []);
 
   const {
     register,
@@ -113,20 +153,21 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
     defaultValues: {
       registrants: [
         {
-          email: userEmail || "",
           saint_name: "",
           full_name: userName || "",
           gender: "male" as const,
           age_group: "26_35" as const,
           province: "",
           diocese: "",
-          address: "",
-          facebook_link: "",
-          phone: "",
           shirt_size: "M" as const,
           event_role: "participant",
           is_primary: true,
           notes: "",
+          // Optional fields
+          email: userEmail || "",
+          phone: "",
+          address: "",
+          facebook_link: userFacebookUrl || "",
         }
       ],
       notes: "",
@@ -139,7 +180,7 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
   });
 
   const registrants = watch("registrants");
-  const basePrice = 6000; // Base price in JPY per person
+  const basePrice = eventConfig?.base_price || 6000; // Dynamic price from event config
   const totalAmount = registrants.length * basePrice;
 
   const handleRoleSelection = (role: EventParticipationRole) => {
@@ -163,10 +204,16 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
       gender: "male" as const,
       age_group: "26_35" as const,
       shirt_size: "M" as const,
-      facebook_link: "",
       event_role: selectedRole, // Use same role as primary
       is_primary: false,
       notes: "",
+      // Optional fields
+      email: "",
+      phone: "",
+      address: "",
+      facebook_link: "",
+      province: "",
+      diocese: "",
     });
   };
 
@@ -316,93 +363,7 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                   </h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Primary registrant gets full form */}
-                    {isPrimary && (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.email`}>Email *</Label>
-                          <Input
-                            id={`registrants.${index}.email`}
-                            {...register(`registrants.${index}.email`)}
-                            placeholder="example@email.com"
-                            disabled={!!userEmail}
-                          />
-                          {errors.registrants?.[index]?.email && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.email?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.phone`}>Số điện thoại *</Label>
-                          <Input
-                            id={`registrants.${index}.phone`}
-                            {...register(`registrants.${index}.phone`)}
-                            placeholder="090-1234-5678"
-                          />
-                          {errors.registrants?.[index]?.phone && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.phone?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.province`}>Tỉnh/Phủ *</Label>
-                          <select
-                            id={`registrants.${index}.province`}
-                            {...register(`registrants.${index}.province`)}
-                            onChange={(e) => handleProvinceChange(index, e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value="">Chọn tỉnh/phủ</option>
-                            {JAPANESE_PROVINCES.map((province) => (
-                              <option key={province.value} value={province.value}>
-                                {province.label}
-                              </option>
-                            ))}
-                          </select>
-                          {errors.registrants?.[index]?.province && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.province?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.diocese`}>Giáo phận *</Label>
-                          <Input
-                            id={`registrants.${index}.diocese`}
-                            {...register(`registrants.${index}.diocese`)}
-                            placeholder="Tự động điền khi chọn tỉnh"
-                            readOnly
-                            className="bg-muted"
-                          />
-                          {errors.registrants?.[index]?.diocese && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.diocese?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor={`registrants.${index}.address`}>Địa chỉ *</Label>
-                          <Input
-                            id={`registrants.${index}.address`}
-                            {...register(`registrants.${index}.address`)}
-                            placeholder="Địa chỉ hiện tại tại Nhật Bản"
-                          />
-                          {errors.registrants?.[index]?.address && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.address?.message}
-                            </p>
-                          )}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Common fields for all registrants */}
+                    {/* Core required fields for all registrants */}
                     <div className="space-y-2">
                       <Label htmlFor={`registrants.${index}.saint_name`}>Tên Thánh</Label>
                       <Input
@@ -418,11 +379,15 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                         id={`registrants.${index}.full_name`}
                         {...register(`registrants.${index}.full_name`)}
                         placeholder="Nguyễn Văn A"
-                        disabled={isPrimary && !!userName}
                       />
                       {errors.registrants?.[index]?.full_name && (
                         <p className="text-sm text-destructive">
                           {errors.registrants[index]?.full_name?.message}
+                        </p>
+                      )}
+                      {isPrimary && userName && (
+                        <p className="text-xs text-muted-foreground">
+                          Tên từ tài khoản: {userName}. Bạn có thể chỉnh sửa nếu cần.
                         </p>
                       )}
                     </div>
@@ -469,6 +434,49 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                       )}
                     </div>
 
+                    {/* Required location fields for primary registrant */}
+                    {isPrimary && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.province`}>Tỉnh/Phủ *</Label>
+                          <select
+                            id={`registrants.${index}.province`}
+                            {...register(`registrants.${index}.province`)}
+                            onChange={(e) => handleProvinceChange(index, e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Chọn tỉnh/phủ</option>
+                            {JAPANESE_PROVINCES.map((province) => (
+                              <option key={province.value} value={province.value}>
+                                {province.label}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.registrants?.[index]?.province && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.province?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.diocese`}>Giáo phận *</Label>
+                          <Input
+                            id={`registrants.${index}.diocese`}
+                            {...register(`registrants.${index}.diocese`)}
+                            placeholder="Tự động điền khi chọn tỉnh"
+                            readOnly
+                            className="bg-muted"
+                          />
+                          {errors.registrants?.[index]?.diocese && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.diocese?.message}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+
                     <div className="space-y-2">
                       <Label htmlFor={`registrants.${index}.shirt_size`}>Size áo *</Label>
                       <select
@@ -491,18 +499,23 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor={`registrants.${index}.facebook_link`}>Link Facebook</Label>
-                      <Input
-                        id={`registrants.${index}.facebook_link`}
-                        {...register(`registrants.${index}.facebook_link`)}
-                        placeholder="https://facebook.com/username"
-                      />
-                      {errors.registrants?.[index]?.facebook_link && (
-                        <p className="text-sm text-destructive">
-                          {errors.registrants[index]?.facebook_link?.message}
-                        </p>
-                      )}
-                    </div>
+                          <Label htmlFor={`registrants.${index}.facebook_link`}>Link Facebook</Label>
+                          <Input
+                            id={`registrants.${index}.facebook_link`}
+                            {...register(`registrants.${index}.facebook_link`)}
+                            placeholder="https://facebook.com/username"
+                          />
+                          {errors.registrants?.[index]?.facebook_link && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.facebook_link?.message}
+                            </p>
+                          )}
+                          {isPrimary && userFacebookUrl && (
+                            <p className="text-xs text-muted-foreground">
+                              Tự động điền từ tài khoản Facebook của bạn
+                            </p>
+                          )}
+                        </div>
 
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Ghi chú</Label>
@@ -512,6 +525,62 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                         placeholder="Ý kiến đóng góp hoặc yêu cầu đặc biệt"
                         className="min-h-[80px]"
                       />
+                    </div>
+
+                    {/* Optional contact information section */}
+                    <div className="md:col-span-2 border-t pt-4 mt-4">
+                      <h5 className="font-medium mb-4 text-muted-foreground">Thông tin liên lạc (tùy chọn)</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.email`}>Email (tùy chọn)</Label>
+                          <Input
+                            id={`registrants.${index}.email`}
+                            {...register(`registrants.${index}.email`)}
+                            placeholder="example@email.com"
+                          />
+                          {errors.registrants?.[index]?.email && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.email?.message}
+                            </p>
+                          )}
+                          {isPrimary && userFacebookUrl && (
+                            <p className="text-xs text-muted-foreground">
+                              Email là tùy chọn vì bạn đã đăng nhập bằng Facebook
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.phone`}>Số điện thoại (tùy chọn)</Label>
+                          <Input
+                            id={`registrants.${index}.phone`}
+                            {...register(`registrants.${index}.phone`)}
+                            placeholder="090-1234-5678"
+                          />
+                          {errors.registrants?.[index]?.phone && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.phone?.message}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Ít nhất 10 số, có thể bao gồm +, dấu cách, dấu gạch ngang
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.address`}>Địa chỉ (tùy chọn)</Label>
+                          <Input
+                            id={`registrants.${index}.address`}
+                            {...register(`registrants.${index}.address`)}
+                            placeholder="Địa chỉ hiện tại tại Nhật Bản"
+                          />
+                          {errors.registrants?.[index]?.address && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.address?.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Hidden fields */}
@@ -524,19 +593,36 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
           </CardContent>
         </Card>
 
-        {/* General Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ghi chú chung</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              {...register("notes")}
-              placeholder="Ghi chú chung cho toàn bộ đăng ký (nếu có)"
-              className="min-h-[100px]"
-            />
-          </CardContent>
-        </Card>
+        {/* Cancellation Policy */}
+        {eventConfig?.cancellation_deadline && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Chính sách hủy đăng ký
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="space-y-2">
+                  <p className="font-medium text-amber-800">
+                    Hạn chót hủy đăng ký: {new Date(eventConfig.cancellation_deadline).toLocaleDateString('vi-VN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                  <p className="text-sm text-amber-700">
+                    Sau thời hạn này, phí đăng ký sẽ không được hoàn lại. Vui lòng cân nhắc kỹ trước khi đăng ký.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Summary */}
         <Card>

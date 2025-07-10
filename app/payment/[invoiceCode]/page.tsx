@@ -47,7 +47,7 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
   }
 
   // If already paid, redirect to tickets page
-  if (registration.status === 'paid' || registration.status === 'confirmed') {
+  if (registration.status === 'confirmed' || registration.status === 'checked_in') {
     redirect(`/tickets/${invoiceCode}`);
   }
 

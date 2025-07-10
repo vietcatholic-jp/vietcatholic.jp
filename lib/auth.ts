@@ -77,6 +77,7 @@ export async function signInWithFacebook() {
     provider: 'facebook',
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
+      scopes: 'public_profile',
     },
   });
 
