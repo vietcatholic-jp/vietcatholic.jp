@@ -21,16 +21,17 @@ export async function GET(request: NextRequest) {
 
       if (!existingProfile) {
         // Create user profile from OAuth data
+        const fullName = data.user.user_metadata?.name ||
+          `${data.user.user_metadata?.given_name || ''} ${data.user.user_metadata?.family_name || ''}`.trim() || '';
+
         const { error: profileError } = await supabase
           .from("users")
           .insert({
             id: data.user.id,
             email: data.user.email,
-            first_name: data.user.user_metadata?.given_name || data.user.user_metadata?.name?.split(' ')[0] || '',
-            last_name: data.user.user_metadata?.family_name || data.user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+            full_name: fullName,
             avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture,
             role: 'participant', // Default role
-            onboarding_completed: false,
           });
 
         if (profileError) {

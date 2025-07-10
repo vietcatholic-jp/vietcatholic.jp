@@ -407,8 +407,12 @@ export function RegistrationForm({ userEmail, userName }: RegistrationFormProps)
                         id={`registrants.${index}.full_name`}
                         {...register(`registrants.${index}.full_name`)}
                         placeholder="Nguyễn Văn A"
-                        disabled={isPrimary && !!userName}
                       />
+                      {isPrimary && userName && (
+                        <p className="text-xs text-muted-foreground">
+                          Tên được lấy từ tài khoản mạng xã hội. Bạn có thể chỉnh sửa nếu cần.
+                        </p>
+                      )}
                       {errors.registrants?.[index]?.full_name && (
                         <p className="text-sm text-destructive">
                           {errors.registrants[index]?.full_name?.message}

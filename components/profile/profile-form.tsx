@@ -77,8 +77,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName: data.full_name.split(' ')[0] || '',
-          lastName: data.full_name.split(' ').slice(1).join(' ') || '',
+          full_name: data.full_name,
           region: data.region,
         }),
       });
