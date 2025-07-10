@@ -40,7 +40,7 @@ export async function GET() {
       .from("registrations")
       .select(`
         *,
-        registrants(count),
+        registrants(*),
         user:users(email, full_name, region)
       `)
       .order("created_at", { ascending: false })
@@ -63,19 +63,32 @@ export async function GET() {
         .select("region")
         .not("region", "is", null)
         .order("region");
-
       if (regions) {
         const regionCounts = regions.reduce((acc: Record<string, number>, curr: { region: string }) => {
           acc[curr.region] = (acc[curr.region] || 0) + 1;
           return acc;
         }, {});
-
-        regionalStats = Object.entries(regionCounts).map(([region, count]) => ({
-          region,
-          count,
-        }));
+        regionalStats = Object.entries(regionCounts).map(([region, count]) => ({ region, count }));
       }
     }
+
+    // Compute statistics by province, diocese, and event_role
+    const { data: registrantsStatData } = await supabase
+      .from("registrants")
+      .select("province, diocese, event_role");
+    const provinceCounts: Record<string, number> = {};
+    const dioceseCounts: Record<string, number> = {};
+    const roleCounts: Record<string, number> = {};
+    if (registrantsStatData) {
+      registrantsStatData.forEach((r) => {
+        if (r.province) provinceCounts[r.province] = (provinceCounts[r.province] || 0) + 1;
+        if (r.diocese) dioceseCounts[r.diocese] = (dioceseCounts[r.diocese] || 0) + 1;
+        if (r.event_role) roleCounts[r.event_role] = (roleCounts[r.event_role] || 0) + 1;
+      });
+    }
+    const provinceStats = Object.entries(provinceCounts).map(([province, count]) => ({ province, count }));
+    const dioceseStats = Object.entries(dioceseCounts).map(([diocese, count]) => ({ diocese, count }));
+    const roleStats = Object.entries(roleCounts).map(([event_role, count]) => ({ event_role, count }));
 
     return NextResponse.json({
       stats: {
@@ -86,6 +99,9 @@ export async function GET() {
       },
       recentRegistrations: recentRegistrations || [],
       regionalStats,
+      provinceStats,
+      dioceseStats,
+      roleStats,
       userProfile: {
         role: profile.role,
         region: profile.region

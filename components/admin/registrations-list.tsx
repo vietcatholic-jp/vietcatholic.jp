@@ -236,7 +236,7 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
                         <Edit className="h-4 w-4" />
                       </Button>
                     )}
-                    {(userRole === 'super_admin' || (userRole === 'regional_admin' && canModifyRegistration(registration))) && (
+                    {(userRole === 'super_admin') && (
                       <Button 
                         variant="ghost" 
                         size="sm"

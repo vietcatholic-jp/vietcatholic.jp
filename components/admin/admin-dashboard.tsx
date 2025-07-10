@@ -36,6 +36,9 @@ interface AdminData {
     role: UserRole;
     region?: RegionType;
   };
+  provinceStats?: { province: string; count: number }[];
+  dioceseStats?: { diocese: string; count: number }[];
+  roleStats?: { event_role: string; count: number }[];
 }
 
 export function AdminDashboard() {
@@ -214,19 +217,59 @@ export function AdminDashboard() {
               </Card>
             </div>
 
-            {/* Regional Stats (for super admin) */}
-            {data.regionalStats && userRole === 'super_admin' && (
+            {/* Province Stats (for super admin) */}
+            {data.provinceStats && userRole === 'super_admin' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Thống kê theo khu vực</CardTitle>
+                  <CardTitle>Thống kê theo tỉnh</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {data.regionalStats.map((stat: { region: string; count: number }) => (
-                      <div key={stat.region} className="text-center">
+                    {data.provinceStats.map((stat) => (
+                      <div key={stat.province} className="text-center">
                         <div className="font-semibold text-lg">{stat.count}</div>
                         <div className="text-sm text-muted-foreground capitalize">
-                          {stat.region.replace('_', ' ')}
+                          {stat.province}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {/* Diocese Stats (for super admin) */}
+            {data.dioceseStats && userRole === 'super_admin' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thống kê theo giáo phận</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {data.dioceseStats.map((stat) => (
+                      <div key={stat.diocese} className="text-center">
+                        <div className="font-semibold text-lg">{stat.count}</div>
+                        <div className="text-sm text-muted-foreground capitalize">
+                          {stat.diocese}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {/* Event Role Stats (for super admin) */}
+            {data.roleStats && userRole === 'super_admin' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thống kê theo vai trò</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {data.roleStats.map((stat) => (
+                      <div key={stat.event_role} className="text-center">
+                        <div className="font-semibold text-lg">{stat.count}</div>
+                        <div className="text-sm text-muted-foreground capitalize">
+                          {stat.event_role.replace(/_/g, ' ')}
                         </div>
                       </div>
                     ))}
