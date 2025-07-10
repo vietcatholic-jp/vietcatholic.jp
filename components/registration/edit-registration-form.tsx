@@ -21,6 +21,7 @@ import {
   Registration
 } from "@/lib/types";
 import { toast } from "sonner";
+import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
 
 const RegistrantSchema = z.object({
   id: z.string().optional(),
@@ -33,7 +34,12 @@ const RegistrantSchema = z.object({
   diocese: z.string().optional(),
   address: z.string().optional(),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  phone: z.string()
+    .optional()
+    .transform((val) => val ? cleanPhoneNumber(val) : val)
+    .refine((val) => !val || isValidJapanesePhoneNumber(val), {
+      message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
+    }),
   shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),

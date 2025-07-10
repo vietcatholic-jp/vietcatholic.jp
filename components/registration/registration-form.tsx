@@ -21,6 +21,7 @@ import {
 } from "@/lib/types";
 import { toast } from "sonner";
 import { RoleSelection } from "./role-selection";
+import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
 
 // Primary registrant schema (full details)
 const primaryRegistrantSchema = z.object({
@@ -37,7 +38,12 @@ const primaryRegistrantSchema = z.object({
   diocese: z.string().min(1, "Giáo phận là bắt buộc"),
   address: z.string().min(1, "Địa chỉ là bắt buộc"),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
-  phone: z.string().min(1, "Số điện thoại là bắt buộc"),
+  phone: z.string()
+    .min(1, PHONE_VALIDATION_MESSAGES.REQUIRED)
+    .transform(cleanPhoneNumber)
+    .refine(isValidJapanesePhoneNumber, {
+      message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
+    }),
   shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
   }),
@@ -61,7 +67,12 @@ const additionalRegistrantSchema = z.object({
   diocese: z.string().optional(),
   address: z.string().optional(),
   facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  phone: z.string()
+    .optional()
+    .transform((val) => val ? cleanPhoneNumber(val) : val)
+    .refine((val) => !val || isValidJapanesePhoneNumber(val), {
+      message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
+    }),
   shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
   }),
