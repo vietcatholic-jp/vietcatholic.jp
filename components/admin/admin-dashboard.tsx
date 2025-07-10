@@ -2,23 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminStats } from "@/components/admin/admin-stats";
 import { RegistrationsList } from "@/components/admin/registrations-list";
 import { ExportButton } from "@/components/admin/export-button";
 import { UserManagement } from "@/components/admin/user-management";
 import { EventConfigManager } from "@/components/admin/event-config-manager";
+import { OrganizerTools } from "@/components/admin/organizer-tools";
 import { 
   Users, 
-  FileText, 
   CreditCard,
   Loader2,
   Settings,
   UserCheck,
-  BarChart3
+  BarChart3,
+  Wrench
 } from "lucide-react";
-import Link from "next/link";
 import { toast } from "sonner";
 
 import { Registration, UserRole, RegionType } from "@/lib/types";
@@ -114,111 +113,89 @@ export function AdminDashboard() {
 
         {/* Role-based Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+          {/* Desktop Tab List */}
+          <TabsList className="hidden md:grid w-full grid-cols-6 gap-1">
+            <TabsTrigger value="overview" className="flex items-center gap-1 text-sm">
               <BarChart3 className="h-4 w-4" />
               Tổng quan
             </TabsTrigger>
-            <TabsTrigger value="registrations" className="flex items-center gap-2">
+            <TabsTrigger value="registrations" className="flex items-center gap-1 text-sm">
               <Users className="h-4 w-4" />
               Đăng ký
             </TabsTrigger>
+            {(['event_organizer', 'group_leader', 'regional_admin', 'super_admin'].includes(userRole)) && (
+              <TabsTrigger value="tools" className="flex items-center gap-1 text-sm">
+                <Wrench className="h-4 w-4" />
+                Công cụ
+              </TabsTrigger>
+            )}
             {(userRole === 'super_admin' || userRole === 'regional_admin') && (
-              <TabsTrigger value="users" className="flex items-center gap-2">
+              <TabsTrigger value="users" className="flex items-center gap-1 text-sm">
                 <UserCheck className="h-4 w-4" />
                 Người dùng
               </TabsTrigger>
             )}
             {userRole === 'super_admin' && (
-              <TabsTrigger value="events" className="flex items-center gap-2">
+              <TabsTrigger value="events" className="flex items-center gap-1 text-sm">
                 <Settings className="h-4 w-4" />
                 Sự kiện
               </TabsTrigger>
             )}
-            <TabsTrigger value="payments" className="flex items-center gap-2">
+            <TabsTrigger value="payments" className="flex items-center gap-1 text-sm">
               <CreditCard className="h-4 w-4" />
               Thanh toán
             </TabsTrigger>
           </TabsList>
 
+          {/* Mobile Tab List */}
+          <div className="md:hidden">
+            <TabsList className="grid w-full grid-cols-2 gap-1">
+              <TabsTrigger value="overview" className="flex items-center gap-1 text-xs">
+                <BarChart3 className="h-3 w-3" />
+                Tổng quan
+              </TabsTrigger>
+              <TabsTrigger value="registrations" className="flex items-center gap-1 text-xs">
+                <Users className="h-3 w-3" />
+                Đăng ký
+              </TabsTrigger>
+            </TabsList>
+            
+            {(['event_organizer', 'group_leader', 'regional_admin', 'super_admin'].includes(userRole)) && (
+              <TabsList className="grid w-full grid-cols-2 gap-1 mt-2">
+                <TabsTrigger value="tools" className="flex items-center gap-1 text-xs">
+                  <Wrench className="h-3 w-3" />
+                  Công cụ
+                </TabsTrigger>
+                <TabsTrigger value="payments" className="flex items-center gap-1 text-xs">
+                  <CreditCard className="h-3 w-3" />
+                  Thanh toán
+                </TabsTrigger>
+              </TabsList>
+            )}
+            
+            {(userRole === 'super_admin' || userRole === 'regional_admin') && (
+              <TabsList className="grid w-full grid-cols-1 gap-1 mt-2">
+                <TabsTrigger value="users" className="flex items-center gap-1 text-xs">
+                  <UserCheck className="h-3 w-3" />
+                  Người dùng
+                </TabsTrigger>
+                {userRole === 'super_admin' && (
+                  <TabsTrigger value="events" className="flex items-center gap-1 text-xs">
+                    <Settings className="h-3 w-3" />
+                    Sự kiện
+                  </TabsTrigger>
+                )}
+              </TabsList>
+            )}
+          </div>
+
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Quản lý đăng ký
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Xem và quản lý tất cả đăng ký
-                  </p>
-                  <Button 
-                    variant="default" 
-                    className="w-full"
-                    onClick={() => {
-                      const tabsElement = document.querySelector('[data-state="active"][value="registrations"]');
-                      if (tabsElement) {
-                        (tabsElement as HTMLElement).click();
-                      }
-                    }}
-                  >
-                    Xem danh sách
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Xác nhận thanh toán
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Duyệt hóa đơn thanh toán
-                  </p>
-                  <Button 
-                    variant="default" 
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    onClick={() => {
-                      const tabsElement = document.querySelector('[data-state="active"][value="payments"]');
-                      if (tabsElement) {
-                        (tabsElement as HTMLElement).click();
-                      }
-                    }}
-                  >
-                    Duyệt thanh toán
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Quản lý chương trình
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Cập nhật chương trình sự kiện
-                  </p>
-                  <Link href="/agenda">
-                    <Button variant="default" className="w-full bg-blue-600 hover:bg-blue-700">
-                      Quản lý agenda
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Quick Actions - Improved with role-specific cards */}
+            
 
             {/* Province Stats (for super admin) */}
-            {data.provinceStats && userRole === 'super_admin' && (
+            {data.provinceStats  && (
               <Card>
                 <CardHeader>
                   <CardTitle>Thống kê theo tỉnh</CardTitle>
@@ -238,7 +215,7 @@ export function AdminDashboard() {
               </Card>
             )}
             {/* Diocese Stats (for super admin) */}
-            {data.dioceseStats && userRole === 'super_admin' && (
+            {data.dioceseStats  && (
               <Card>
                 <CardHeader>
                   <CardTitle>Thống kê theo giáo phận</CardTitle>
@@ -258,7 +235,7 @@ export function AdminDashboard() {
               </Card>
             )}
             {/* Event Role Stats (for super admin) */}
-            {data.roleStats && userRole === 'super_admin' && (
+            {data.roleStats &&  (
               <Card>
                 <CardHeader>
                   <CardTitle>Thống kê theo vai trò</CardTitle>
@@ -286,6 +263,16 @@ export function AdminDashboard() {
               userRole={userRole}
             />
           </TabsContent>
+
+          {/* Organizer Tools Tab */}
+          {(['event_organizer', 'group_leader', 'regional_admin', 'super_admin'].includes(userRole)) && (
+            <TabsContent value="tools">
+              <OrganizerTools 
+                registrations={data.recentRegistrations} 
+                userRole={userRole}
+              />
+            </TabsContent>
+          )}
 
           {/* User Management Tab */}
           {(userRole === 'super_admin' || userRole === 'regional_admin') && (

@@ -10,10 +10,9 @@ import {
   Eye, 
   Edit, 
   Trash2, 
-  CheckCircle,
-  XCircle
+  CheckCircle
 } from "lucide-react";
-import { Registration, UserRole, EVENT_PARTICIPATION_ROLES, EventParticipationRole } from "@/lib/types";
+import { Registration, UserRole, EVENT_PARTICIPATION_ROLES } from "@/lib/types";
 import { EditRegistrationForm } from "@/components/registration/edit-registration-form";
 import { toast } from "sonner";
 
@@ -66,23 +65,6 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
-  };
-
-  const getRoleBadge = (role: EventParticipationRole) => {
-    const roleInfo = EVENT_PARTICIPATION_ROLES.find(r => r.value === role);
-    if (!roleInfo) return <Badge variant="outline">{role}</Badge>;
-    
-    let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
-    
-    if (role.startsWith('volunteer_')) {
-      variant = "secondary";
-    } else if (role.startsWith('organizer_')) {
-      variant = "default";
-    } else if (role === 'speaker' || role === 'performer') {
-      variant = "destructive";
-    }
-    
-    return <Badge variant={variant}>{roleInfo.label}</Badge>;
   };
 
   const handleEdit = (registration: Registration) => {
@@ -210,135 +192,161 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
             }
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredRegistrations.map((registration) => (
-              <div
-                key={registration.id}
-                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono font-medium">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-3">Mã đăng ký</th>
+                    <th className="text-left p-3">Người đăng ký</th>
+                    <th className="text-left p-3">Số người</th>
+                    <th className="text-left p-3">Tổng tiền</th>
+                    <th className="text-left p-3">Trạng thái</th>
+                    <th className="text-left p-3">Ngày tạo</th>
+                    <th className="text-left p-3">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRegistrations.map((registration) => (
+                    <tr key={registration.id} className="border-b hover:bg-gray-50">
+                      <td className="p-3">
+                        <div className="font-mono text-sm font-medium">
+                          #{registration.invoice_code}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div>
+                          <div className="font-medium text-sm">
+                            {registration.user?.full_name || 'Chưa cập nhật'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {registration.user?.email}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{registration.participant_count}</span>
+                          <span className="text-xs text-muted-foreground">người</span>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <span className="font-medium">¥{registration.total_amount.toLocaleString()}</span>
+                      </td>
+                      <td className="p-3">
+                        {getStatusBadge(registration.status)}
+                      </td>
+                      <td className="p-3">
+                        <span className="text-sm">
+                          {new Date(registration.created_at).toLocaleDateString('vi-VN')}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" title="Xem chi tiết">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {canModifyRegistration(registration) && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEdit(registration)}
+                              title="Chỉnh sửa"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {(userRole === 'super_admin') && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDelete(registration)}
+                              disabled={deletingId === registration.id}
+                              title="Xóa đăng ký"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-3">
+              {filteredRegistrations.map((registration) => (
+                <div
+                  key={registration.id}
+                  className="border rounded-lg p-3 hover:bg-muted/50 transition-colors"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-mono text-sm font-medium">
                       #{registration.invoice_code}
-                    </span>
+                    </div>
                     {getStatusBadge(registration.status)}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
+
+                  {/* Main Info */}
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Người đăng ký:</span>
+                      <span className="font-medium text-right">
+                        {registration.user?.full_name || registration.user?.email}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Số người:</span>
+                      <span className="font-medium">{registration.participant_count}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tổng tiền:</span>
+                      <span className="font-medium">¥{registration.total_amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ngày tạo:</span>
+                      <span className="font-medium">
+                        {new Date(registration.created_at).toLocaleDateString('vi-VN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 mt-3 pt-2 border-t">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Eye className="h-3 w-3 mr-1" />
+                      Xem
                     </Button>
                     {canModifyRegistration(registration) && (
                       <Button 
-                        variant="ghost" 
+                        variant="outline" 
                         size="sm"
                         onClick={() => handleEdit(registration)}
+                        className="flex-1"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3 w-3 mr-1" />
+                        Sửa
                       </Button>
                     )}
-                    {(userRole === 'super_admin') && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDelete(registration)}
-                        disabled={deletingId === registration.id}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    {(['regional_admin', 'super_admin', 'group_leader', 'event_organizer'].includes(userRole)) && (
+                      <>
+                        {registration.status === 'pending' && (userRole === 'regional_admin' || userRole === 'super_admin') && (
+                          <Button size="sm" variant="outline" className="text-green-600 hover:text-green-700">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Duyệt
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Người đăng ký:</span>
-                    <div className="font-medium">
-                      {registration.user?.full_name || registration.user?.email}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {registration.user?.email}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <span className="text-muted-foreground">Số người tham gia:</span>
-                    <div className="font-medium">{registration.participant_count}</div>
-                  </div>
-                  
-                  <div>
-                    <span className="text-muted-foreground">Tổng tiền:</span>
-                    <div className="font-medium">¥{registration.total_amount.toLocaleString()}</div>
-                  </div>
-                  
-                  <div>
-                    <span className="text-muted-foreground">Ngày đăng ký:</span>
-                    <div className="font-medium">
-                      {new Date(registration.created_at).toLocaleDateString('vi-VN')}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Display registrants with their roles */}
-                {registration.registrants && registration.registrants.length > 0 && (
-                  <div className="mt-3">
-                    <span className="text-muted-foreground text-sm">Danh sách tham gia:</span>
-                    <div className="mt-2 space-y-2">
-                      {registration.registrants.map((registrant) => (
-                        <div key={registrant.id} className="flex items-center justify-between bg-muted/30 rounded p-2">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium">{registrant.full_name}</span>
-                            {registrant.saint_name && (
-                              <span className="text-xs text-muted-foreground">({registrant.saint_name})</span>
-                            )}
-                            {registrant.is_primary && (
-                              <Badge variant="outline" className="text-xs">Chính</Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {registrant.event_role && getRoleBadge(registrant.event_role)}
-                            <span className="text-xs text-muted-foreground">
-                              {registrant.gender === 'male' ? 'Nam' : registrant.gender === 'female' ? 'Nữ' : 'Khác'} • 
-                              {registrant.shirt_size}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {registration.notes && (
-                  <div className="mt-3 p-2 bg-muted rounded text-sm">
-                    <span className="text-muted-foreground">Ghi chú:</span>
-                    <span className="ml-1">{registration.notes}</span>
-                  </div>
-                )}
-
-                {/* Quick Actions for admins */}
-                {(['regional_admin', 'super_admin', 'group_leader', 'event_organizer'].includes(userRole)) && (
-                  <div className="mt-3 flex items-center gap-2">
-                    {registration.status === 'pending' && (userRole === 'regional_admin' || userRole === 'super_admin') && (
-                      <Button size="sm" variant="outline" className="text-green-600 hover:text-green-700">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Xác nhận thanh toán
-                      </Button>
-                    )}
-                    {registration.status !== 'cancelled' && (userRole === 'regional_admin' || userRole === 'super_admin') && (
-                      <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                        <XCircle className="h-3 w-3 mr-1" />
-                        Hủy đăng ký
-                      </Button>
-                    )}
-                    {/* View action for all admin roles */}
-                    <Button size="sm" variant="outline">
-                      <Eye className="h-3 w-3 mr-1" />
-                      Xem chi tiết
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
