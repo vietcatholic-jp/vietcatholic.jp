@@ -33,7 +33,7 @@ const RegistrantSchema = z.object({
   province: z.string().optional(),
   diocese: z.string().optional(),
   address: z.string().optional(),
-  facebook_link: z.string().url("Link Facebook không hợp lệ").optional().or(z.literal("")),
+  facebook_link: z.string().optional().or(z.literal("")),
   phone: z.string()
     .optional()
     .transform((val) => val ? cleanPhoneNumber(val) : val)
@@ -49,6 +49,44 @@ const RegistrantSchema = z.object({
 const FormSchema = z.object({
   registrants: z.array(RegistrantSchema).min(1, "Phải có ít nhất 1 người tham gia"),
   notes: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // Validate Facebook link for each registrant
+  data.registrants.forEach((registrant, index) => {
+    if (registrant.is_primary) {
+      // For primary registrant, Facebook link is required
+      if (!registrant.facebook_link || registrant.facebook_link.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Link Facebook là bắt buộc cho người đăng ký chính",
+          path: ["registrants", index, "facebook_link"],
+        });
+      } else {
+        // Validate URL format for primary registrant
+        try {
+          new URL(registrant.facebook_link);
+        } catch {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Link Facebook không hợp lệ",
+            path: ["registrants", index, "facebook_link"],
+          });
+        }
+      }
+    } else {
+      // For non-primary registrants, if provided, must be valid URL
+      if (registrant.facebook_link && registrant.facebook_link.trim() !== "") {
+        try {
+          new URL(registrant.facebook_link);
+        } catch {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Link Facebook không hợp lệ",
+            path: ["registrants", index, "facebook_link"],
+          });
+        }
+      }
+    }
+  });
 });
 
 type FormData = z.infer<typeof FormSchema>;
@@ -410,7 +448,9 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor={`registrants.${index}.facebook_link`}>Link Facebook</Label>
+                      <Label htmlFor={`registrants.${index}.facebook_link`}>
+                        Link Facebook {isPrimary ? "*" : ""}
+                      </Label>
                       <Input
                         id={`registrants.${index}.facebook_link`}
                         {...register(`registrants.${index}.facebook_link`)}
