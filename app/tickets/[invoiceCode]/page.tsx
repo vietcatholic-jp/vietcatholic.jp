@@ -166,7 +166,6 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
                         {!registrant.portrait_url && (
                           <PortraitUpload
                             registrantId={registrant.id}
-                            onUploadComplete={() => window.location.reload()}
                           />
                         )}
                       </div>

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 interface PortraitUploadProps {
   registrantId: string;
-  onUploadComplete: () => void;
+  onUploadComplete?: () => void;
 }
 
 export function PortraitUpload({ registrantId, onUploadComplete }: PortraitUploadProps) {
@@ -77,7 +77,13 @@ export function PortraitUpload({ registrantId, onUploadComplete }: PortraitUploa
       if (updateError) throw updateError;
 
       toast.success("Upload ảnh thành công!");
-      onUploadComplete();
+      
+      // Refresh the page if no callback provided (for server-side components)
+      if (onUploadComplete) {
+        onUploadComplete();
+      } else {
+        window.location.reload();
+      }
 
     } catch (error) {
       console.error('Upload error:', error);
