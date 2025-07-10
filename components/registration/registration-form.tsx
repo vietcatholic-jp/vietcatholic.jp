@@ -478,7 +478,9 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                     </div>
 
                     <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.facebook_link`}>Link Facebook</Label>
+                          <Label htmlFor={`registrants.${index}.facebook_link`}>
+                            Link Facebook {isPrimary ? "*" : ""}
+                          </Label>
                           <Input
                             id={`registrants.${index}.facebook_link`}
                             {...register(`registrants.${index}.facebook_link`)}
@@ -493,6 +495,12 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                             <p className="text-xs text-muted-foreground">
                               Tự động điền từ tài khoản Facebook của bạn
                             </p>
+                          )}
+                          {isPrimary && (
+                            <div className="text-xs text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                              Link facebook được lấy ở phần cài đặt trong trang cá nhân → 
+                              Bấm vào dấu ... bên cạnh nút chỉnh sửa trang cá nhân → Kéo xuống phía dưới cùng, bạn sẽ thấy chữ copy link, bấm vào đó để sao chép → dán vào đây.
+                            </div>
                           )}
                         </div>
 

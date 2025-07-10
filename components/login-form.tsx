@@ -16,7 +16,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
 
 export function LoginForm({
   className,
@@ -48,7 +47,7 @@ export function LoginForm({
     }
   };
 
-  const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
+  const handleOAuthLogin = async (provider: 'google') => {
     const supabase = createClient();
     setError(null);
 
@@ -57,10 +56,6 @@ export function LoginForm({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-          // For Facebook, request additional profile information
-          ...(provider === 'facebook' && {
-            scopes: 'public_profile',
-          }),
         },
       });
       if (error) throw error;
@@ -91,15 +86,9 @@ export function LoginForm({
                   <FcGoogle className="h-4 w-4 mr-2" />
                   Tiếp tục với Google
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleOAuthLogin('facebook')}
-                >
-                  <FaFacebook className="h-4 w-4 mr-2 text-blue-600" />
-                  Tiếp tục với Facebook
-                </Button>
+                <p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  💡 <strong>Khuyến nghị:</strong> Sử dụng Google để đăng nhập thuận tiện và nhanh chóng hơn!
+                </p>
               </div>
               
               <div className="relative">
