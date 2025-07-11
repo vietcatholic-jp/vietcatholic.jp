@@ -272,7 +272,7 @@ export default async function AgendaPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="h-2 w-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  Liên hệ ban tổ chức nếu có thắc mắc: support@daihoiconggiao.jp
+                  Liên hệ ban tổ chức nếu có thắc mắc: https://www.facebook.com/GTCGVNtaiNhat
                 </li>
               </ul>
             </CardContent>

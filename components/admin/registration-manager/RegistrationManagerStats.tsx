@@ -13,13 +13,13 @@ import {
 
 interface RegistrationManagerStatsProps {
   stats: {
-    totalRegistrations: number;
-    pendingPayments: number;
-    confirmedRegistrations: number;
-    rejectedPayments: number;
-    cancelRequests: number;
-    totalAmount: number;
-    confirmedAmount: number;
+    total_registrations: number;
+    pending_payments: number;
+    confirmed_registrations: number;
+    rejected_payments: number;
+    cancel_requests: number;
+    total_amount: number;
+    confirmed_amount: number;
   };
 }
 
@@ -27,63 +27,83 @@ export function RegistrationManagerStats({ stats }: RegistrationManagerStatsProp
   const statCards = [
     {
       title: "Tổng đăng ký",
-      value: stats.totalRegistrations,
+      value: stats.total_registrations,
       icon: Users,
       variant: "default" as const,
-      description: "Tổng số đăng ký"
+      description: "Tổng số đăng ký",
+      priority: false
     },
     {
       title: "Chờ thanh toán",
-      value: stats.pendingPayments,
+      value: stats.pending_payments,
       icon: Clock,
       variant: "secondary" as const,
-      description: "Cần xác nhận"
+      description: "Cần xác nhận",
+      priority: stats.pending_payments > 0
     },
     {
       title: "Đã xác nhận",
-      value: stats.confirmedRegistrations,
+      value: stats.confirmed_registrations,
       icon: CheckCircle,
       variant: "success" as const,
-      description: "Thanh toán thành công"
+      description: "Thanh toán thành công",
+      priority: false
     },
     {
       title: "Từ chối",
-      value: stats.rejectedPayments,
+      value: stats.rejected_payments,
       icon: XCircle,
       variant: "destructive" as const,
-      description: "Thanh toán bị từ chối"
+      description: "Thanh toán bị từ chối",
+      priority: stats.rejected_payments > 0
     },
     {
       title: "Yêu cầu hủy",
-      value: stats.cancelRequests,
+      value: stats.cancel_requests,
       icon: AlertCircle,
       variant: "warning" as const,
-      description: "Cần xử lý"
+      description: "Cần xử lý",
+      priority: stats.cancel_requests > 0
     }
   ];
-  /**
-  const getBadgeVariant = (variant: string) => {
-    switch (variant) {
-      case "success": return "default";
-      case "warning": return "secondary";
-      case "destructive": return "destructive";
-      default: return "outline";
-    }
-  };*/
+
+  const priorityItems = statCards.filter(card => card.priority);
 
   return (
     <div className="space-y-4">
-      {/* Main Stats Grid - Compact for mobile */}
+      {/* Priority Alert */}
+      {priorityItems.length > 0 && (
+        <Card className="p-4 border-orange-200 bg-orange-50">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="h-5 w-5 text-orange-600" />
+            <h3 className="font-semibold text-orange-900">Cần xử lý ưu tiên</h3>
+          </div>
+          <div className="space-y-1">
+            {priorityItems.map((item, index) => (
+              <div key={index} className="flex items-center justify-between text-sm">
+                <span className="text-orange-700">{item.title}</span>
+                <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
+                  {item.value}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Main Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="p-3 md:p-4">
+            <Card key={index} className={`p-3 md:p-4 ${stat.priority ? 'border-orange-200 bg-orange-50' : ''}`}>
               <div className="flex items-center justify-between mb-1">
-                <Icon className="h-4 w-4 text-muted-foreground" />
-                <div className="text-lg md:text-2xl font-bold">{stat.value}</div>
+                <Icon className={`h-4 w-4 ${stat.priority ? 'text-orange-600' : 'text-muted-foreground'}`} />
+                <div className={`text-lg md:text-2xl font-bold ${stat.priority ? 'text-orange-900' : ''}`}>
+                  {stat.value}
+                </div>
               </div>
-              <div className="text-xs md:text-sm font-medium text-left">
+              <div className={`text-xs md:text-sm font-medium text-left ${stat.priority ? 'text-orange-700' : ''}`}>
                 {stat.title}
               </div>
             </Card>
@@ -91,7 +111,7 @@ export function RegistrationManagerStats({ stats }: RegistrationManagerStatsProp
         })}
       </div>
 
-      {/* Financial Summary - Compact for mobile */}
+      {/* Financial Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
         <Card className="p-3 md:p-4">
           <div className="flex items-center justify-between mb-1">
@@ -99,47 +119,29 @@ export function RegistrationManagerStats({ stats }: RegistrationManagerStatsProp
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-lg md:text-2xl font-bold">
-            ¥{stats.totalAmount.toLocaleString()}
+            ¥{stats.total_amount.toLocaleString()}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Tổng số tiền từ tất cả đăng ký
           </div>
         </Card>
 
         <Card className="p-3 md:p-4">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium">Đã thu được</span>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Đã thu</span>
+            <DollarSign className="h-4 w-4 text-green-600" />
           </div>
           <div className="text-lg md:text-2xl font-bold text-green-600">
-            ¥{stats.confirmedAmount.toLocaleString()}
+            ¥{stats.confirmed_amount.toLocaleString()}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {stats.total_amount > 0 ? 
+              `${Math.round((stats.confirmed_amount / stats.total_amount) * 100)}% của tổng dự kiến` : 
+              'Chưa có doanh thu'
+            }
           </div>
         </Card>
       </div>
-
-      {/* Quick Actions - Compact for mobile */}
-      <Card className="p-3 md:p-4">
-        <h3 className="font-medium mb-2">Cần xử lý</h3>
-        <div className="flex flex-wrap gap-1">
-          {stats.pendingPayments > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {stats.pendingPayments} thanh toán
-            </Badge>
-          )}
-          {stats.cancelRequests > 0 && (
-            <Badge variant="outline" className="text-xs">
-              {stats.cancelRequests} yêu cầu hủy
-            </Badge>
-          )}
-          {stats.rejectedPayments > 0 && (
-            <Badge variant="destructive" className="text-xs">
-              {stats.rejectedPayments} bị từ chối
-            </Badge>
-          )}
-          {stats.pendingPayments === 0 && stats.cancelRequests === 0 && stats.rejectedPayments === 0 && (
-            <Badge variant="default" className="text-xs">
-              Không có việc cần xử lý
-            </Badge>
-          )}
-        </div>
-      </Card>
     </div>
   );
 }

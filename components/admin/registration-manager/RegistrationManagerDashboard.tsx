@@ -5,56 +5,109 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RegistrationManagerStats } from "./RegistrationManagerStats";
 import { RegistrationManagerList } from "./RegistrationManagerList";
 import { CancelRequestsManager } from "./CancelRequestsManager";
+import { QuickActions } from "./QuickActions";
 import { 
   BarChart3, 
   Users, 
   XCircle,
-  Loader2
+  Loader2,
+  RefreshCw
 } from "lucide-react";
 import { Registration, CancelRequest } from "@/lib/types";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface RegistrationManagerData {
   stats: {
-    totalRegistrations: number;
-    pendingPayments: number;
-    confirmedRegistrations: number;
-    rejectedPayments: number;
-    cancelRequests: number;
-    totalAmount: number;
-    confirmedAmount: number;
+    total_registrations: number;
+    pending_payments: number;
+    confirmed_registrations: number;
+    rejected_payments: number;
+    cancel_requests: number;
+    total_amount: number;
+    confirmed_amount: number;
   };
   registrations: Registration[];
   cancelRequests: CancelRequest[];
+  totalPages: number;
 }
 
 export function RegistrationManagerDashboard() {
   const [data, setData] = useState<RegistrationManagerData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1, search = "", status = "all", showLoading = true) => {
     try {
-      const response = await fetch('/api/admin/registration-manager');
+      if (showLoading) {
+        setIsLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
+      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+        search,
+        status,
+      });
+      
+      const response = await fetch(`/api/admin/registration-manager?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch data');
       }
       const result = await response.json();
       setData(result);
+      setLastRefresh(new Date());
     } catch (error) {
       console.error('Error fetching registration manager data:', error);
       toast.error('Failed to load registration data');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(currentPage, searchTerm, statusFilter);
+  }, [currentPage, searchTerm, statusFilter]);
+
+  // Auto-refresh every 30 seconds when on the overview tab
+  useEffect(() => {
+    if (activeTab === "overview") {
+      const interval = setInterval(() => {
+        fetchData(currentPage, searchTerm, statusFilter, false);
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab, currentPage, searchTerm, statusFilter]);
 
   const handleDataRefresh = () => {
-    fetchData();
+    fetchData(currentPage, searchTerm, statusFilter, false);
+  };
+
+  const handleManualRefresh = () => {
+    fetchData(currentPage, searchTerm, statusFilter, false);
+    toast.success('Dữ liệu đã được làm mới');
+  };
+
+  const handleSearch = (search: string) => {
+    setSearchTerm(search);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   if (isLoading) {
@@ -82,37 +135,68 @@ export function RegistrationManagerDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Quản lý đăng ký</h1>
-          <p className="text-muted-foreground mt-2">
-            Quản lý thông tin đăng ký, xác nhận thanh toán và xử lý yêu cầu hủy
-          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Quản lý đăng ký</h1>
+              <p className="text-muted-foreground mt-2">
+                Quản lý thông tin đăng ký, xác nhận thanh toán và xử lý yêu cầu hủy
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {lastRefresh && (
+                <span className="text-sm text-muted-foreground">
+                  Cập nhật lần cuối: {lastRefresh.toLocaleTimeString('vi-VN')}
+                </span>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManualRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Đang tải...' : 'Làm mới'}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
+              <BarChart3 className="h-4 w-4 hidden sm:flex" />
               Tổng quan
             </TabsTrigger>
             <TabsTrigger value="registrations" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
+              <Users className="h-4 w-4 hidden sm:flex" />
               Đăng ký
             </TabsTrigger>
             <TabsTrigger value="cancellations" className="flex items-center gap-2">
-              <XCircle className="h-4 w-4" />
+              <XCircle className="h-4 w-4 hidden sm:flex" />
               Yêu cầu hủy
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <RegistrationManagerStats stats={data.stats} />
+            <div className="space-y-6">
+              <RegistrationManagerStats stats={data.stats} />
+              <QuickActions stats={data.stats} onTabChange={setActiveTab} />
+            </div>
           </TabsContent>
 
           <TabsContent value="registrations" className="mt-6">
             <RegistrationManagerList 
               registrations={data.registrations}
+              currentPage={currentPage}
+              totalPages={data.totalPages}
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
               onDataRefresh={handleDataRefresh}
+              onSearch={handleSearch}
+              onStatusFilter={handleStatusFilter}
+              onPageChange={handlePageChange}
+              isLoading={isLoading}
             />
           </TabsContent>
 

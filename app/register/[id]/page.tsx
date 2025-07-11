@@ -134,10 +134,7 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
                   </p>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="font-medium">Email:</span> support@daihoiconggiao.jp
-                    </div>
-                    <div>
-                      <span className="font-medium">Điện thoại:</span> (03) 1234-5678
+                      <span className="font-medium">Fanpage</span> https://www.facebook.com/GTCGVNtaiNhat/
                     </div>
                   </div>
                 </CardContent>

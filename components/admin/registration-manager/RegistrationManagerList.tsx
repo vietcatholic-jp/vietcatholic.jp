@@ -1,43 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, 
   Eye, 
   Edit, 
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import { Registration } from "@/lib/types";
 import { RegistrationDetailModal } from "./RegistrationDetailModal";
 import { RegistrationEditModal } from "./RegistrationEditModal";
+import { Button } from "@/components/ui/button";
 
 interface RegistrationManagerListProps {
   registrations: Registration[];
+  currentPage: number;
+  totalPages: number;
+  searchTerm: string;
+  statusFilter: string;
+  isLoading: boolean;
   onDataRefresh: () => void;
+  onSearch: (search: string) => void;
+  onStatusFilter: (status: string) => void;
+  onPageChange: (page: number) => void;
 }
 
-export function RegistrationManagerList({ registrations, onDataRefresh }: RegistrationManagerListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+export function RegistrationManagerList({ 
+  registrations, 
+  currentPage,
+  totalPages,
+  searchTerm,
+  statusFilter,
+  isLoading,
+  onDataRefresh,
+  onSearch,
+  onStatusFilter,
+  onPageChange
+}: RegistrationManagerListProps) {
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [viewingRegistration, setViewingRegistration] = useState<Registration | null>(null);
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
 
-  // Filter registrations based on search and status
-  const filteredRegistrations = registrations.filter(registration => {
-    const matchesSearch = 
-      registration.invoice_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.user?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.registrants?.some(r => r.full_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === "all" || registration.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearch(localSearchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localSearchTerm, onSearch]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -61,12 +77,6 @@ export function RegistrationManagerList({ registrations, onDataRefresh }: Regist
   };
 
   const priorityStatuses = ['report_paid', 'cancel_pending', 'payment_rejected'];
-  const sortedRegistrations = [...filteredRegistrations].sort((a, b) => {
-    const aPriority = priorityStatuses.includes(a.status) ? 0 : 1;
-    const bPriority = priorityStatuses.includes(b.status) ? 0 : 1;
-    if (aPriority !== bPriority) return aPriority - bPriority;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
 
   return (
     <>
@@ -78,9 +88,9 @@ export function RegistrationManagerList({ registrations, onDataRefresh }: Regist
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Tìm kiếm..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Tìm kiếm theo mã đăng ký..."
+                  value={localSearchTerm}
+                  onChange={(e) => setLocalSearchTerm(e.target.value)}
                   className="pl-10 w-full md:w-64"
                 />
               </div>
@@ -88,7 +98,7 @@ export function RegistrationManagerList({ registrations, onDataRefresh }: Regist
                 <Filter className="h-4 w-4 text-muted-foreground" />
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => onStatusFilter(e.target.value)}
                   className="px-3 py-2 border border-input bg-background rounded-md text-sm flex-1 md:flex-none"
                 >
                   <option value="all">Tất cả</option>
@@ -105,9 +115,13 @@ export function RegistrationManagerList({ registrations, onDataRefresh }: Regist
           </div>
         </CardHeader>
         <CardContent>
-          {sortedRegistrations.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : registrations.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {searchTerm || statusFilter !== "all" 
+              {localSearchTerm || statusFilter !== "all" 
                 ? "Không tìm thấy đăng ký nào phù hợp"
                 : "Chưa có đăng ký nào"
               }
@@ -130,7 +144,7 @@ export function RegistrationManagerList({ registrations, onDataRefresh }: Regist
                       </tr>
                     </thead>
                     <tbody>
-                      {sortedRegistrations.map((registration) => (
+                      {registrations.map((registration) => (
                         <tr
                           key={registration.id}
                           className={`border-b hover:bg-gray-50 ${
@@ -196,7 +210,7 @@ export function RegistrationManagerList({ registrations, onDataRefresh }: Regist
 
               {/* Mobile List */}
               <div className="md:hidden space-y-3">
-                {sortedRegistrations.map((registration) => (
+                {registrations.map((registration) => (
                   <div
                     key={registration.id}
                     className={`border rounded-lg p-3 ${
@@ -255,6 +269,48 @@ export function RegistrationManagerList({ registrations, onDataRefresh }: Regist
                   </div>
                 ))}
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="text-sm text-muted-foreground">
+                    Trang {currentPage} của {totalPages}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onPageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Trước
+                    </Button>
+                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                      const page = i + 1;
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => onPageChange(page)}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onPageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Sau
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </CardContent>

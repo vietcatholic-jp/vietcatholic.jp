@@ -2,8 +2,15 @@ import { NextResponse } from 'next/server';
 import { getServerUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const offset = (page - 1) * limit;
+    const searchTerm = searchParams.get('search') || '';
+    const statusFilter = searchParams.get('status') || 'all';
+
     const user = await getServerUser();
     
     if (!user) {
@@ -22,16 +29,40 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get registration statistics
-    const { data: registrations, error: registrationsError } = await supabase
+    // Get registration statistics using RPC
+    const { data: stats, error: statsError } = await supabase.rpc('get_registration_stats').single();
+	
+    if (statsError) {
+      throw statsError;
+    }
+
+    // Get paginated and filtered registrations
+    let query = supabase
       .from('registrations')
       .select(`
         *,
         user:users(*),
         registrants(*),
         receipts(*)
-      `)
-      .order('created_at', { ascending: false });
+      `, { count: 'exact' });
+
+    if (searchTerm) {
+      // Enhanced search across multiple fields
+      query = query.or(`
+        invoice_code.ilike.%${searchTerm}%,
+        user.full_name.ilike.%${searchTerm}%,
+        user.email.ilike.%${searchTerm}%,
+        user.phone.ilike.%${searchTerm}%
+      `);
+    }
+
+    if (statusFilter !== 'all') {
+      query = query.eq('status', statusFilter);
+    }
+    
+    const { data: registrations, error: registrationsError, count } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (registrationsError) {
       throw registrationsError;
@@ -51,23 +82,11 @@ export async function GET() {
       throw cancelRequestsError;
     }
 
-    // Calculate statistics
-    const stats = {
-      totalRegistrations: registrations.length,
-      pendingPayments: registrations.filter(r => r.status === 'report_paid').length,
-      confirmedRegistrations: registrations.filter(r => r.status === 'confirm_paid' || r.status === 'confirmed').length,
-      rejectedPayments: registrations.filter(r => r.status === 'payment_rejected').length,
-      cancelRequests: cancelRequests.filter(r => r.status === 'pending').length,
-      totalAmount: registrations.reduce((sum, r) => sum + r.total_amount, 0),
-      confirmedAmount: registrations
-        .filter(r => r.status === 'confirm_paid' || r.status === 'confirmed')
-        .reduce((sum, r) => sum + r.total_amount, 0),
-    };
-
     return NextResponse.json({
       stats,
       registrations,
       cancelRequests,
+      totalPages: Math.ceil((count || 0) / limit),
     });
 
   } catch (error) {

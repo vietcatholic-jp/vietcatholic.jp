@@ -313,7 +313,7 @@ declare
   exists_code boolean;
 begin
   loop
-    code := to_char(now(), 'YYYY') || '-' || lpad(floor(random() * 999999)::text, 6, '0');
+    code := 'DH' || to_char(now(), 'YY') || '-' || lpad(floor(random() * 999999)::text, 6, '0');
     select exists(select 1 from public.registrations where invoice_code = code) into exists_code;
     if not exists_code then
       exit;
