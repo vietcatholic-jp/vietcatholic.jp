@@ -122,7 +122,7 @@ export default async function DashboardPage({
                 </Button>
               </Link>
 
-              {(profile.role === 'regional_admin' || profile.role === 'super_admin') && (
+              {(profile.role === 'regional_admin' || profile.role === 'super_admin' || profile.role === 'registration_manager') && (
                 <Link href="/admin">
                   <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
                     <Settings className="h-4 w-4" />

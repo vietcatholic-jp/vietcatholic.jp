@@ -14,7 +14,7 @@ export function AdminRegistrations() {
   const userRole = data.userProfile?.role || 'participant';
 
   // Group leaders get a specialized view
-  if (userRole === 'group_leader') {
+  if (userRole === 'group_leader' || userRole === 'super_admin') {
     return <GroupLeaderRegistrations />;
   }
 

@@ -79,6 +79,10 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
                     <span className="text-muted-foreground">Trạng thái:</span>
                     <Badge variant="secondary">
                       {registration.status === 'pending' && 'Chờ thanh toán'}
+                      {registration.status === 'report_paid' && 'Đã báo thanh toán'}
+                      {registration.status === 'confirm_paid' && 'Đã xác nhận thanh toán'}
+                      {registration.status === 'payment_rejected' && 'Thanh toán bị từ chối'}
+                      
                     </Badge>
                   </div>
                   

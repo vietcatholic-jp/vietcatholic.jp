@@ -2,7 +2,7 @@
 create extension if not exists "uuid-ossp";
 
 -- Create custom types
-create type user_role as enum ('participant', 'event_organizer','group_leader', 'regional_admin', 'super_admin');
+create type user_role as enum ('participant', 'registration_manager', 'event_organizer','group_leader', 'regional_admin', 'super_admin');
 create type region_type as enum ('kanto', 'kansai', 'chubu', 'kyushu', 'chugoku', 'shikoku', 'tohoku', 'hokkaido');
 create type gender_type as enum ('male', 'female', 'other');
 create type age_group_type as enum ('under_12','12_17', '18_25', '26_35', '36_50', 'over_50');

@@ -36,6 +36,7 @@ interface UserManagementProps {
 
 const roleLabels: Record<UserRole, string> = {
   'participant': 'Người tham gia',
+  'registration_manager': 'Quản lý đăng ký',
   'event_organizer': 'Tổ chức sự kiện', 
   'group_leader': 'Trưởng nhóm',
   'regional_admin': 'Quản trị viên khu vực',
