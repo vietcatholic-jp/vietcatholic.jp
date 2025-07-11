@@ -9,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 
 interface UserProfile {
   full_name: string | null;
+  role: string;
 }
 
 export function ClientAuthButton() {
@@ -25,7 +26,7 @@ export function ClientAuthButton() {
         // Get user profile
         const { data: profileData } = await supabase
           .from('users')
-          .select('full_name')
+          .select('full_name, role')
           .eq('id', user.id)
           .single();
 
@@ -72,11 +73,20 @@ export function ClientAuthButton() {
     return user?.email?.slice(0, 10) + '...' || '';
   };
 
+  const isAdmin = profile?.role && ['registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin'].includes(profile.role);
+
   return user ? (
     <div className="flex items-center gap-4">
       <span className="text-sm text-gray-600">
         Xin chào, {getDisplayName()}
       </span>
+      {isAdmin && (
+        <Button asChild size="sm" variant="outline">
+          <Link href={profile.role === 'registration_manager' ? '/admin/registration-manager' : '/admin'}>
+            Quản trị
+          </Link>
+        </Button>
+      )}
       <Button
         size="sm"
         variant="outline"

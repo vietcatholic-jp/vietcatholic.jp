@@ -93,7 +93,7 @@ export default async function RegisterPage() {
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="font-medium">Facebook:</span>
-                      <span className="ml-2 text-muted-foreground">https://www.facebook.com/gioitreconggiaojp</span>
+                      <span className="ml-2 text-muted-foreground">https://www.facebook.com/GTCGVNtaiNhat/</span>
                     </div>
                   </div>
                 </CardContent>
