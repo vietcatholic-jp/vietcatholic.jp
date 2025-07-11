@@ -57,6 +57,11 @@ export async function POST(request: NextRequest) {
     const { data: invoiceResult } = await supabase.rpc('generate_invoice_code');
     const invoiceCode = invoiceResult || `INV-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
+    const totalAmount = validated.registrants.reduce((total, registrant) => {
+      const price = registrant.age_group === 'under_12' ? basePrice * 0.5 : basePrice;
+      return total + price;
+    }, 0);
+
     // Create registration record
     const { data: registration, error: regError } = await supabase
       .from("registrations")
@@ -65,7 +70,7 @@ export async function POST(request: NextRequest) {
         event_config_id: eventConfig?.id,
         invoice_code: invoiceCode,
         status: "pending",
-        total_amount: validated.registrants.length * basePrice,
+        total_amount: totalAmount,
         participant_count: validated.registrants.length,
         notes: validated.notes,
       })
