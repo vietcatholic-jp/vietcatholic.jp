@@ -99,7 +99,7 @@ export async function updateSession(request: NextRequest) {
 
     // Check role-based access for admin routes
     if (pathname.startsWith('/admin')) {
-      if (!profile || !['regional_admin', 'super_admin'].includes(profile.role)) {
+      if (!profile || !['regional_admin','registration_manager','group_leader', 'event_organizer', 'super_admin'].includes(profile.role)) {
         url.pathname = "/dashboard";
         return NextResponse.redirect(url);
       }

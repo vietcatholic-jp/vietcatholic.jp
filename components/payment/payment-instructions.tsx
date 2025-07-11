@@ -149,12 +149,12 @@ export function PaymentInstructions({ amount, invoiceCode }: PaymentInstructions
             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <div>
                 <p className="text-sm text-muted-foreground">Nội dung chuyển khoản</p>
-                <p className="font-medium font-mono">{invoiceCode}</p>
+                <p className="font-medium text-xl font-mono">{invoiceCode.split("-")[1]}</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => copyToClipboard(invoiceCode, "mã đăng ký")}
+                onClick={() => copyToClipboard(invoiceCode.split("-")[1], "mã đăng ký")}
               >
                 {copiedField === "mã đăng ký" ? (
                   <CheckCircle className="h-4 w-4 text-green-500" />
@@ -173,10 +173,10 @@ export function PaymentInstructions({ amount, invoiceCode }: PaymentInstructions
             Lưu ý quan trọng
           </h4>
           <ul className="text-sm text-amber-800 space-y-1 ml-6 list-disc">
-            <li>Vui lòng ghi chính xác mã đăng ký <strong>{invoiceCode}</strong> trong nội dung chuyển khoản</li>
+            <li>Vui lòng ghi chính xác mã đăng ký <strong className="text-xl">{invoiceCode.split("-")[1]}</strong> trong nội dung chuyển khoản</li>
             <li>Sau khi chuyển khoản, vui lòng upload hóa đơn/ảnh chụp màn hình xác nhận</li>
             <li>Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc sau khi nhận được thanh toán</li>
-            <li>Nếu có thắc mắc, vui lòng liên hệ: support@daihoiconggiao.jp</li>
+            <li>Nếu có thắc mắc, vui lòng liên hệ qua fanpage trực tiếp: https://www.facebook.com/GTCGVNtaiNhat/</li>
           </ul>
         </div>
       </CardContent>

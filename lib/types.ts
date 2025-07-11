@@ -1,4 +1,4 @@
-export type UserRole = 'participant' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin';
+export type UserRole = 'participant' | 'registration_manager' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin';
 export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | 'shikoku' | 'tohoku' | 'hokkaido';
 export type GenderType = 'male' | 'female' | 'other';
 export type AgeGroupType = 'under_12' | '12_17' | '18_25' | '26_35' | '36_50' | 'over_50';
@@ -8,6 +8,10 @@ export type RegistrationStatus =
   | 'report_paid'      // User uploaded payment receipt
   | 'confirm_paid'     // Admin confirmed payment is correct
   | 'payment_rejected' // Admin rejected payment
+  | 'donation'         // User chose to donate instead of cancelling
+  | 'cancel_pending'   // Cancellation request pending admin review
+  | 'cancel_accepted'  // Admin accepted cancellation
+  | 'cancel_rejected'  // Admin rejected cancellation
   | 'cancelled'        // Registration cancelled
   | 'confirmed'        // Fully confirmed, tickets can be generated
   | 'checked_in'       // Participant checked in at event
@@ -307,8 +311,11 @@ export const REGIONS: { value: RegionType; label: string }[] = [
 
 export const ROLES: { value: UserRole; label: string }[] = [
   { value: 'participant', label: 'Participant' },
+  { value: 'registration_manager', label: 'Registration Manager' },
   { value: 'event_organizer', label: 'Event Organizer' },
   { value: 'group_leader', label: 'Group Leader' },
+  { value: 'regional_admin', label: 'Regional Admin' },
+  { value: 'super_admin', label: 'Super Admin' },
 ];
 
 export const EVENT_PARTICIPATION_ROLES: { value: EventParticipationRole; label: string; description: string }[] = [

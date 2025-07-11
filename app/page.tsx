@@ -76,7 +76,7 @@ export default async function Home() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4">Đăng ký tài khoản với thông tin cá nhân để bắt đầu hành trình</p>
+                <p className="text-gray-700 mb-4">Đăng ký tài khoản để bắt đầu hành trình</p>
                 <Button asChild variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50">
                   <Link href="/auth/sign-up">
                     Đăng Ký Ngay
@@ -95,7 +95,7 @@ export default async function Home() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4">Điền thông tin chi tiết và chọn các hoạt động bạn muốn tham gia</p>
+                <p className="text-gray-700 mb-4">Điền thông tin chi tiết, số người tham gia</p>
                 <Button asChild variant="outline" size="sm" className="border-green-600 text-green-600 hover:bg-green-50">
                   <Link href="/register">
                     Đăng Ký Sự Kiện
@@ -117,7 +117,7 @@ export default async function Home() {
                 <p className="text-gray-700 mb-4">Hoàn tất thanh toán phí tham gia để xác nhận đăng ký</p>
                 <div className="text-sm text-amber-700 font-medium">
                   <CheckCircle className="inline mr-1 h-4 w-4" />
-                  Thanh toán an toàn
+                  Thanh toán qua chuyển khoản ngân hàng
                 </div>
               </CardContent>
             </Card>
@@ -131,7 +131,7 @@ export default async function Home() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4">Tải xuống vé tham gia với thông tin cá nhân và QR code</p>
+                <p className="text-gray-700 mb-4">Tải vé tham gia với mã QR</p>
                 <div className="text-sm text-purple-700 font-medium">
                   <Sparkles className="inline mr-1 h-4 w-4" />
                   Vé điện tử tiện lợi

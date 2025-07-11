@@ -9,27 +9,50 @@ import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+interface UserProfile {
+  role: string;
+}
+
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     
+    const fetchUserAndProfile = async (user: User | null) => {
+      if (user) {
+        // Get user profile
+        const { data: profileData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        setProfile(profileData);
+      } else {
+        setProfile(null);
+      }
+      setUser(user);
+    };
+
     // Get initial user
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+      fetchUserAndProfile(user);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      fetchUserAndProfile(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const isAdmin = profile?.role && ['registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin'].includes(profile.role);
 
   return (
     <nav className="w-full border-b border-border bg-gradient-to-r from-blue-50 via-white to-purple-50 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -73,6 +96,14 @@ export function Navbar() {
                 >
                   📅 Chương trình
                 </Link>
+                {isAdmin && (
+                  <Link 
+                    href={profile?.role === 'registration_manager' ? '/admin/registration-manager' : '/admin'}
+                    className="text-sm font-medium transition-colors hover:text-orange-600 hover:bg-orange-50 px-3 py-2 rounded-lg"
+                  >
+                    ⚙️ Quản trị
+                  </Link>
+                )}
               </div>
             )}
           </div>
@@ -123,6 +154,15 @@ export function Navbar() {
                   >
                     📅 Chương trình
                   </Link>
+                  {isAdmin && (
+                    <Link 
+                      href={profile?.role === 'registration_manager' ? '/admin/registration-manager' : '/admin'}
+                      className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-orange-600 hover:bg-orange-50 px-3 py-3 rounded-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      ⚙️ Quản trị
+                    </Link>
+                  )}
                   <div className="border-t pt-3 mt-3">
                     <div className="flex items-center justify-between px-3">
                       <ThemeSwitcher />

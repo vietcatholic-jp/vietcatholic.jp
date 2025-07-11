@@ -12,7 +12,7 @@ DECLARE
   user_role user_role;
 BEGIN
   SELECT role INTO user_role FROM public.users WHERE id = user_id;
-  RETURN user_role IN ('super_admin', 'regional_admin', 'event_organizer', 'group_leader');
+  RETURN user_role IN ('super_admin', 'registration_manager', 'regional_admin', 'group_leader');
 END;
 $$;
 
@@ -26,7 +26,7 @@ DECLARE
   user_role user_role;
 BEGIN
   SELECT role INTO user_role FROM public.users WHERE id = user_id;
-  RETURN user_role IN ('super_admin', 'regional_admin');
+  RETURN user_role IN ('super_admin', 'registration_manager');
 END;
 $$;
 
