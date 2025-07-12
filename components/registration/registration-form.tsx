@@ -285,7 +285,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
             type="button"
             size="lg"
             onClick={addRegistrant}
-            className="rounded-full h-14 w-14 shadow-lg"
+            className="rounded-full h-12 w-12 shadow-lg"
           >
             <Plus className="h-6 w-6" />
           </Button>
