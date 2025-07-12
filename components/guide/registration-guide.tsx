@@ -73,12 +73,12 @@ export function RegistrationGuide() {
             Hướng dẫn đăng ký tham gia
           </h1>
           <p className="text-lg text-muted-foreground mb-6">
-            Đại hội Công giáo Việt Nam tại Nhật Bản 2025 - Pilgrims of Hope
+            ĐẠI HỘI TOÀN QUỐC NĂM THÁNH 2025 - Những Người Hành Hương của Hy Vọng
           </p>
           <div className="flex justify-center">
             <Badge variant="outline" className="text-base px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
               <Calendar className="h-4 w-4 mr-2" />
-              Năm Thánh 2025
+              14-15/09/2025
             </Badge>
           </div>
         </div>
@@ -128,11 +128,12 @@ function OverviewSection() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-blue-500" />
-                  <span>Năm Thánh 2025 - Pilgrims of Hope</span>
+                  <span>ĐẠI HỘI TOÀN QUỐC NĂM THÁNH 2025</span>
+				  <span>Những Người Hành Hương của Hy Vọng</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-green-500" />
-                  <span>Nhật Bản (địa điểm cụ thể sẽ được thông báo)</span>
+                  <span>Hadano, Kanagawa, Nhật Bản</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-purple-500" />
@@ -183,7 +184,7 @@ function OverviewSection() {
               </div>
               <h3 className="font-semibold mb-2">2. Thanh toán</h3>
               <p className="text-sm text-center text-muted-foreground">
-                Chuyển khoản và upload biên lai
+                Chuyển khoản và thông báo biên lai
               </p>
             </div>
             
@@ -436,7 +437,7 @@ function PaymentSection() {
                 
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div>
-                    <p className="text-sm text-muted-foreground">Tên tài khoản</p>
+                    <p className="text-sm text-red-600 text-muted-foreground">Tên tài khoản</p>
                     <p className="font-medium">在日カトリックベトナム青年会</p>
                   </div>
                   <Button variant="ghost" size="sm">

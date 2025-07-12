@@ -139,14 +139,53 @@ begin
     r.event_role::text as role_name,
     case r.event_role
       when 'participant' then 'Người tham gia'
-      when 'volunteer_media' then 'Ban Truyền thông'
-      when 'volunteer_logistics' then 'Ban Hậu cần'
-      when 'volunteer_liturgy' then 'Ban Phụng vụ'
-      when 'volunteer_security' then 'Ban An ninh'
-      when 'volunteer_registration' then 'Ban Đăng ký'
-      when 'volunteer_catering' then 'Ban Ẩm thực'
+      -- Media team roles
+      when 'volunteer_media_leader' then 'Trưởng ban Truyền thông'
+      when 'volunteer_media_sub_leader' then 'Phó ban Truyền thông'
+      when 'volunteer_media_member' then 'Thành viên ban Truyền thông'
+      -- Activity team roles
+      when 'volunteer_activity_leader' then 'Trưởng ban Sinh hoạt'
+      when 'volunteer_activity_sub_leader' then 'Phó ban Sinh hoạt'
+      when 'volunteer_activity_member' then 'Thành viên ban Sinh hoạt'
+      -- Discipline team roles
+      when 'volunteer_discipline_leader' then 'Trưởng ban Kỷ luật'
+      when 'volunteer_discipline_sub_leader' then 'Phó ban Kỷ luật'
+      when 'volunteer_discipline_member' then 'Thành viên ban Kỷ luật'
+      -- Logistics team roles
+      when 'volunteer_logistics_leader' then 'Trưởng ban Hậu cần'
+      when 'volunteer_logistics_sub_leader' then 'Phó ban Hậu cần'
+      when 'volunteer_logistics_member' then 'Thành viên ban Hậu cần'
+      -- Liturgy team roles
+      when 'volunteer_liturgy_leader' then 'Trưởng ban Phụng vụ'
+      when 'volunteer_liturgy_sub_leader' then 'Phó ban Phụng vụ'
+      when 'volunteer_liturgy_member' then 'Thành viên ban Phụng vụ'
+      -- Security team roles
+      when 'volunteer_security_leader' then 'Trưởng ban An ninh'
+      when 'volunteer_security_sub_leader' then 'Phó ban An ninh'
+      when 'volunteer_security_member' then 'Thành viên ban An ninh'
+      -- Registration team roles
+      when 'volunteer_registration_leader' then 'Trưởng ban Thư ký'
+      when 'volunteer_registration_sub_leader' then 'Phó ban Thư ký'
+      when 'volunteer_registration_member' then 'Thành viên ban Thư ký'
+      -- Catering team roles
+      when 'volunteer_catering_leader' then 'Trưởng ban Ẩm thực'
+      when 'volunteer_catering_sub_leader' then 'Phó ban Ẩm thực'
+      when 'volunteer_catering_member' then 'Thành viên ban Ẩm thực'
+      -- Health team roles
+      when 'volunteer_health_leader' then 'Trưởng ban Y tế'
+      when 'volunteer_health_sub_leader' then 'Phó ban Y tế'
+      when 'volunteer_health_member' then 'Thành viên ban Y tế'
+      -- Audio Light team roles
+      when 'volunteer_audio_light_leader' then 'Trưởng ban Âm thanh Ánh sáng'
+      when 'volunteer_audio_light_sub_leader' then 'Phó ban Âm thanh Ánh sáng'
+      when 'volunteer_audio_light_member' then 'Thành viên ban Âm thanh Ánh sáng'
+      -- Group leadership roles
+      when 'volunteer_group_leader' then 'Trưởng nhóm các đội'
+      when 'volunteer_group_sub_leader' then 'Phó trưởng nhóm các đội'
+      -- Organizer roles
       when 'organizer_core' then 'Ban Tổ chức chính'
       when 'organizer_regional' then 'Ban Tổ chức khu vực'
+      -- Special roles
       when 'speaker' then 'Diễn giả'
       when 'performer' then 'Nghệ sĩ biểu diễn'
       else r.event_role::text

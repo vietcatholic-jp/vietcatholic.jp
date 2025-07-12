@@ -25,16 +25,55 @@ create type registration_status as enum (
 -- Event participation roles
 create type event_participation_role as enum (
   'participant',           -- Regular attendee
-  'volunteer_media',       -- Media team volunteer
-  'volunteer_logistics',   -- Logistics team volunteer
-  'volunteer_liturgy',     -- Liturgy team volunteer
-  'volunteer_security',    -- Security team volunteer
-  'volunteer_registration',-- Registration desk volunteer
-  'volunteer_catering',    -- Catering team volunteer
-  'organizer_core',        -- Core organizing committee
-  'organizer_regional',    -- Regional organizer
-  'speaker',               -- Speaker/presenter
-  'performer'              -- Performer (choir, band, etc.)
+  -- Media team roles
+  'volunteer_media_leader',       -- Trưởng ban Truyền thông
+  'volunteer_media_sub_leader',   -- Phó ban Truyền thông
+  'volunteer_media_member',       -- Thành viên ban Truyền thông
+  -- Activity team roles
+  'volunteer_activity_leader',    -- Trưởng ban Sinh hoạt
+  'volunteer_activity_sub_leader',-- Phó ban Sinh hoạt
+  'volunteer_activity_member',    -- Thành viên ban Sinh hoạt
+  -- Discipline team roles
+  'volunteer_discipline_leader',  -- Trưởng ban Kỷ luật
+  'volunteer_discipline_sub_leader',-- Phó ban Kỷ luật
+  'volunteer_discipline_member',  -- Thành viên ban Kỷ luật
+  -- Logistics team roles
+  'volunteer_logistics_leader',   -- Trưởng ban Hậu cần
+  'volunteer_logistics_sub_leader',-- Phó ban Hậu cần
+  'volunteer_logistics_member',   -- Thành viên ban Hậu cần
+  -- Liturgy team roles
+  'volunteer_liturgy_leader',     -- Trưởng ban Phụng vụ
+  'volunteer_liturgy_sub_leader', -- Phó ban Phụng vụ
+  'volunteer_liturgy_member',     -- Thành viên ban Phụng vụ
+  -- Security team roles
+  'volunteer_security_leader',    -- Trưởng ban An ninh
+  'volunteer_security_sub_leader',-- Phó ban An ninh
+  'volunteer_security_member',    -- Thành viên ban An ninh
+  -- Registration team roles
+  'volunteer_registration_leader',-- Trưởng ban Thư ký
+  'volunteer_registration_sub_leader',-- Phó ban Thư ký
+  'volunteer_registration_member',-- Thành viên ban Thư ký
+  -- Catering team roles
+  'volunteer_catering_leader',    -- Trưởng ban Ẩm thực
+  'volunteer_catering_sub_leader',-- Phó ban Ẩm thực
+  'volunteer_catering_member',    -- Thành viên ban Ẩm thực
+  -- Health team roles
+  'volunteer_health_leader',      -- Trưởng ban Y tế
+  'volunteer_health_sub_leader',  -- Phó ban Y tế
+  'volunteer_health_member',      -- Thành viên ban Y tế
+  -- Audio Light team roles
+  'volunteer_audio_light_leader', -- Trưởng ban Âm thanh Ánh sáng
+  'volunteer_audio_light_sub_leader',-- Phó ban Âm thanh Ánh sáng
+  'volunteer_audio_light_member', -- Thành viên ban Âm thanh Ánh sáng
+  -- Group leadership roles
+  'volunteer_group_leader',       -- Trưởng nhóm các đội
+  'volunteer_group_sub_leader',   -- Phó trưởng nhóm các đội
+  -- Organizer roles
+  'organizer_core',               -- BAN TỔ CHỨC, THỦ QUỸ
+  'organizer_regional',           -- BAN TỔ CHỨC KHU VỰC
+  -- Special roles
+  'speaker',                      -- Speaker/presenter
+  'performer'                     -- Performer (choir, band, etc.)
 );
 
 -- Users table (extends Supabase auth.users)
@@ -394,14 +433,53 @@ BEGIN
     r.event_role::text as role_name,
     CASE r.event_role
       WHEN 'participant' THEN 'Người tham gia'
-      WHEN 'volunteer_media' THEN 'Ban Truyền thông'
-      WHEN 'volunteer_logistics' THEN 'Ban Hậu cần'
-      WHEN 'volunteer_liturgy' THEN 'Ban Phụng vụ'
-      WHEN 'volunteer_security' THEN 'Ban An ninh'
-      WHEN 'volunteer_registration' THEN 'Ban Đăng ký'
-      WHEN 'volunteer_catering' THEN 'Ban Ẩm thực'
+      -- Media team roles
+      WHEN 'volunteer_media_leader' THEN 'Trưởng ban Truyền thông'
+      WHEN 'volunteer_media_sub_leader' THEN 'Phó ban Truyền thông'
+      WHEN 'volunteer_media_member' THEN 'Thành viên ban Truyền thông'
+      -- Activity team roles
+      WHEN 'volunteer_activity_leader' THEN 'Trưởng ban Sinh hoạt'
+      WHEN 'volunteer_activity_sub_leader' THEN 'Phó ban Sinh hoạt'
+      WHEN 'volunteer_activity_member' THEN 'Thành viên ban Sinh hoạt'
+      -- Discipline team roles
+      WHEN 'volunteer_discipline_leader' THEN 'Trưởng ban Kỷ luật'
+      WHEN 'volunteer_discipline_sub_leader' THEN 'Phó ban Kỷ luật'
+      WHEN 'volunteer_discipline_member' THEN 'Thành viên ban Kỷ luật'
+      -- Logistics team roles
+      WHEN 'volunteer_logistics_leader' THEN 'Trưởng ban Hậu cần'
+      WHEN 'volunteer_logistics_sub_leader' THEN 'Phó ban Hậu cần'
+      WHEN 'volunteer_logistics_member' THEN 'Thành viên ban Hậu cần'
+      -- Liturgy team roles
+      WHEN 'volunteer_liturgy_leader' THEN 'Trưởng ban Phụng vụ'
+      WHEN 'volunteer_liturgy_sub_leader' THEN 'Phó ban Phụng vụ'
+      WHEN 'volunteer_liturgy_member' THEN 'Thành viên ban Phụng vụ'
+      -- Security team roles
+      WHEN 'volunteer_security_leader' THEN 'Trưởng ban An ninh'
+      WHEN 'volunteer_security_sub_leader' THEN 'Phó ban An ninh'
+      WHEN 'volunteer_security_member' THEN 'Thành viên ban An ninh'
+      -- Registration team roles
+      WHEN 'volunteer_registration_leader' THEN 'Trưởng ban Thư ký'
+      WHEN 'volunteer_registration_sub_leader' THEN 'Phó ban Thư ký'
+      WHEN 'volunteer_registration_member' THEN 'Thành viên ban Thư ký'
+      -- Catering team roles
+      WHEN 'volunteer_catering_leader' THEN 'Trưởng ban Ẩm thực'
+      WHEN 'volunteer_catering_sub_leader' THEN 'Phó ban Ẩm thực'
+      WHEN 'volunteer_catering_member' THEN 'Thành viên ban Ẩm thực'
+      -- Health team roles
+      WHEN 'volunteer_health_leader' THEN 'Trưởng ban Y tế'
+      WHEN 'volunteer_health_sub_leader' THEN 'Phó ban Y tế'
+      WHEN 'volunteer_health_member' THEN 'Thành viên ban Y tế'
+      -- Audio Light team roles
+      WHEN 'volunteer_audio_light_leader' THEN 'Trưởng ban Âm thanh Ánh sáng'
+      WHEN 'volunteer_audio_light_sub_leader' THEN 'Phó ban Âm thanh Ánh sáng'
+      WHEN 'volunteer_audio_light_member' THEN 'Thành viên ban Âm thanh Ánh sáng'
+      -- Group leadership roles
+      WHEN 'volunteer_group_leader' THEN 'Trưởng nhóm các đội'
+      WHEN 'volunteer_group_sub_leader' THEN 'Phó trưởng nhóm các đội'
+      -- Organizer roles
       WHEN 'organizer_core' THEN 'Ban Tổ chức chính'
       WHEN 'organizer_regional' THEN 'Ban Tổ chức khu vực'
+      -- Special roles
       WHEN 'speaker' THEN 'Diễn giả'
       WHEN 'performer' THEN 'Nghệ sĩ biểu diễn'
       ELSE r.event_role::text

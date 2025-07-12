@@ -14,7 +14,12 @@ import {
   Crown,
   MapPin,
   Mic,
-  Music
+  Music,
+  Heart,
+  Volume2,
+  Target,
+  UserCog,
+  Activity
 } from "lucide-react";
 import { EventParticipationRole, EVENT_PARTICIPATION_ROLES } from "@/lib/types";
 
@@ -26,14 +31,66 @@ interface RoleSelectionProps {
 
 const ROLE_ICONS: Record<EventParticipationRole, React.ComponentType<{ className?: string }>> = {
   participant: Users,
-  volunteer_media: Camera,
-  volunteer_logistics: Truck,
-  volunteer_liturgy: Church,
-  volunteer_security: Shield,
-  volunteer_registration: UserCheck,
-  volunteer_catering: ChefHat,
+  
+  // Media team roles
+  volunteer_media_leader: Camera,
+  volunteer_media_sub_leader: Camera,
+  volunteer_media_member: Camera,
+  
+  // Activity team roles
+  volunteer_activity_leader: Activity,
+  volunteer_activity_sub_leader: Activity,
+  volunteer_activity_member: Activity,
+  
+  // Discipline team roles
+  volunteer_discipline_leader: Target,
+  volunteer_discipline_sub_leader: Target,
+  volunteer_discipline_member: Target,
+  
+  // Logistics team roles
+  volunteer_logistics_leader: Truck,
+  volunteer_logistics_sub_leader: Truck,
+  volunteer_logistics_member: Truck,
+  
+  // Liturgy team roles
+  volunteer_liturgy_leader: Church,
+  volunteer_liturgy_sub_leader: Church,
+  volunteer_liturgy_member: Church,
+  
+  // Security team roles
+  volunteer_security_leader: Shield,
+  volunteer_security_sub_leader: Shield,
+  volunteer_security_member: Shield,
+  
+  // Registration team roles
+  volunteer_registration_leader: UserCheck,
+  volunteer_registration_sub_leader: UserCheck,
+  volunteer_registration_member: UserCheck,
+  
+  // Catering team roles
+  volunteer_catering_leader: ChefHat,
+  volunteer_catering_sub_leader: ChefHat,
+  volunteer_catering_member: ChefHat,
+  
+  // Health team roles
+  volunteer_health_leader: Heart,
+  volunteer_health_sub_leader: Heart,
+  volunteer_health_member: Heart,
+  
+  // Audio Light team roles
+  volunteer_audio_light_leader: Volume2,
+  volunteer_audio_light_sub_leader: Volume2,
+  volunteer_audio_light_member: Volume2,
+  
+  // Group leadership roles
+  volunteer_group_leader: UserCog,
+  volunteer_group_sub_leader: UserCog,
+  
+  // Organizer roles
   organizer_core: Crown,
   organizer_regional: MapPin,
+  
+  // Special roles
   speaker: Mic,
   performer: Music,
 };
@@ -45,22 +102,112 @@ const ROLE_CATEGORIES = [
     color: "bg-blue-50 border-blue-200"
   },
   {
-    title: "Đội ngũ thành viên các ban",
+    title: "Ban Truyền thông",
     roles: [
-      'volunteer_media',
-      'volunteer_logistics', 
-      'volunteer_liturgy',
-      'volunteer_security',
-      'volunteer_registration',
-      'volunteer_catering',
-      'performer', 'speaker'
+      'volunteer_media_leader',
+      'volunteer_media_sub_leader',
+      'volunteer_media_member'
     ] as EventParticipationRole[],
     color: "bg-green-50 border-green-200"
   },
   {
+    title: "Ban Sinh hoạt",
+    roles: [
+      'volunteer_activity_leader',
+      'volunteer_activity_sub_leader',
+      'volunteer_activity_member'
+    ] as EventParticipationRole[],
+    color: "bg-yellow-50 border-yellow-200"
+  },
+  {
+    title: "Ban Kỷ luật",
+    roles: [
+      'volunteer_discipline_leader',
+      'volunteer_discipline_sub_leader',
+      'volunteer_discipline_member'
+    ] as EventParticipationRole[],
+    color: "bg-red-50 border-red-200"
+  },
+  {
+    title: "Ban Hậu cần",
+    roles: [
+      'volunteer_logistics_leader',
+      'volunteer_logistics_sub_leader',
+      'volunteer_logistics_member'
+    ] as EventParticipationRole[],
+    color: "bg-orange-50 border-orange-200"
+  },
+  {
+    title: "Ban Phụng vụ",
+    roles: [
+      'volunteer_liturgy_leader',
+      'volunteer_liturgy_sub_leader',
+      'volunteer_liturgy_member'
+    ] as EventParticipationRole[],
+    color: "bg-purple-50 border-purple-200"
+  },
+  {
+    title: "Ban An ninh",
+    roles: [
+      'volunteer_security_leader',
+      'volunteer_security_sub_leader',
+      'volunteer_security_member'
+    ] as EventParticipationRole[],
+    color: "bg-gray-50 border-gray-200"
+  },
+  {
+    title: "Ban Thư ký",
+    roles: [
+      'volunteer_registration_leader',
+      'volunteer_registration_sub_leader',
+      'volunteer_registration_member'
+    ] as EventParticipationRole[],
+    color: "bg-indigo-50 border-indigo-200"
+  },
+  {
+    title: "Ban Ẩm thực",
+    roles: [
+      'volunteer_catering_leader',
+      'volunteer_catering_sub_leader',
+      'volunteer_catering_member'
+    ] as EventParticipationRole[],
+    color: "bg-pink-50 border-pink-200"
+  },
+  {
+    title: "Ban Y tế",
+    roles: [
+      'volunteer_health_leader',
+      'volunteer_health_sub_leader',
+      'volunteer_health_member'
+    ] as EventParticipationRole[],
+    color: "bg-teal-50 border-teal-200"
+  },
+  {
+    title: "Ban Âm thanh Ánh sáng",
+    roles: [
+      'volunteer_audio_light_leader',
+      'volunteer_audio_light_sub_leader',
+      'volunteer_audio_light_member'
+    ] as EventParticipationRole[],
+    color: "bg-cyan-50 border-cyan-200"
+  },
+  {
+    title: "Trưởng nhóm",
+    roles: [
+      'volunteer_group_leader',
+      'volunteer_group_sub_leader'
+    ] as EventParticipationRole[],
+    color: "bg-emerald-50 border-emerald-200"
+  },
+  {
     title: "Ban Tổ chức",
     roles: ['organizer_core', 'organizer_regional'] as EventParticipationRole[],
-    color: "bg-purple-50 border-purple-200"
+    color: "bg-violet-50 border-violet-200"
+  },
+  {
+    title: "Vai trò đặc biệt",
+    roles: ['speaker'] as EventParticipationRole[],
+    color: "bg-amber-50 border-amber-200"
   }
 ];
 
@@ -90,22 +237,15 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
         </p>
       </div>
 
-      {/* Continue button at top when role is selected */}
+      {/* Selected role indicator */}
       {selectedRole && (
         <div className="flex justify-center py-4 border rounded-lg bg-primary/5">
-          <div className="text-center space-y-3">
+          <div className="text-center">
             <p className="text-sm text-muted-foreground">
               Bạn đã chọn: <span className="font-medium text-primary">
                 {EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label}
               </span>
             </p>
-            <Button 
-              onClick={onContinue}
-              size="lg"
-              className="min-w-[200px]"
-            >
-              Tiếp tục đăng ký →
-            </Button>
           </div>
         </div>
       )}
@@ -157,6 +297,24 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
           </CardContent>
         </Card>
       ))}
+
+      {/* Floating Continue Button */}
+      {selectedRole && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-white rounded-full shadow-lg border border-gray-200 px-6 py-3">
+            <Button 
+              onClick={onContinue}
+              size="lg"
+              className="min-w-[200px] rounded-full"
+            >
+              Tiếp tục đăng ký →
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Spacer to prevent content from being hidden behind floating button */}
+      {selectedRole && <div className="h-20"></div>}
 
       <div className="flex justify-center pt-4">
         <Button 
