@@ -91,6 +91,12 @@ export function Navbar() {
                   📝 Đăng ký
                 </Link>
                 <Link 
+                  href="/guide" 
+                  className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
+                >
+                  📖 Hướng dẫn
+                </Link>
+                <Link 
                   href="/agenda" 
                   className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
                 >
@@ -111,6 +117,14 @@ export function Navbar() {
           {/* Right side */}
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-4">
+              {!user && (
+                <Link 
+                  href="/guide" 
+                  className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
+                >
+                  📖 Hướng dẫn
+                </Link>
+              )}
               <ThemeSwitcher />
               <ClientAuthButton />
             </div>
@@ -148,6 +162,13 @@ export function Navbar() {
                     📝 Đăng ký
                   </Link>
                   <Link 
+                    href="/guide" 
+                    className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    📖 Hướng dẫn
+                  </Link>
+                  <Link 
                     href="/agenda" 
                     className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
@@ -172,10 +193,19 @@ export function Navbar() {
                 </>
               )}
               {!user && (
-                <div className="flex items-center justify-between px-3">
-                  <ThemeSwitcher />
-                  <ClientAuthButton />
-                </div>
+                <>
+                  <Link 
+                    href="/guide" 
+                    className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    📖 Hướng dẫn
+                  </Link>
+                  <div className="flex items-center justify-between px-3">
+                    <ThemeSwitcher />
+                    <ClientAuthButton />
+                  </div>
+                </>
               )}
             </div>
           </div>
