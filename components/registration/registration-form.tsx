@@ -197,6 +197,15 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       province: "",
       diocese: "",
     });
+    
+    // Scroll to the newly added registrant on mobile
+    setTimeout(() => {
+      const newRegistrantIndex = registrants.length;
+      const element = document.getElementById(`registrant-${newRegistrantIndex}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const handleProvinceChange = (index: number, selectedProvince: string) => {
@@ -263,7 +272,25 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
   // Step 2: Registration Form
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto relative">
+      {/* Floating Add Button for Mobile */}
+      <div className="fixed bottom-20 right-4 z-50 sm:hidden">
+        <div className="flex flex-col items-end space-y-2">
+          {registrants.length > 1 && (
+            <div className="bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-medium">
+              {registrants.length} người
+            </div>
+          )}
+          <Button
+            type="button"
+            size="lg"
+            onClick={addRegistrant}
+            className="rounded-full h-14 w-14 shadow-lg"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
+      </div>
       {/* Progress indicator */}
       <div className="flex items-center justify-center space-x-4 mb-6">
         <div className="flex items-center space-x-2">
@@ -316,33 +343,52 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                 variant="outline"
                 size="sm"
                 onClick={addRegistrant}
+                className="hidden sm:flex"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Thêm người
               </Button>
             </div>
+            {/* Mobile add button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addRegistrant}
+              className="sm:hidden w-full mt-3"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm người tham gia
+            </Button>
           </CardHeader>
           <CardContent className="space-y-8">
             {fields.map((field, index) => {
               const isPrimary = index === 0;
               
               return (
-                <div key={field.id} className="border rounded-lg p-6 relative">
+                <div key={field.id} id={`registrant-${index}`} className="border rounded-lg p-4 sm:p-6 relative">
                   {registrants.length > 1 && !isPrimary && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute top-2 right-2"
+                      className="absolute top-2 right-2 h-8 w-8 p-0"
                       onClick={() => remove(index)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                   
-                  <h4 className="font-medium mb-4">
-                    {isPrimary ? `Người đăng ký chính (${EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label})` : `Người tham gia ${index + 1}`}
-                  </h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium text-sm sm:text-base">
+                      {isPrimary ? `Người đăng ký chính` : `Người tham gia ${index + 1}`}
+                    </h4>
+                    {isPrimary && (
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        {EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label}
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Core required fields for all registrants */}
@@ -518,9 +564,11 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                     </div>
 
                     {/* Optional contact information section */}
-                    <div className="md:col-span-2 border-t pt-4 mt-4">
-                      <h5 className="font-medium mb-4 text-muted-foreground">Thông tin liên lạc (tùy chọn)</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2 border-t pt-4 mt-6">
+                      <h5 className="font-medium mb-3 text-muted-foreground text-sm">
+                        Thông tin liên lạc (tùy chọn)
+                      </h5>
+                      <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor={`registrants.${index}.email`}>Email (tùy chọn)</Label>
                           <Input
@@ -577,9 +625,38 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                     <input type="hidden" {...register(`registrants.${index}.event_role`)} />
                     <input type="hidden" {...register(`registrants.${index}.is_primary`)} />
                   </div>
+                  
+                  {/* Add person button after each registrant (except the last one) */}
+                  {index < registrants.length - 1 && (
+                    <div className="flex justify-center mt-4 pt-4 border-t border-dashed">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={addRegistrant}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Thêm người khác
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })}
+            
+            {/* Final add button at the bottom */}
+            <div className="flex justify-center pt-4 border-t border-dashed">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addRegistrant}
+                className="w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Thêm người tham gia
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
