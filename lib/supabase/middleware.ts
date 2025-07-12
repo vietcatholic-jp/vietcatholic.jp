@@ -121,11 +121,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If authenticated user tries to access homepage, redirect to dashboard
-  if (user && pathname === '/') {
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
-  }
+  // Remove the automatic redirect from homepage to dashboard for authenticated users
+  // This allows logged-in users to access the home page
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
