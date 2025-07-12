@@ -186,7 +186,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       gender: "male" as const,
       age_group: "26_35" as const,
       shirt_size: "M" as const,
-      event_role: selectedRole, // Use same role as primary
+      event_role: selectedRole === 'participant' ? selectedRole : 'participant', // Default to participant unless primary is already participant
       is_primary: false,
       notes: "",
       // Optional fields
@@ -504,7 +504,38 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                         </div>
                       </>
                     )}
-
+                    {!isPrimary && selectedRole !== 'participant' && (
+                      <div className="space-y-2">
+                        <Label htmlFor={`registrants.${index}.event_role`}>Vai trò tham gia *</Label>
+                        <select
+                          id={`registrants.${index}.event_role`}
+                          {...register(`registrants.${index}.event_role`)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {
+                            // Additional registrants can only choose between participant and the primary's role
+                            EVENT_PARTICIPATION_ROLES
+                              .filter(role => 
+                                role.value === 'participant' || 
+                                (role.value === selectedRole)
+                              )
+                              .map((role) => (
+                                <option key={role.value} value={role.value}>
+                                  {role.label}
+                                </option>
+                              ))
+                        }
+                        </select>
+                        {errors.registrants?.[index]?.event_role && (
+                          <p className="text-sm text-destructive">
+                            {errors.registrants[index]?.event_role?.message}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Người tham gia thêm chỉ có thể chọn giữa &quot;Người tham gia&quot; hoặc &quot;{EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label}&quot;.
+                        </p>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor={`registrants.${index}.shirt_size`}>Size áo *</Label>
                       <select
