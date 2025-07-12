@@ -176,8 +176,9 @@ export function PaymentInstructions({ amount, invoiceCode }: PaymentInstructions
             <li>Vui lòng ghi chính xác mã đăng ký <strong className="text-xl">{invoiceCode.split("-")[1]}</strong> trong nội dung chuyển khoản</li>
             <li>Sau khi chuyển khoản, vui lòng upload hóa đơn/ảnh chụp màn hình xác nhận</li>
             <li>Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc sau khi nhận được thanh toán</li>
-            <li>Nếu có thắc mắc, vui lòng liên hệ qua fanpage trực tiếp: https://www.facebook.com/GTCGVNtaiNhat/</li>
+            <li>Nếu có thắc mắc, vui lòng liên hệ trực tiếp qua fanpage nhóm giới trẻ công giáo tại Nhật.</li>
           </ul>
+          <a className="text-blue-600 mt-2 p-4 text-sm" href="https://www.facebook.com/GTCGVNtaiNhat/" target="_blank" rel="noopener noreferrer">facebook.com/GTCGVNtaiNhat</a>
         </div>
       </CardContent>
     </Card>
