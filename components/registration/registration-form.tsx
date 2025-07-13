@@ -227,6 +227,8 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         body: JSON.stringify({
           registrants: data.registrants.map(registrant => ({
             ...registrant,
+            saint_name: registrant.saint_name?.toUpperCase() || "",
+            full_name: registrant.full_name.toUpperCase(), // Ensure full name is uppercase
             // For additional registrants, inherit contact info from primary
             email: registrant.is_primary ? registrant.email : data.registrants[0].email,
             phone: registrant.is_primary ? registrant.phone : data.registrants[0].phone,
