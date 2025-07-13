@@ -28,7 +28,7 @@ export async function GET() {
       .eq("id", user.id)
       .single();
 
-    if (!profile || profile.role !== "group_leader") {
+    if (!profile || !['group_leader', 'super_admin'].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -39,38 +39,29 @@ export async function GET() {
       'organizer_core',
       'volunteer_media_leader',
       'volunteer_media_sub_leader',
-      'volunteer_media_member',
       'volunteer_activity_leader',
       'volunteer_activity_sub_leader',
-      'volunteer_activity_member',
       'volunteer_discipline_leader',
       'volunteer_discipline_sub_leader',
-      'volunteer_discipline_member',
       'volunteer_logistics_leader',
       'volunteer_logistics_sub_leader',
-      'volunteer_logistics_member',
       'volunteer_liturgy_leader',
       'volunteer_liturgy_sub_leader',
-      'volunteer_liturgy_member',
       'volunteer_security_leader',
       'volunteer_security_sub_leader',
-      'volunteer_security_member',
       'volunteer_registration_leader',
       'volunteer_registration_sub_leader',
-      'volunteer_registration_member',
       'volunteer_catering_leader',
       'volunteer_catering_sub_leader',
-      'volunteer_catering_member',
       'volunteer_health_leader',
       'volunteer_health_sub_leader',
-      'volunteer_health_member',
       'volunteer_audio_light_leader',
       'volunteer_audio_light_sub_leader',
-      'volunteer_audio_light_member',
       'volunteer_group_leader',
       'volunteer_group_sub_leader'
     ];
 
+    // First get all confirmed registrations with user data
     const { data: registrations, error } = await supabase
       .from("registrations")
       .select(`
@@ -78,20 +69,23 @@ export async function GET() {
         user:users(email, full_name, region, province),
         registrants(*)
       `)
-      .eq("status", "confirmed")
-      .eq("user.region", profile.region);
+      .eq("status", "confirmed");
 
     if (error) {
       console.error("Group leader registrations query error:", error);
       return NextResponse.json({ error: "Failed to fetch registrations" }, { status: 500 });
     }
 
-    // Filter registrations that have at least one registrant with a group-related role
-    const filteredRegistrations = (registrations || []).filter((registration: Registration) => 
-      registration.registrants?.some((registrant: Registrant) => 
+    // Filter registrations by group-related roles
+    const filteredRegistrations = (registrations || []).filter((registration: Registration) => {
+      // Check if registration has at least one registrant with a group-related role
+      const hasGroupRole = registration.registrants?.some((registrant: Registrant) =>
         groupRelatedRoles.includes(registrant.event_role || '')
-      )
-    );
+      );
+
+      // Both super admin and group leaders can see all group registrations
+      return hasGroupRole;
+    });
 
     return NextResponse.json({ 
       registrations: filteredRegistrations,
