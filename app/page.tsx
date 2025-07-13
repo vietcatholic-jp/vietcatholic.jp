@@ -4,8 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
       <Navbar />
@@ -39,17 +44,28 @@ export default async function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all">
-              <Link href="/auth/sign-up">
-                <Heart className="mr-2 h-5 w-5" />
-                Bắt Đầu Hành Trình
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-full">
-              <Link href="/auth/login">
-                Đăng Nhập
-              </Link>
-            </Button>
+            {user ? (
+              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all">
+                <Link href="/dashboard">
+                  <ArrowRight className="mr-2 h-5 w-5" />
+                  Vào Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all">
+                  <Link href="/auth/sign-up">
+                    <Heart className="mr-2 h-5 w-5" />
+                    Bắt Đầu Hành Trình
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-full">
+                  <Link href="/auth/login">
+                    Đăng Nhập
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -160,12 +176,21 @@ export default async function Home() {
             Mỗi bước đi của chúng ta là một lời cầu nguyện, mỗi gặp gỡ là một ân sủng.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all">
-              <Link href="/auth/sign-up">
-                <Heart className="mr-2 h-5 w-5" />
-                Bắt Đầu Ngay Hôm Nay
-              </Link>
-            </Button>
+            {user ? (
+              <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all">
+                <Link href="/dashboard">
+                  <ArrowRight className="mr-2 h-5 w-5" />
+                  Vào Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all">
+                <Link href="/auth/sign-up">
+                  <Heart className="mr-2 h-5 w-5" />
+                  Bắt Đầu Ngay Hôm Nay
+                </Link>
+              </Button>
+            )}
             <p className="text-sm opacity-75">
               🙏 &ldquo;Trong Chúa Kitô, chúng ta tìm thấy hy vọng&rdquo; 🙏
             </p>

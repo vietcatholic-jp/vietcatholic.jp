@@ -256,7 +256,7 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
 
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-green-500" />
-                        <span>{event.base_price.toLocaleString('vi-VN')} ¥</span>
+                        <span>¥{event.base_price.toLocaleString()}</span>
                       </div>
 
                       <div className="text-xs text-muted-foreground">

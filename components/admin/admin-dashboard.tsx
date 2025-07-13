@@ -9,6 +9,8 @@ import { ExportButton } from "@/components/admin/export-button";
 import { UserManagement } from "@/components/admin/user-management";
 import { EventConfigManager } from "@/components/admin/event-config-manager";
 import { OrganizerTools } from "@/components/admin/organizer-tools";
+import { DiocesesChart } from "@/components/admin/dioceses-chart";
+import { ProvincesChart } from "@/components/admin/provinces-chart";
 import { 
   Users, 
   CreditCard,
@@ -195,44 +197,12 @@ export function AdminDashboard() {
             
 
             {/* Province Stats (for super admin) */}
-            {data.provinceStats  && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Thống kê theo tỉnh</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {data.provinceStats.map((stat) => (
-                      <div key={stat.province} className="text-center">
-                        <div className="font-semibold text-lg">{stat.count}</div>
-                        <div className="text-sm text-muted-foreground capitalize">
-                          {stat.province}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            {data.provinceStats && (
+              <ProvincesChart provinceStats={data.provinceStats} />
             )}
             {/* Diocese Stats (for super admin) */}
-            {data.dioceseStats  && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Thống kê theo giáo phận</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {data.dioceseStats.map((stat) => (
-                      <div key={stat.diocese} className="text-center">
-                        <div className="font-semibold text-lg">{stat.count}</div>
-                        <div className="text-sm text-muted-foreground capitalize">
-                          {stat.diocese}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            {data.dioceseStats && (
+              <DiocesesChart dioceseStats={data.dioceseStats} />
             )}
             {/* Event Role Stats (for super admin) */}
             {data.roleStats &&  (
