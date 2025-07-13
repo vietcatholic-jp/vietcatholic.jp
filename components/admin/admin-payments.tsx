@@ -94,7 +94,7 @@ export function AdminPayments() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {paymentStats.totalReceived.toLocaleString('vi-VN')}₫
+                ¥{paymentStats.totalReceived.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 Đã xác nhận
@@ -173,7 +173,7 @@ export function AdminPayments() {
                     <div>
                       <h4 className="font-medium">{request.user?.full_name || request.account_holder_name}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Số tiền: {request.refund_amount.toLocaleString('vi-VN')}₫
+                        Số tiền: ¥{request.refund_amount.toLocaleString()}
                       </p>
                     </div>
                     <Badge 
