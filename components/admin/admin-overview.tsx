@@ -2,6 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminData } from "@/components/admin/admin-context";
+import { DiocesesChart } from "@/components/admin/dioceses-chart";
+import { ProvincesChart } from "@/components/admin/provinces-chart";
 
 export function AdminOverview() {
   const { data, isLoading } = useAdminData();
@@ -14,44 +16,12 @@ export function AdminOverview() {
     <div className="space-y-6">
       {/* Province Stats (for super admin) */}
       {data.provinceStats && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Thống kê theo tỉnh</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {data.provinceStats.map((stat) => (
-                <div key={stat.province} className="text-center">
-                  <div className="font-semibold text-lg">{stat.count}</div>
-                  <div className="text-sm text-muted-foreground capitalize">
-                    {stat.province}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <ProvincesChart provinceStats={data.provinceStats} />
       )}
 
       {/* Diocese Stats (for super admin) */}
       {data.dioceseStats && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Thống kê theo giáo phận</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {data.dioceseStats.map((stat) => (
-                <div key={stat.diocese} className="text-center">
-                  <div className="font-semibold text-lg">{stat.count}</div>
-                  <div className="text-sm text-muted-foreground capitalize">
-                    {stat.diocese}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <DiocesesChart dioceseStats={data.dioceseStats} />
       )}
 
       {/* Event Role Stats (for super admin) */}
