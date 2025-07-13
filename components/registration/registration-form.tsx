@@ -173,6 +173,8 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
   const proceedToRegistration = () => {
     setCurrentStep('registration');
+    // Scroll to top for better UX when moving to registration step
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const goBackToRoleSelection = () => {
