@@ -3,6 +3,10 @@ export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | '
 export type GenderType = 'male' | 'female' | 'other';
 export type AgeGroupType = 'under_12' | '12_17' | '18_25' | '26_35' | '36_50' | 'over_50';
 export type ShirtSizeType = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
+
+// For registration role selection - can be 'participant' or an event role ID
+export type EventParticipationRole = string;
+
 export type RegistrationStatus = 
   | 'pending'          // Initial registration, waiting for payment
   | 'report_paid'      // User uploaded payment receipt
@@ -16,59 +20,6 @@ export type RegistrationStatus =
   | 'confirmed'        // Fully confirmed, tickets can be generated
   | 'checked_in'       // Participant checked in at event
   | 'checked_out';     // Participant checked out from event
-
-// NEW: Event participation roles
-export type EventParticipationRole = 
-  | 'participant'           // Regular attendee
-  // Media team roles
-  | 'volunteer_media_leader'       // Trưởng ban Truyền thông
-  | 'volunteer_media_sub_leader'   // Phó ban Truyền thông
-  | 'volunteer_media_member'       // Thành viên ban Truyền thông
-  // Activity team roles
-  | 'volunteer_activity_leader'    // Trưởng ban Sinh hoạt
-  | 'volunteer_activity_sub_leader'// Phó ban Sinh hoạt
-  | 'volunteer_activity_member'    // Thành viên ban Sinh hoạt
-  // Discipline team roles
-  | 'volunteer_discipline_leader'  // Trưởng ban Kỷ luật
-  | 'volunteer_discipline_sub_leader'// Phó ban Kỷ luật
-  | 'volunteer_discipline_member'  // Thành viên ban Kỷ luật
-  // Logistics team roles
-  | 'volunteer_logistics_leader'   // Trưởng ban Hậu cần
-  | 'volunteer_logistics_sub_leader'// Phó ban Hậu cần
-  | 'volunteer_logistics_member'   // Thành viên ban Hậu cần
-  // Liturgy team roles
-  | 'volunteer_liturgy_leader'     // Trưởng ban Phụng vụ
-  | 'volunteer_liturgy_sub_leader' // Phó ban Phụng vụ
-  | 'volunteer_liturgy_member'     // Thành viên ban Phụng vụ
-  // Security team roles
-  | 'volunteer_security_leader'    // Trưởng ban An ninh
-  | 'volunteer_security_sub_leader'// Phó ban An ninh
-  | 'volunteer_security_member'    // Thành viên ban An ninh
-  // Registration team roles
-  | 'volunteer_registration_leader'// Trưởng ban Thư ký
-  | 'volunteer_registration_sub_leader'// Phó ban Thư ký
-  | 'volunteer_registration_member'// Thành viên ban Thư ký
-  // Catering team roles
-  | 'volunteer_catering_leader'    // Trưởng ban Ẩm thực
-  | 'volunteer_catering_sub_leader'// Phó ban Ẩm thực
-  | 'volunteer_catering_member'    // Thành viên ban Ẩm thực
-  // Health team roles
-  | 'volunteer_health_leader'      // Trưởng ban Y tế
-  | 'volunteer_health_sub_leader'  // Phó ban Y tế
-  | 'volunteer_health_member'      // Thành viên ban Y tế
-  // Audio Light team roles
-  | 'volunteer_audio_light_leader' // Trưởng ban Âm thanh Ánh sáng
-  | 'volunteer_audio_light_sub_leader'// Phó ban Âm thanh Ánh sáng
-  | 'volunteer_audio_light_member' // Thành viên ban Âm thanh Ánh sáng
-  // Group leadership roles
-  | 'volunteer_group_leader'       // Trưởng nhóm các đội
-  | 'volunteer_group_sub_leader'   // Phó trưởng nhóm các đội
-  // Organizer roles
-  | 'organizer_core'               // BAN TỔ CHỨC, THỦ QUỸ
-  | 'organizer_regional'           // BAN TỔ CHỨC KHU VỰC
-  // Special roles
-  | 'speaker'                      // Speaker/presenter
-  | 'performer';                   // Performer (choir, band, etc.)
 
 export interface User {
   id: string;
@@ -92,6 +43,31 @@ export interface EventConfig {
   base_price: number;
   cancellation_deadline?: string;
   is_active: boolean;
+  total_slots?: number;
+  registered_count?: number;
+  cancelled_count?: number;
+  checked_in_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventTeam {
+  id: string;
+  event_config_id: string;
+  name: string;
+  description?: string;
+  leader_id?: string;
+  sub_leader_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventRole {
+  id: string;
+  event_config_id: string;
+  name: string;
+  description?: string;
+  permissions?: Record<string, unknown>; // JSONB
   created_at: string;
   updated_at: string;
 }
@@ -127,7 +103,8 @@ export interface Registrant {
   facebook_link?: string;
   phone?: string;     // Optional for additional registrants
   shirt_size: ShirtSizeType;
-  event_role?: EventParticipationRole;
+  event_team_id?: string;
+  event_role_id?: string;
   is_primary?: boolean;  // Marks the main registrant
   notes?: string;
   portrait_url?: string;
@@ -211,7 +188,8 @@ export interface RegistrantFormData {
   facebook_link?: string;
   phone?: string;     // Optional for additional registrants
   shirt_size: ShirtSizeType;
-  event_role: EventParticipationRole;
+  event_team_id?: string;
+  event_role_id?: string;
   is_primary?: boolean;
   notes?: string;
 }
@@ -234,6 +212,16 @@ export interface Database {
         Row: EventConfig;
         Insert: Omit<EventConfig, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<EventConfig, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      event_teams: {
+        Row: EventTeam;
+        Insert: Omit<EventTeam, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<EventTeam, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      event_roles: {
+        Row: EventRole;
+        Insert: Omit<EventRole, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<EventRole, 'id' | 'created_at' | 'updated_at'>>;
       };
       registrations: {
         Row: Registration;
@@ -355,72 +343,6 @@ export const ROLES: { value: UserRole; label: string }[] = [
   { value: 'group_leader', label: 'Group Leader' },
   { value: 'regional_admin', label: 'Regional Admin' },
   { value: 'super_admin', label: 'Super Admin' },
-];
-
-export const EVENT_PARTICIPATION_ROLES: { value: EventParticipationRole; label: string; description: string }[] = [
-  { value: 'participant', label: 'Người tham gia', description: 'Tham gia như người dự sự kiện thông thường' },
-  
-  // Media team roles
-  { value: 'volunteer_media_leader', label: 'Trưởng ban Truyền thông', description: 'Lãnh đạo ban Truyền thông' },
-  { value: 'volunteer_media_sub_leader', label: 'Phó ban Truyền thông', description: 'Phó lãnh đạo ban Truyền thông' },
-  { value: 'volunteer_media_member', label: 'Thành viên ban Truyền thông', description: 'Chụp ảnh, quay video, social media' },
-  
-  // Activity team roles
-  { value: 'volunteer_activity_leader', label: 'Trưởng ban Sinh hoạt', description: 'Lãnh đạo ban Sinh hoạt' },
-  { value: 'volunteer_activity_sub_leader', label: 'Phó ban Sinh hoạt', description: 'Phó lãnh đạo ban Sinh hoạt' },
-  { value: 'volunteer_activity_member', label: 'Thành viên ban Sinh hoạt', description: 'Hỗ trợ các hoạt động sinh hoạt' },
-  
-  // Discipline team roles
-  { value: 'volunteer_discipline_leader', label: 'Trưởng ban Kỷ luật', description: 'Lãnh đạo ban Kỷ luật' },
-  { value: 'volunteer_discipline_sub_leader', label: 'Phó ban Kỷ luật', description: 'Phó lãnh đạo ban Kỷ luật' },
-  { value: 'volunteer_discipline_member', label: 'Thành viên ban Kỷ luật', description: 'Hỗ trợ duy trì kỷ luật' },
-  
-  // Logistics team roles
-  { value: 'volunteer_logistics_leader', label: 'Trưởng ban Hậu cần', description: 'Lãnh đạo ban Hậu cần' },
-  { value: 'volunteer_logistics_sub_leader', label: 'Phó ban Hậu cần', description: 'Phó lãnh đạo ban Hậu cần' },
-  { value: 'volunteer_logistics_member', label: 'Thành viên ban Hậu cần', description: 'Chuẩn bị sân khấu, vận chuyển, setup' },
-  
-  // Liturgy team roles
-  { value: 'volunteer_liturgy_leader', label: 'Trưởng ban Phụng vụ', description: 'Lãnh đạo ban Phụng vụ' },
-  { value: 'volunteer_liturgy_sub_leader', label: 'Phó ban Phụng vụ', description: 'Phó lãnh đạo ban Phụng vụ' },
-  { value: 'volunteer_liturgy_member', label: 'Thành viên ban Phụng vụ', description: 'Hỗ trợ các nghi thức tôn giáo' },
-  
-  // Security team roles
-  { value: 'volunteer_security_leader', label: 'Trưởng ban An ninh', description: 'Lãnh đạo ban An ninh' },
-  { value: 'volunteer_security_sub_leader', label: 'Phó ban An ninh', description: 'Phó lãnh đạo ban An ninh' },
-  { value: 'volunteer_security_member', label: 'Thành viên ban An ninh', description: 'Đảm bảo an toàn và trật tự' },
-  
-  // Registration team roles
-  { value: 'volunteer_registration_leader', label: 'Trưởng ban Thư ký', description: 'Lãnh đạo ban Thư ký' },
-  { value: 'volunteer_registration_sub_leader', label: 'Phó ban Thư ký', description: 'Phó lãnh đạo ban Thư ký' },
-  { value: 'volunteer_registration_member', label: 'Thành viên ban Thư ký', description: 'Hỗ trợ check-in và đăng ký tại chỗ' },
-  
-  // Catering team roles
-  { value: 'volunteer_catering_leader', label: 'Trưởng ban Ẩm thực', description: 'Lãnh đạo ban Ẩm thực' },
-  { value: 'volunteer_catering_sub_leader', label: 'Phó ban Ẩm thực', description: 'Phó lãnh đạo ban Ẩm thực' },
-  { value: 'volunteer_catering_member', label: 'Thành viên ban Ẩm thực', description: 'Chuẩn bị và phục vụ đồ ăn uống' },
-  
-  // Health team roles
-  { value: 'volunteer_health_leader', label: 'Trưởng ban Y tế', description: 'Lãnh đạo ban Y tế' },
-  { value: 'volunteer_health_sub_leader', label: 'Phó ban Y tế', description: 'Phó lãnh đạo ban Y tế' },
-  { value: 'volunteer_health_member', label: 'Thành viên ban Y tế', description: 'Hỗ trợ y tế và sức khỏe' },
-  
-  // Audio Light team roles
-  { value: 'volunteer_audio_light_leader', label: 'Trưởng ban Âm thanh Ánh sáng', description: 'Lãnh đạo ban Âm thanh Ánh sáng' },
-  { value: 'volunteer_audio_light_sub_leader', label: 'Phó ban Âm thanh Ánh sáng', description: 'Phó lãnh đạo ban Âm thanh Ánh sáng' },
-  { value: 'volunteer_audio_light_member', label: 'Thành viên ban Âm thanh Ánh sáng', description: 'Hỗ trợ âm thanh và ánh sáng' },
-  
-  // Group leadership roles
-  { value: 'volunteer_group_leader', label: 'Trưởng nhóm các đội', description: 'Lãnh đạo nhóm các đội' },
-  { value: 'volunteer_group_sub_leader', label: 'Phó trưởng nhóm các đội', description: 'Phó lãnh đạo nhóm các đội' },
-  
-  // Organizer roles
-  { value: 'organizer_core', label: 'Ban Tổ chức chính', description: 'Thành viên ban tổ chức cốt lõi' },
-  { value: 'organizer_regional', label: 'Ban Tổ chức khu vực', description: 'Đại diện tổ chức từ các khu vực' },
-  
-  // Special roles
-  { value: 'speaker', label: 'Diễn giả', description: 'Thuyết trình, chia sẻ kinh nghiệm' },
-  { value: 'performer', label: 'Ban sinh hoạt', description: 'Ca sĩ, nhạc sĩ, vũ đoàn, etc.' },
 ];
 
 export const GENDERS: { value: GenderType; label: string }[] = [

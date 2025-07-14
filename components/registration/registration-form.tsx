@@ -15,13 +15,14 @@ import {
   AGE_GROUPS, 
   SHIRT_SIZES,
   EventParticipationRole,
-  EVENT_PARTICIPATION_ROLES,
   JAPANESE_PROVINCES,
   PROVINCE_DIOCESE_MAPPING,
-  EventConfig
+  EventConfig,
+  EventRole
 } from "@/lib/types";
 import { toast } from "sonner";
 import { RoleSelection } from "./role-selection";
+import { createClient } from "@/lib/supabase/client";
 
 // Primary registrant schema (full details) - facebook_link is required for primary
 const primaryRegistrantSchema = z.object({
@@ -101,24 +102,65 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   const [currentStep, setCurrentStep] = useState<'role-selection' | 'registration'>('role-selection');
   const [selectedRole, setSelectedRole] = useState<EventParticipationRole>('participant');
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
+  const [eventRoles, setEventRoles] = useState<EventRole[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const supabase = createClient();
 
-  // Fetch active event config
+  // Utility function to get role display name
+  const getRoleDisplayName = (role: EventParticipationRole): string => {
+    if (role === 'participant') return 'Người tham gia';
+    const eventRole = eventRoles.find(r => r.id === role);
+    return eventRole ? eventRole.name : 'Chưa chọn';
+  };
+
+  // Utility function to get available roles for additional registrants
+  const getAvailableRolesForAdditional = () => {
+    const baseRoles = [{ id: 'participant', name: 'Người tham gia' }];
+    if (selectedRole !== 'participant') {
+      const selectedRoleObj = eventRoles.find(r => r.id === selectedRole);
+      if (selectedRoleObj) {
+        baseRoles.push({ id: selectedRoleObj.id, name: selectedRoleObj.name });
+      }
+    }
+    return baseRoles;
+  };
+
+  // Fetch active event config and roles
   useEffect(() => {
-    const fetchEventConfig = async () => {
+    const fetchEventData = async () => {
+      setIsLoadingRoles(true);
       try {
+        // Fetch event config
         const response = await fetch('/api/admin/events');
         if (response.ok) {
           const { events } = await response.json();
           const activeEvent = events?.find((event: EventConfig) => event.is_active);
           setEventConfig(activeEvent || null);
+          
+          // Fetch event roles if we have an active event
+          if (activeEvent) {
+            const { data: roles, error: rolesError } = await supabase
+              .from('event_roles')
+              .select('*')
+              .eq('event_config_id', activeEvent.id)
+              .order('name');
+
+            if (rolesError) {
+              console.error('Error fetching event roles:', rolesError);
+            } else {
+              setEventRoles(roles || []);
+            }
+          }
         }
       } catch (error) {
-        console.error('Failed to fetch event config:', error);
+        console.error('Failed to fetch event data:', error);
+      } finally {
+        setIsLoadingRoles(false);
       }
     };
 
-    fetchEventConfig();
-  }, []);
+    fetchEventData();
+  }, [supabase]);
 
   const {
     register,
@@ -265,11 +307,18 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   if (currentStep === 'role-selection') {
     return (
       <div className="max-w-4xl mx-auto">
-        <RoleSelection
-          selectedRole={selectedRole}
-          onRoleSelect={handleRoleSelection}
-          onContinue={proceedToRegistration}
-        />
+        {isLoadingRoles ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Đang tải vai trò...</p>
+          </div>
+        ) : (
+          <RoleSelection
+            selectedRole={selectedRole}
+            onRoleSelect={handleRoleSelection}
+            onContinue={proceedToRegistration}
+          />
+        )}
       </div>
     );
   }
@@ -327,7 +376,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           <h2 className="text-2xl font-bold">Đăng ký tham gia</h2>
           <p className="text-muted-foreground">
             Vai trò: <span className="font-medium">
-              {EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label}
+              {getRoleDisplayName(selectedRole)}
             </span>
           </p>
         </div>
@@ -389,7 +438,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                     </h4>
                     {isPrimary && (
                       <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                        {EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label}
+                        {getRoleDisplayName(selectedRole)}
                       </span>
                     )}
                   </div>
@@ -518,14 +567,10 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                         >
                           {
                             // Additional registrants can only choose between participant and the primary's role
-                            EVENT_PARTICIPATION_ROLES
-                              .filter(role => 
-                                role.value === 'participant' || 
-                                (role.value === selectedRole)
-                              )
+                            getAvailableRolesForAdditional()
                               .map((role) => (
-                                <option key={role.value} value={role.value}>
-                                  {role.label}
+                                <option key={role.id} value={role.id}>
+                                  {role.name}
                                 </option>
                               ))
                         }
@@ -536,7 +581,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          Người tham gia thêm chỉ có thể chọn giữa &quot;Người tham gia&quot; hoặc &quot;{EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label}&quot;.
+                          Người tham gia thêm chỉ có thể chọn giữa &quot;Người tham gia&quot; hoặc &quot;{getRoleDisplayName(selectedRole)}&quot;.
                         </p>
                       </div>
                     )}
@@ -736,7 +781,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
               <div className="flex justify-between">
                 <span>Vai trò tham gia:</span>
                 <span className="font-medium">
-                  {EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label}
+                  {getRoleDisplayName(selectedRole)}
                 </span>
               </div>
               <div className="flex justify-between">

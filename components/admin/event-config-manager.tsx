@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { EventConfig, UserRole } from "@/lib/types";
+import { EventRoleManager } from "@/components/admin/event-role-manager";
 
 interface EventConfigManagerProps {
   currentUserRole: UserRole;
@@ -36,6 +37,7 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'events' | 'roles'>('events');
 
   // Only super_admin can manage event configs
   const canManageEvents = currentUserRole === 'super_admin';
@@ -58,6 +60,13 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const activeEvent = events.find(e => e.is_active);
+
+  // Tab navigation
+  const handleTabChange = (tab: 'events' | 'roles') => {
+    setActiveTab(tab);
   };
 
   const handleCreateEvent = () => {
@@ -208,100 +217,121 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
             Tạo sự kiện mới
           </Button>
         </div>
+
+        {/* Tab navigation */}
+        <div className="mt-4">
+          <Button
+            variant={activeTab === 'events' ? 'default' : 'outline'}
+            onClick={() => handleTabChange('events')}
+            className="mr-2"
+          >
+            Quản lý sự kiện
+          </Button>
+          <Button
+            variant={activeTab === 'roles' ? 'default' : 'outline'}
+            onClick={() => handleTabChange('roles')}
+          >
+            Quản lý vai trò
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {events.map((event) => (
-            <Card key={event.id} className={`border ${event.is_active ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-lg">{event.name}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        event.is_active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {event.is_active ? 'Đang hoạt động' : 'Tạm dừng'}
-                      </span>
-                    </div>
-                    
-                    {event.description && (
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {event.description}
-                      </p>
-                    )}
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-blue-500" />
-                        <span>
-                          {event.start_date 
-                            ? new Date(event.start_date).toLocaleDateString('vi-VN')
-                            : 'Chưa xác định'
-                          }
+        {activeTab === 'events' ? (
+          <div className="space-y-4">
+            {events.map((event) => (
+              <Card key={event.id} className={`border ${event.is_active ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-lg">{event.name}</h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          event.is_active 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {event.is_active ? 'Đang hoạt động' : 'Tạm dừng'}
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-red-500" />
-                        <span>
-                          {event.end_date 
-                            ? new Date(event.end_date).toLocaleDateString('vi-VN')
-                            : 'Chưa xác định'
-                          }
-                        </span>
-                      </div>
+                      {event.description && (
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {event.description}
+                        </p>
+                      )}
 
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-500" />
-                        <span>¥{event.base_price.toLocaleString()}</span>
-                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-blue-500" />
+                          <span>
+                            {event.start_date 
+                              ? new Date(event.start_date).toLocaleDateString('vi-VN')
+                              : 'Chưa xác định'
+                            }
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-red-500" />
+                          <span>
+                            {event.end_date 
+                              ? new Date(event.end_date).toLocaleDateString('vi-VN')
+                              : 'Chưa xác định'
+                            }
+                          </span>
+                        </div>
 
-                      <div className="text-xs text-muted-foreground">
-                        Cập nhật: {new Date(event.updated_at).toLocaleDateString('vi-VN')}
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 text-green-500" />
+                          <span>¥{event.base_price.toLocaleString()}</span>
+                        </div>
+
+                        <div className="text-xs text-muted-foreground">
+                          Cập nhật: {new Date(event.updated_at).toLocaleDateString('vi-VN')}
+                        </div>
                       </div>
                     </div>
+
+                    <div className="flex items-center gap-2 ml-4">
+                      <Button
+                        variant={event.is_active ? "destructive" : "default"}
+                        size="sm"
+                        onClick={() => toggleEventStatus(event.id, !event.is_active)}
+                      >
+                        {event.is_active ? 'Tạm dừng' : 'Kích hoạt'}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditEvent(event)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteEvent(event.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
 
-                  <div className="flex items-center gap-2 ml-4">
-                    <Button
-                      variant={event.is_active ? "destructive" : "default"}
-                      size="sm"
-                      onClick={() => toggleEventStatus(event.id, !event.is_active)}
-                    >
-                      {event.is_active ? 'Tạm dừng' : 'Kích hoạt'}
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditEvent(event)}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {events.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              Chưa có sự kiện nào được tạo
-            </div>
-          )}
-        </div>
+            {events.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                Chưa có sự kiện nào được tạo
+              </div>
+            )}
+          </div>
+        ) : (
+          <EventRoleManager eventConfig={activeEvent || null} />
+        )}
 
         {/* Edit/Create Event Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
