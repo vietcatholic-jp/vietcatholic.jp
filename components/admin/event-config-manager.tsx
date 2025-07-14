@@ -413,7 +413,7 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
                 </div>
 
                 <div>
-                  <Label htmlFor="base_price">Giá cơ bản (¥)</Label>
+                  <Label htmlFor="base_price">Phí tham gia (¥)</Label>
                   <Input
                     id="base_price"
                     type="number"
