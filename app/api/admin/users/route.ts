@@ -6,10 +6,12 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    // Get pagination and search parameters
+    // Get pagination, search and filter parameters
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    const roleFilter = searchParams.get('role') || '';
+    const regionFilter = searchParams.get('region') || '';
 
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -50,6 +52,18 @@ export async function GET(request: Request) {
       const searchFilter = `full_name.ilike.%${search}%,email.ilike.%${search}%`;
       countQuery = countQuery.or(searchFilter);
       usersQuery = usersQuery.or(searchFilter);
+    }
+
+    // Apply role filter if provided
+    if (roleFilter && roleFilter !== 'all') {
+      countQuery = countQuery.eq("role", roleFilter);
+      usersQuery = usersQuery.eq("role", roleFilter);
+    }
+
+    // Apply region filter if provided (only for super_admin)
+    if (regionFilter && regionFilter !== 'all' && profile.role === "super_admin") {
+      countQuery = countQuery.eq("region", regionFilter);
+      usersQuery = usersQuery.eq("region", regionFilter);
     }
 
     // Get total count first

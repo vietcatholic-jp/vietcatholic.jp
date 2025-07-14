@@ -118,6 +118,14 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
         params.append('search', searchTerm);
       }
 
+      // Add filter parameters
+      if (roleFilter !== 'all') {
+        params.append('role', roleFilter);
+      }
+      if (regionFilter !== 'all') {
+        params.append('region', regionFilter);
+      }
+
       const response = await fetch(`/api/admin/users?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -233,7 +241,8 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
       </CardHeader>
       <CardContent>
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="space-y-4 mb-6">
+          {/* Search Row */}
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -245,39 +254,68 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
                 className="pl-10"
               />
             </div>
-            <Button onClick={handleSearch} variant="outline" size="sm">
+            <Button onClick={handleSearch} variant="outline" size="sm" className="px-4">
+              <Search className="h-4 w-4 mr-1" />
               Tìm
             </Button>
             {searchTerm && (
-              <Button onClick={handleClearSearch} variant="outline" size="sm">
+              <Button onClick={handleClearSearch} variant="outline" size="sm" className="px-4">
                 Xóa
               </Button>
             )}
           </div>
-          
-          <Select value={roleFilter} onValueChange={(value: UserRole | "all") => setRoleFilter(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Lọc theo vai trò" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả vai trò</SelectItem>
-              {Object.entries(roleLabels).map(([role, label]) => (
-                <SelectItem key={role} value={role}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          <Select value={regionFilter} onValueChange={(value: RegionType | "all") => setRegionFilter(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Lọc theo khu vực" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả khu vực</SelectItem>
-              {Object.entries(regionLabels).map(([region, label]) => (
-                <SelectItem key={region} value={region}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Filters Row */}
+          <div className="flex gap-4 items-center flex-wrap">
+            <div className="text-sm font-medium text-gray-700">Lọc theo:</div>
+
+            <div className="flex gap-3 flex-wrap">
+              <div className="min-w-[160px]">
+                <Select value={roleFilter} onValueChange={(value: UserRole | "all") => setRoleFilter(value)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Vai trò" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả vai trò</SelectItem>
+                    {Object.entries(roleLabels).map(([role, label]) => (
+                      <SelectItem key={role} value={role}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {currentUserRole === "super_admin" && (
+                <div className="min-w-[160px]">
+                  <Select value={regionFilter} onValueChange={(value: RegionType | "all") => setRegionFilter(value)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Khu vực" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tất cả khu vực</SelectItem>
+                      {Object.entries(regionLabels).map(([region, label]) => (
+                        <SelectItem key={region} value={region}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Clear Filters Button */}
+              {(roleFilter !== 'all' || regionFilter !== 'all') && (
+                <Button
+                  onClick={() => {
+                    setRoleFilter('all');
+                    setRegionFilter('all');
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Xóa bộ lọc
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Users Table */}
