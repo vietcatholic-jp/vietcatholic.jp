@@ -2,26 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Users, 
-  Camera, 
-  Truck, 
-  Church, 
-  Shield, 
-  UserCheck, 
-  ChefHat,
-  Crown,
-  MapPin,
-  Mic,
-  Music,
-  Heart,
-  Volume2,
-  Target,
-  UserCog,
-  Activity
-} from "lucide-react";
-import { EventParticipationRole, EVENT_PARTICIPATION_ROLES } from "@/lib/types";
+import { Users, UserCog } from "lucide-react";
+import { EventParticipationRole, EventRole } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface RoleSelectionProps {
   selectedRole: EventParticipationRole;
@@ -29,189 +13,149 @@ interface RoleSelectionProps {
   onContinue: () => void;
 }
 
-const ROLE_ICONS: Record<EventParticipationRole, React.ComponentType<{ className?: string }>> = {
-  participant: Users,
-  
-  // Media team roles
-  volunteer_media_leader: Camera,
-  volunteer_media_sub_leader: Camera,
-  volunteer_media_member: Camera,
-  
-  // Activity team roles
-  volunteer_activity_leader: Activity,
-  volunteer_activity_sub_leader: Activity,
-  volunteer_activity_member: Activity,
-  
-  // Discipline team roles
-  volunteer_discipline_leader: Target,
-  volunteer_discipline_sub_leader: Target,
-  volunteer_discipline_member: Target,
-  
-  // Logistics team roles
-  volunteer_logistics_leader: Truck,
-  volunteer_logistics_sub_leader: Truck,
-  volunteer_logistics_member: Truck,
-  
-  // Liturgy team roles
-  volunteer_liturgy_leader: Church,
-  volunteer_liturgy_sub_leader: Church,
-  volunteer_liturgy_member: Church,
-  
-  // Security team roles
-  volunteer_security_leader: Shield,
-  volunteer_security_sub_leader: Shield,
-  volunteer_security_member: Shield,
-  
-  // Registration team roles
-  volunteer_registration_leader: UserCheck,
-  volunteer_registration_sub_leader: UserCheck,
-  volunteer_registration_member: UserCheck,
-  
-  // Catering team roles
-  volunteer_catering_leader: ChefHat,
-  volunteer_catering_sub_leader: ChefHat,
-  volunteer_catering_member: ChefHat,
-  
-  // Health team roles
-  volunteer_health_leader: Heart,
-  volunteer_health_sub_leader: Heart,
-  volunteer_health_member: Heart,
-  
-  // Audio Light team roles
-  volunteer_audio_light_leader: Volume2,
-  volunteer_audio_light_sub_leader: Volume2,
-  volunteer_audio_light_member: Volume2,
-  
-  // Group leadership roles
-  volunteer_group_leader: UserCog,
-  volunteer_group_sub_leader: UserCog,
-  
-  // Organizer roles
-  organizer_core: Crown,
-  organizer_regional: MapPin,
-  
-  // Special roles
-  speaker: Mic,
-  performer: Music,
-};
-
-const ROLE_CATEGORIES = [
-  {
-    title: "Tham dự viên",
-    roles: ['participant'] as EventParticipationRole[],
-    color: "bg-blue-50 border-blue-200"
-  },
-  {
-    title: "Ban Truyền thông",
-    roles: [
-      'volunteer_media_leader',
-      'volunteer_media_sub_leader',
-      'volunteer_media_member'
-    ] as EventParticipationRole[],
-    color: "bg-green-50 border-green-200"
-  },
-  {
-    title: "Ban Sinh hoạt",
-    roles: [
-      'volunteer_activity_leader',
-      'volunteer_activity_sub_leader',
-      'volunteer_activity_member'
-    ] as EventParticipationRole[],
-    color: "bg-yellow-50 border-yellow-200"
-  },
-  {
-    title: "Ban Kỷ luật",
-    roles: [
-      'volunteer_discipline_leader',
-      'volunteer_discipline_sub_leader',
-      'volunteer_discipline_member'
-    ] as EventParticipationRole[],
-    color: "bg-red-50 border-red-200"
-  },
-  {
-    title: "Ban Hậu cần",
-    roles: [
-      'volunteer_logistics_leader',
-      'volunteer_logistics_sub_leader',
-      'volunteer_logistics_member'
-    ] as EventParticipationRole[],
-    color: "bg-orange-50 border-orange-200"
-  },
-  {
-    title: "Ban Phụng vụ",
-    roles: [
-      'volunteer_liturgy_leader',
-      'volunteer_liturgy_sub_leader',
-      'volunteer_liturgy_member'
-    ] as EventParticipationRole[],
-    color: "bg-purple-50 border-purple-200"
-  },
-  {
-    title: "Ban An ninh",
-    roles: [
-      'volunteer_security_leader',
-      'volunteer_security_sub_leader',
-      'volunteer_security_member'
-    ] as EventParticipationRole[],
-    color: "bg-gray-50 border-gray-200"
-  },
-  {
-    title: "Ban Thư ký",
-    roles: [
-      'volunteer_registration_leader',
-      'volunteer_registration_sub_leader',
-      'volunteer_registration_member'
-    ] as EventParticipationRole[],
-    color: "bg-indigo-50 border-indigo-200"
-  },
-  {
-    title: "Ban Ẩm thực",
-    roles: [
-      'volunteer_catering_leader',
-      'volunteer_catering_sub_leader',
-      'volunteer_catering_member'
-    ] as EventParticipationRole[],
-    color: "bg-pink-50 border-pink-200"
-  },
-  {
-    title: "Ban Y tế",
-    roles: [
-      'volunteer_health_leader',
-      'volunteer_health_sub_leader',
-      'volunteer_health_member'
-    ] as EventParticipationRole[],
-    color: "bg-teal-50 border-teal-200"
-  },
-  {
-    title: "Ban Âm thanh Ánh sáng",
-    roles: [
-      'volunteer_audio_light_leader',
-      'volunteer_audio_light_sub_leader',
-      'volunteer_audio_light_member'
-    ] as EventParticipationRole[],
-    color: "bg-cyan-50 border-cyan-200"
-  },
-  {
-    title: "Trưởng nhóm",
-    roles: [
-      'volunteer_group_leader',
-      'volunteer_group_sub_leader'
-    ] as EventParticipationRole[],
-    color: "bg-emerald-50 border-emerald-200"
-  },
-  {
-    title: "Ban Tổ chức",
-    roles: ['organizer_core', 'organizer_regional'] as EventParticipationRole[],
-    color: "bg-violet-50 border-violet-200"
-  },
-  {
-    title: "Vai trò đặc biệt",
-    roles: ['speaker'] as EventParticipationRole[],
-    color: "bg-amber-50 border-amber-200"
-  }
-];
-
 export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSelectionProps) {
+  const [selectedCategory, setSelectedCategory] = useState<'participant' | 'organization' | null>(null);
+  const [eventRoles, setEventRoles] = useState<EventRole[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchEventRoles = async () => {
+      try {
+        // First, get the active event
+        const { data: activeEvent, error: eventError } = await supabase
+          .from('event_configs')
+          .select('id')
+          .eq('is_active', true)
+          .single();
+
+        if (eventError) {
+          console.error('Error fetching active event:', eventError);
+          setIsLoading(false);
+          return;
+        }
+
+        // Then fetch roles for this event
+        const { data: roles, error: rolesError } = await supabase
+          .from('event_roles')
+          .select('*')
+          .eq('event_config_id', activeEvent.id)
+          .order('name');
+
+        if (rolesError) {
+          console.error('Error fetching event roles:', rolesError);
+        } else {
+          setEventRoles(roles || []);
+        }
+      } catch (error) {
+        console.error('Error in fetchEventRoles:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEventRoles();
+  }, [supabase]);
+
+  // Set initial category based on selected role
+  useEffect(() => {
+    if (selectedRole === 'participant') {
+      setSelectedCategory('participant');
+    } else if (selectedRole && selectedRole !== 'participant') {
+      setSelectedCategory('organization');
+    }
+  }, [selectedRole]);
+
+  // Handle category selection
+  const handleCategorySelect = (category: 'participant' | 'organization') => {
+    setSelectedCategory(category);
+    if (category === 'participant') {
+      onRoleSelect('participant');
+    } else {
+      // Reset role when switching to organization - don't set to 'organization'
+      // Let user select a specific role
+    }
+  };
+
+  // Handle specific role selection for organization members
+  const handleOrganizationRoleSelect = (roleId: string) => {
+    onRoleSelect(roleId as EventParticipationRole);
+  };
+
+  // Group roles by team based on their names
+  const groupRolesByTeam = () => {
+    const teams: { [key: string]: EventRole[] } = {};
+    
+    eventRoles.forEach(role => {
+      let teamName = 'Khác'; // Default category
+      
+      if (role.name.includes('Truyền thông')) {
+        teamName = 'Ban Truyền thông';
+      } else if (role.name.includes('Sinh hoạt')) {
+        teamName = 'Ban Sinh hoạt';
+      } else if (role.name.includes('Kỷ luật')) {
+        teamName = 'Ban Kỷ luật';
+      } else if (role.name.includes('Hậu cần')) {
+        teamName = 'Ban Hậu cần';
+      } else if (role.name.includes('Phụng vụ')) {
+        teamName = 'Ban Phụng vụ';
+      } else if (role.name.includes('An ninh')) {
+        teamName = 'Ban An ninh';
+      } else if (role.name.includes('Thư ký')) {
+        teamName = 'Ban Thư ký';
+      } else if (role.name.includes('Ẩm thực')) {
+        teamName = 'Ban Ẩm thực';
+      } else if (role.name.includes('Y tế')) {
+        teamName = 'Ban Y tế';
+      } else if (role.name.includes('Âm thanh')) {
+        teamName = 'Ban Âm thanh & Ánh sáng';
+      } else if (role.name.includes('nhóm')) {
+        teamName = 'Ban Điều phối';
+      } else if (role.name.includes('tổ chức')) {
+        teamName = 'Ban Tổ chức';
+      }
+      
+      if (!teams[teamName]) {
+        teams[teamName] = [];
+      }
+      teams[teamName].push(role);
+    });
+    
+    // Sort roles within each team by hierarchy (leader, sub-leader, member)
+    Object.keys(teams).forEach(teamName => {
+      teams[teamName].sort((a, b) => {
+        const getOrder = (name: string) => {
+          if (name.includes('Trưởng')) return 0;
+          if (name.includes('Phó')) return 1;
+          if (name.includes('Thành viên')) return 2;
+          return 3;
+        };
+        return getOrder(a.name) - getOrder(b.name);
+      });
+    });
+    
+    return teams;
+  };
+
+  const teamGroups = groupRolesByTeam();
+
+  // Get display name for selected role
+  const getSelectedRoleDisplay = () => {
+    if (selectedRole === 'participant') return 'Người tham gia';
+    if (!selectedRole || selectedRole === '') return 'Chưa chọn';
+    const role = eventRoles.find(r => r.id === selectedRole);
+    return role ? role.name : 'Chưa chọn';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4 text-muted-foreground">Đang tải vai trò...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Progress indicator */}
@@ -237,69 +181,104 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
         </p>
       </div>
 
+      {/* Step 1: Category Selection */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card 
+          className={`cursor-pointer transition-all ${selectedCategory === 'participant' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+          onClick={() => handleCategorySelect('participant')}
+        >
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+            <CardTitle className="text-lg">Người tham gia</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Tham gia sự kiện như một người tham dự thông thường
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className={`cursor-pointer transition-all ${selectedCategory === 'organization' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+          onClick={() => handleCategorySelect('organization')}
+        >
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
+              <UserCog className="h-6 w-6 text-green-600" />
+            </div>
+            <CardTitle className="text-lg">Thành viên Ban tổ chức</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Tham gia với vai trò cụ thể trong ban tổ chức
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Step 2: Organization Role Selection */}
+      {selectedCategory === 'organization' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chọn ban và vai trò cụ thể</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Chọn ban bạn muốn tham gia và vai trò của bạn trong ban đó
+              </p>
+            </CardHeader>
+            <CardContent>
+              {Object.entries(teamGroups).map(([teamName, roles]) => (
+                <div key={teamName} className="mb-6 last:mb-0">
+                  <h4 className="font-medium text-base mb-3 pb-2 border-b text-primary">
+                    {teamName}
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {roles.map((role) => (
+                      <Button
+                        key={role.id}
+                        variant={selectedRole === role.id ? "default" : "outline"}
+                        onClick={() => handleOrganizationRoleSelect(role.id)}
+                        className="h-auto p-3 flex flex-col items-start justify-start space-y-1 text-left"
+                      >
+                        <div className="font-medium text-sm">{role.name}</div>
+                        {role.description && (
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-2 text-wrap">
+                              {role.description}
+                            </p>
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {Object.keys(teamGroups).length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Chưa có vai trò nào được thiết lập cho sự kiện này.</p>
+                  <p className="text-sm">Vui lòng liên hệ ban tổ chức để biết thêm thông tin.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Selected role indicator */}
       {selectedRole && (
         <div className="flex justify-center py-4 border rounded-lg bg-primary/5">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
               Bạn đã chọn: <span className="font-medium text-primary">
-                {EVENT_PARTICIPATION_ROLES.find(r => r.value === selectedRole)?.label}
+                {getSelectedRoleDisplay()}
               </span>
             </p>
           </div>
         </div>
       )}
 
-      {ROLE_CATEGORIES.map((category) => (
-        <Card key={category.title} className={category.color}>
-          <CardHeader>
-            <CardTitle className="text-lg">{category.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {category.roles.map((role) => {
-                const roleInfo = EVENT_PARTICIPATION_ROLES.find(r => r.value === role)!;
-                const Icon = ROLE_ICONS[role];
-                const isSelected = selectedRole === role;
-                
-                return (
-                  <div
-                    key={role}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
-                      isSelected 
-                        ? 'border-primary bg-primary/5 shadow-md' 
-                        : 'border-gray-200 bg-white hover:border-gray-300'
-                    }`}
-                    onClick={() => onRoleSelect(role)}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <Icon className={`h-6 w-6 mt-1 ${isSelected ? 'text-primary' : 'text-gray-600'}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <h3 className={`font-medium ${isSelected ? 'text-primary' : 'text-gray-900'}`}>
-                            {roleInfo.label}
-                          </h3>
-                          {isSelected && (
-                            <Badge variant="default" className="text-xs">
-                              Đã chọn
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {roleInfo.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-
       {/* Floating Continue Button */}
-      {selectedRole && (
+      {selectedRole && selectedRole !== '' && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
           <div className="bg-white rounded-full shadow-lg border border-gray-200 px-6 py-3">
             <Button 
@@ -307,26 +286,15 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
               size="lg"
               className="min-w-[200px] rounded-full"
             >
-              Tiếp tục đăng ký →
+              {selectedRole === 'participant' ? 'Tiếp tục →' : 'Tiếp tục đăng ký →'}
             </Button>
           </div>
         </div>
       )}
 
       {/* Spacer to prevent content from being hidden behind floating button */}
-      {selectedRole && <div className="h-20"></div>}
+      <div className="h-20"></div>
 
-      <div className="flex justify-center pt-4">
-        <Button 
-          onClick={onContinue}
-          size="lg"
-          disabled={!selectedRole}
-          className="min-w-[200px]"
-          variant={selectedRole ? "default" : "outline"}
-        >
-          {selectedRole ? "Tiếp tục đăng ký →" : "Vui lòng chọn vai trò"}
-        </Button>
-      </div>
     </div>
   );
 }

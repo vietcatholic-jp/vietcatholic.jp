@@ -2,7 +2,21 @@
 create extension if not exists "uuid-ossp";
 
 -- Create custom types
-create type user_role as enum ('participant', 'registration_manager', 'event_organizer','group_leader', 'regional_admin', 'super_admin');
+create type user_role as enum ('participant', -- Người tham gia
+  'volunteer', -- Tình nguyện viên
+  'volunteer_leader', -- Trưởng ban tình nguyện
+  'volunteer_sub_leader', -- Phó ban tình nguyện
+  'organizer', -- Ban tổ chức
+  'organizer_core', -- Ban tổ chức cốt lõi
+  'organizer_regional', -- Ban tổ chức khu vực
+  'admin', -- Quản trị viên
+  'registration_manager', -- Quản lý đăng ký
+  'event_organizer', -- Người tổ chức sự kiện
+  'group_leader', -- Trưởng nhóm các đội
+  'regional_admin', -- Quản trị viên khu vực
+  'super_admin' -- Quản trị viên cao cấp
+);
+'registration_manager', 'event_organizer','group_leader', 'regional_admin', 'super_admin');
 create type region_type as enum ('kanto', 'kansai', 'chubu', 'kyushu', 'chugoku', 'shikoku', 'tohoku', 'hokkaido');
 create type gender_type as enum ('male', 'female', 'other');
 create type age_group_type as enum ('under_12','12_17', '18_25', '26_35', '36_50', 'over_50');
@@ -102,12 +116,44 @@ create table public.event_configs (
   base_price decimal(10,2) default 0,
   is_active boolean default false,
   cancellation_deadline timestamptz,
+  total_slots integer,
+  registered_count integer default 0,
+  cancelled_count integer default 0,
+  checked_in_count integer default 0,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- Add comment for documentation
 comment on column public.event_configs.cancellation_deadline is 'Deadline for users to cancel their paid registrations';
+
+-- Event teams table
+create table public.event_teams (
+  id uuid default uuid_generate_v4() primary key,
+  event_config_id uuid references public.event_configs(id) on delete cascade not null,
+  name text not null,
+  description text,
+  leader_id uuid references public.users(id),
+  sub_leader_id uuid references public.users(id),
+  created_at timestamptz default timezone('utc'::text, now()) not null,
+  updated_at timestamptz default timezone('utc'::text, now()) not null,
+  unique(event_config_id, name)
+);
+
+comment on column public.event_teams.leader_id is 'User ID of the team leader';
+comment on column public.event_teams.sub_leader_id is 'User ID of the team sub-leader';
+
+-- Event roles table
+create table public.event_roles (
+  id uuid default uuid_generate_v4() primary key,
+  event_config_id uuid references public.event_configs(id) on delete cascade not null,
+  name text not null,
+  description text,
+  permissions jsonb, -- For future use, e.g. { "can_check_in": true }
+  created_at timestamptz default timezone('utc'::text, now()) not null,
+  updated_at timestamptz default timezone('utc'::text, now()) not null,
+  unique(event_config_id, name)
+);
 
 -- Registrations table
 create table public.registrations (
@@ -140,7 +186,8 @@ create table public.registrants (
   facebook_link text,
   phone text,     -- Optional for additional registrants
   shirt_size shirt_size_type not null,
-  event_role event_participation_role default 'participant',
+  event_team_id uuid references public.event_teams(id) on delete set null,
+  event_role_id uuid references public.event_roles(id) on delete set null,
   is_primary boolean default false,  -- Marks the main registrant (person who created registration)
   notes text,
   portrait_url text,
@@ -278,10 +325,44 @@ create table public.transportation_registrations (
 
 -- Note: RLS policies are defined in policies.sql
 
--- Note: Functions and triggers are defined in functions.sql
--- Note: Views are defined in views.sql
--- Note: RLS policies are defined in policies.sql
--- Note: Storage buckets and indexes are defined in storage.sql
+-- Function to update event counts
+create or replace function update_event_counts()
+returns trigger as $$
+declare
+  v_event_config_id uuid;
+begin
+  if (tg_op = 'INSERT' or tg_op = 'UPDATE') then
+    select event_config_id into v_event_config_id from public.registrations where id = new.registration_id;
+  elsif (tg_op = 'DELETE') then
+    select event_config_id into v_event_config_id from public.registrations where id = old.registration_id;
+  end if;
+
+  if v_event_config_id is not null then
+    update public.event_configs
+    set
+      registered_count = (
+        select count(*) from public.registrations
+        where event_config_id = v_event_config_id and status in ('confirm_paid', 'confirmed', 'checked_in')
+      ),
+      cancelled_count = (
+        select count(*) from public.registrations
+        where event_config_id = v_event_config_id and status in ('cancelled', 'cancel_accepted')
+      ),
+      checked_in_count = (
+        select count(*) from public.registrations
+        where event_config_id = v_event_config_id and status = 'checked_in'
+      )
+    where id = v_event_config_id;
+  end if;
+
+  return null; -- result is ignored since this is an AFTER trigger
+end;
+$$ language plpgsql;
+
+-- Create trigger to automatically update counts when registration status changes
+create trigger on_registration_change
+  after insert or update or delete on public.registrations
+  for each row execute function update_event_counts();
 
 -- Success message
 select 'Database schema created successfully for production!' as message;
