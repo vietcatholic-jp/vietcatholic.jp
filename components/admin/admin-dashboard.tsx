@@ -40,6 +40,7 @@ interface AdminData {
   provinceStats?: { province: string; count: number }[];
   dioceseStats?: { diocese: string; count: number }[];
   roleStats?: { event_role: string; count: number }[];
+  teamStats?: { team: string; count: number }[];
 }
 
 export function AdminDashboard() {
@@ -216,7 +217,27 @@ export function AdminDashboard() {
                       <div key={stat.event_role} className="text-center">
                         <div className="font-semibold text-lg">{stat.count}</div>
                         <div className="text-sm text-muted-foreground capitalize">
-                          {stat.event_role.replace(/_/g, ' ')}
+                          {stat.event_role}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {/* Team Stats (for super admin) */}
+            {data.teamStats &&  (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thống kê theo nhóm</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {data.teamStats.map((stat) => (
+                      <div key={stat.team} className="text-center">
+                        <div className="font-semibold text-lg">{stat.count}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {stat.team}
                         </div>
                       </div>
                     ))}

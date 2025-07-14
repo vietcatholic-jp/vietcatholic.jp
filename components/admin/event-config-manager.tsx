@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { EventConfig, UserRole } from "@/lib/types";
 import { EventRoleManager } from "@/components/admin/event-role-manager";
+import { EventTeamManager } from "@/components/admin/event-team-manager";
 
 interface EventConfigManagerProps {
   currentUserRole: UserRole;
@@ -37,7 +38,7 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'events' | 'roles'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'teams' | 'roles'>('events');
 
   // Only super_admin can manage event configs
   const canManageEvents = currentUserRole === 'super_admin';
@@ -65,7 +66,7 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
   const activeEvent = events.find(e => e.is_active);
 
   // Tab navigation
-  const handleTabChange = (tab: 'events' | 'roles') => {
+  const handleTabChange = (tab: 'events' | 'teams' | 'roles') => {
     setActiveTab(tab);
   };
 
@@ -228,6 +229,13 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
             Quản lý sự kiện
           </Button>
           <Button
+            variant={activeTab === 'teams' ? 'default' : 'outline'}
+            onClick={() => handleTabChange('teams')}
+            className="mr-2"
+          >
+            Quản lý nhóm
+          </Button>
+          <Button
             variant={activeTab === 'roles' ? 'default' : 'outline'}
             onClick={() => handleTabChange('roles')}
           >
@@ -329,6 +337,8 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
               </div>
             )}
           </div>
+        ) : activeTab === 'teams' ? (
+          <EventTeamManager eventConfig={activeEvent || null} />
         ) : (
           <EventRoleManager eventConfig={activeEvent || null} />
         )}

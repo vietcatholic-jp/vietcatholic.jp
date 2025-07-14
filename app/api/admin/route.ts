@@ -55,7 +55,7 @@ export async function GET() {
       .from("registrations")
       .select(`
         *,
-        registrants(*),
+        registrants(*, event_roles(name)),
         user:users(email, full_name, region, province)
       `)
       .order("created_at", { ascending: false })
@@ -114,20 +114,45 @@ export async function GET() {
     // Compute statistics by province, diocese, and event_role
     const { data: registrantsStatData } = await supabase
       .from("registrants")
-      .select("province, diocese, event_role");
+      .select(`
+        province, 
+        diocese, 
+        event_role_id,
+        event_roles!inner(name, event_teams!inner(name))
+      `);
     const provinceCounts: Record<string, number> = {};
     const dioceseCounts: Record<string, number> = {};
     const roleCounts: Record<string, number> = {};
+    const teamCounts: Record<string, number> = {};
     if (registrantsStatData) {
       registrantsStatData.forEach((r) => {
         if (r.province) provinceCounts[r.province] = (provinceCounts[r.province] || 0) + 1;
         if (r.diocese) dioceseCounts[r.diocese] = (dioceseCounts[r.diocese] || 0) + 1;
-        if (r.event_role) roleCounts[r.event_role] = (roleCounts[r.event_role] || 0) + 1;
+        // Handle both old and new role structures
+        if (r.event_roles && Array.isArray(r.event_roles) && r.event_roles.length > 0) {
+          const role = r.event_roles[0];
+          if (role.name) roleCounts[role.name] = (roleCounts[role.name] || 0) + 1;
+          if (role.event_teams && Array.isArray(role.event_teams) && role.event_teams.length > 0) {
+            const team = role.event_teams[0];
+            if (team.name) teamCounts[team.name] = (teamCounts[team.name] || 0) + 1;
+          }
+        }
       });
     }
     const provinceStats = Object.entries(provinceCounts).map(([province, count]) => ({ province, count }));
     const dioceseStats = Object.entries(dioceseCounts).map(([diocese, count]) => ({ diocese, count }));
     const roleStats = Object.entries(roleCounts).map(([event_role, count]) => ({ event_role, count }));
+    const teamStats = Object.entries(teamCounts).map(([team, count]) => ({ team, count }));
+
+    // Add backward compatibility for event_role field
+    const processedRegistrations = filteredRegistrations.map((registration) => ({
+      ...registration,
+      registrants: registration.registrants?.map((registrant: DatabaseRegistrant & { event_roles?: { name: string } }) => ({
+        ...registrant,
+        // Add backward compatibility event_role field
+        event_role: registrant.event_roles?.name || 'participant'
+      }))
+    }));
 
     return NextResponse.json({
       stats: {
@@ -136,11 +161,12 @@ export async function GET() {
         pendingRegistrations: pendingRegistrations.count || 0,
         totalParticipants: totalParticipants.count || 0,
       },
-      recentRegistrations: filteredRegistrations,
+      recentRegistrations: processedRegistrations,
       regionalStats,
       provinceStats,
       dioceseStats,
       roleStats,
+      teamStats,
       userProfile: {
         role: profile.role,
         region: profile.region
