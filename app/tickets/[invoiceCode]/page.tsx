@@ -125,7 +125,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
                           <span className="text-muted-foreground">({registrant.saint_name})</span>
                         )}
                       </div>
-                      {existingTicket ? (
+                      {registrant.portrait_url ? (
                         <Badge className="bg-green-500">Đã có vé</Badge>
                       ) : (
                         <Badge variant="secondary">Chưa có vé</Badge>

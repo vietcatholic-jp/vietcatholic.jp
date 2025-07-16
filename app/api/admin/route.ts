@@ -96,7 +96,7 @@ export async function GET() {
 
     // Get regional breakdown (super admin only)
     let regionalStats = null;
-    if (profile.role === "super_admin") {
+    if (profile.role === "super_admin" || profile.role === "event_organizer") {
       const { data: regions } = await supabase
         .from("users")
         .select("region")
@@ -118,8 +118,9 @@ export async function GET() {
         province, 
         diocese, 
         event_role_id,
-        event_roles!inner(name, event_teams!inner(name))
+        event_roles!inner(name)
       `);
+      //event_roles!inner(name, event_teams!inner(name))
     const provinceCounts: Record<string, number> = {};
     const dioceseCounts: Record<string, number> = {};
     const roleCounts: Record<string, number> = {};
@@ -132,10 +133,10 @@ export async function GET() {
         if (r.event_roles && Array.isArray(r.event_roles) && r.event_roles.length > 0) {
           const role = r.event_roles[0];
           if (role.name) roleCounts[role.name] = (roleCounts[role.name] || 0) + 1;
-          if (role.event_teams && Array.isArray(role.event_teams) && role.event_teams.length > 0) {
-            const team = role.event_teams[0];
-            if (team.name) teamCounts[team.name] = (teamCounts[team.name] || 0) + 1;
-          }
+          //if (role.event_teams && Array.isArray(role.event_teams) && role.event_teams.length > 0) {
+          //  const team = role.event_teams[0];
+          //  if (team.name) teamCounts[team.name] = (teamCounts[team.name] || 0) + 1;
+          //}
         }
       });
     }

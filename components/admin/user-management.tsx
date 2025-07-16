@@ -69,9 +69,9 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
   const getAssignableRoles = (): UserRole[] => {
     switch (currentUserRole) {
       case 'super_admin':
-        return ['participant', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin'];
-      case 'regional_admin':
-        return ['participant', 'event_organizer', 'group_leader'];
+        return ['participant','registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin'];
+      case 'event_organizer':
+        return ['participant', 'regional_admin', 'group_leader','registration_manager'];
       default:
         return [];
     }
