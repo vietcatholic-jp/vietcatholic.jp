@@ -147,15 +147,6 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
     return role ? role.name : 'Chưa chọn';
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-        <p className="mt-4 text-muted-foreground">Đang tải vai trò...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Progress indicator */}
@@ -212,7 +203,7 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-sm text-muted-foreground">
-              Tham gia với vai trò cụ thể trong ban tổ chức
+              Tham gia với vai trò cụ thể trong ban tổ chức, các ban
             </p>
           </CardContent>
         </Card>
@@ -220,11 +211,18 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
 
       {/* Step 2: Organization Role Selection */}
       {selectedCategory === 'organization' && (
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chọn ban và vai trò cụ thể</CardTitle>
-              <p className="text-sm text-muted-foreground">
+        <>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Đang tải vai trò...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Chọn ban và vai trò cụ thể</CardTitle>
+                  <p className="text-sm text-muted-foreground">
                 Chọn ban bạn muốn tham gia và vai trò của bạn trong ban đó
               </p>
             </CardHeader>
@@ -262,6 +260,8 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
             </CardContent>
           </Card>
         </div>
+        )}
+        </>
       )}
 
       {/* Selected role indicator */}
