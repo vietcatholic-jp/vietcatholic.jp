@@ -1,10 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
-    
+    const { searchParams } = new URL(request.url);
+
+    // Get pagination, search and filter parameters
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
+    const roleFilter = searchParams.get('role') || '';
+    const regionFilter = searchParams.get('region') || '';
+
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -22,7 +30,12 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get users based on role permissions
+    // Build base query for counting total records
+    let countQuery = supabase
+      .from("users")
+      .select("*", { count: 'exact', head: true });
+
+    // Build base query for fetching data
     let usersQuery = supabase
       .from("users")
       .select("*")
@@ -30,17 +43,61 @@ export async function GET() {
 
     // Regional admins can only see users in their region
     if (profile.role === "regional_admin") {
+      countQuery = countQuery.eq("region", profile.region);
       usersQuery = usersQuery.eq("region", profile.region);
     }
 
+    // Apply search filter if provided
+    if (search) {
+      const searchFilter = `full_name.ilike.%${search}%,email.ilike.%${search}%`;
+      countQuery = countQuery.or(searchFilter);
+      usersQuery = usersQuery.or(searchFilter);
+    }
+
+    // Apply role filter if provided
+    if (roleFilter && roleFilter !== 'all') {
+      countQuery = countQuery.eq("role", roleFilter);
+      usersQuery = usersQuery.eq("role", roleFilter);
+    }
+
+    // Apply region filter if provided (only for super_admin)
+    if (regionFilter && regionFilter !== 'all' && profile.role === "super_admin") {
+      countQuery = countQuery.eq("region", regionFilter);
+      usersQuery = usersQuery.eq("region", regionFilter);
+    }
+
+    // Get total count first
+    const { count: totalCount, error: countError } = await countQuery;
+
+    if (countError) {
+      console.error("Error counting users:", countError);
+      return NextResponse.json({ error: "Failed to count users" }, { status: 500 });
+    }
+
+    // Apply pagination to data query
+    const offset = (page - 1) * limit;
+    usersQuery = usersQuery.range(offset, offset + limit - 1);
+
     const { data: users, error: usersError } = await usersQuery;
-    
+
     if (usersError) {
       console.error("Error fetching users:", usersError);
       return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
     }
 
-    return NextResponse.json({ users: users || [] });
+    const totalPages = Math.ceil((totalCount || 0) / limit);
+
+    return NextResponse.json({
+      users: users || [],
+      pagination: {
+        page,
+        limit,
+        totalCount: totalCount || 0,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
+      }
+    });
 
   } catch (error) {
     console.error("Users API error:", error);
