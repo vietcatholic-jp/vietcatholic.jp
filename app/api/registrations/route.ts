@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
       } = {
         registration_id: registration.id,
         email: registrant.email,
-        saint_name: registrant.saint_name,
-        full_name: registrant.full_name,
+        saint_name: registrant.saint_name?.toUpperCase(),
+        full_name: registrant.full_name.toUpperCase(),
         gender: registrant.gender,
         age_group: registrant.age_group,
         province: registrant.province,
