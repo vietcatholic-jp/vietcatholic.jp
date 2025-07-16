@@ -31,6 +31,7 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function useAdminData() {
   const context = useContext(AdminContext);
+  console.log("useAdminData context:", context);
   if (context === undefined) {
     throw new Error('useAdminData must be used within an AdminProvider');
   }
