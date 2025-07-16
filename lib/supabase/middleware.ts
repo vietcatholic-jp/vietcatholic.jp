@@ -46,6 +46,7 @@ export async function updateSession(request: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = [
     '/',
+    '/guide',
     '/auth/login',
     '/auth/sign-up',
     '/auth/confirm',
