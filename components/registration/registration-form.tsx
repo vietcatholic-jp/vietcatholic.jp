@@ -34,7 +34,9 @@ const primaryRegistrantSchema = z.object({
   age_group: z.enum(['under_18', '18_25', '26_35', '36_50', 'over_50'] as const, {
     required_error: "Vui lòng chọn độ tuổi"
   }),
-  province: z.string().min(1, "Tỉnh/Phủ là bắt buộc"),
+  province: z.string().min(1, "Tỉnh/Phủ là bắt buộc").refine((val) => val && val.trim() !== '', {
+    message: "Tỉnh/Phủ là bắt buộc cho người đăng ký chính"
+  }),
   diocese: z.string().min(1, "Giáo phận là bắt buộc"),
   shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
@@ -43,7 +45,9 @@ const primaryRegistrantSchema = z.object({
   is_primary: z.boolean(),
   notes: z.string().optional(),
   // Facebook link is required for primary registrant
-  facebook_link: z.string().url("Link Facebook không hợp lệ").min(1, "Link Facebook là bắt buộc cho người đăng ký chính"),
+  facebook_link: z.string().url("Link Facebook không hợp lệ").min(1, "Link Facebook là bắt buộc cho người đăng ký chính").refine((val) => val && val.trim() !== '', {
+    message: "Link Facebook là bắt buộc cho người đăng ký chính"
+  }),
   // Optional contact fields
   email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
   phone: z.string().optional().refine((val) => {
@@ -260,6 +264,23 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   };
 
   const onSubmit = async (data: FormData) => {
+    // Extra manual check for primary registrant
+    const primary = data.registrants[0];
+    if (!primary.province || primary.province.trim() === "") {
+      toast.error("Người đăng ký chính phải chọn Tỉnh/Phủ.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!primary.facebook_link || primary.facebook_link.trim() === "") {
+      toast.error("Người đăng ký chính phải nhập Link Facebook.");
+      setIsSubmitting(false);
+      return;
+    }
+    // Prompt user to confirm before submitting
+    if (!window.confirm("Vui lòng kiểm tra lại thông tin đăng ký của bạn trước khi hoàn tất. Bạn có chắc chắn muốn gửi đăng ký?")) {
+      setIsSubmitting(false);
+      return;
+    }
     setIsSubmitting(true);
     
     try {
