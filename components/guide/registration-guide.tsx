@@ -81,6 +81,10 @@ export function RegistrationGuide() {
               14-15/09/2025
             </Badge>
           </div>
+          <p className="text-sm text-orange-500 text-muted-foreground mt-2">
+            Vui lòng mở trang web đăng ký này qua trình duyệt Safari hoặc Chrome trên điện thoại.
+            Không mở trực tiếp trên Messenger để tránh lỗi hiển thị.
+          </p>
         </div>
 
         {/* Tab Navigation */}
