@@ -93,13 +93,13 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
   };
 
   return (
-    <div className={`transition-all duration-200 ${!isLast ? 'border-b' : ''}`}>
+    <div className={`transition-all duration-200 border border-muted rounded-md p-2 bg-slate-200 dark:bg-slate-800 ${isLast ? 'mb-0' : 'mb-4'}`}>
       <div className="p-4 hover:bg-muted/30 transition-colors">
         {/* Header - Always visible */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="min-w-0 flex-1">
-              <div className="font-mono text-sm font-medium text-muted-foreground">
+              <div className="font-mono text-xl font-bold">
                 {registration.invoice_code}
               </div>
               <div className="text-xs text-muted-foreground">
