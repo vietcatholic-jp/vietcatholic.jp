@@ -140,6 +140,7 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
             {/* Payment Instructions and Receipt Upload */}
             <div className="space-y-6">
               <PaymentInstructions 
+                registrationDate={registration.created_at}
                 amount={registration.total_amount}
                 invoiceCode={registration.invoice_code}
               />

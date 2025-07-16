@@ -385,7 +385,7 @@ function PaymentSection() {
             <div className="p-4 bg-green-50 dark:bg-slate-800 rounded-lg border border-green-200">
               <h3 className="font-semibold mb-3">Phương thức thanh toán duy nhất: Chuyển khoản ngân hàng</h3>
               <p className="text-sm text-green-700">
-                Hiện tại chúng tôi chỉ hỗ trợ thanh toán qua chuyển khoản ngân hàng Nhật Bản.
+                Hiện tại chỉ hỗ trợ thanh toán qua chuyển khoản ngân hàng Yucho.
               </p>
             </div>
 
@@ -432,7 +432,7 @@ function PaymentSection() {
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div>
                     <p className="text-sm text-muted-foreground">Số tài khoản (番号)</p>
-                    <p className="font-medium font-mono">35579601</p>
+                    <p className="font-medium font-mono">Xem stk sau khi đăng ký</p>
                   </div>
                   <Button variant="ghost" size="sm">
                     <Copy className="h-4 w-4" />
@@ -442,7 +442,7 @@ function PaymentSection() {
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div>
                     <p className="text-sm text-red-600 text-muted-foreground">Tên tài khoản</p>
-                    <p className="font-medium">在日カトリックベトナム青年会</p>
+                    <p className="font-medium text-red-600">在日カトリックベトナム青年会</p>
                   </div>
                   <Button variant="ghost" size="sm">
                     <Copy className="h-4 w-4" />
@@ -500,6 +500,7 @@ function PaymentSection() {
                     <li>• Không ghi mã đăng ký sẽ khiến việc xác nhận thanh toán bị chậm trễ</li>
                     <li>• Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc</li>
                     <li>• Liên hệ qua fanpage nếu có vấn đề</li>
+                    <li>• Hạn chuyển khoản 10 ngày sau khi đăng ký và trước ngày 10/09/2025</li>
                   </ul>
                 </div>
               </div>
