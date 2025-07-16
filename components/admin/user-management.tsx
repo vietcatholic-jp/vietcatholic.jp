@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { 
+import { Pagination } from "@/components/ui/pagination";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -20,9 +21,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Users, 
-  Edit2, 
+import {
+  Users,
+  Edit2,
   Search,
   Loader2
 } from "lucide-react";
@@ -56,14 +57,20 @@ const regionLabels: Record<RegionType, string> = {
 
 export function UserManagement({ currentUserRole, currentUserRegion }: UserManagementProps) {
   const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // Input value for controlled input
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [regionFilter, setRegionFilter] = useState<RegionType | "all">("all");
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize] = useState(50);
 
   // Determine which roles current user can assign
   const getAssignableRoles = (): UserRole[] => {
@@ -89,20 +96,44 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage, searchTerm, roleFilter, regionFilter]);
 
+  // Reset to page 1 when filters change (except searchTerm)
   useEffect(() => {
-    filterUsers();
-  }, [users, searchTerm, roleFilter, regionFilter]);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [roleFilter, regionFilter]);
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users');
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: pageSize.toString(),
+      });
+
+      // Add search parameter if exists
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+
+      // Add filter parameters
+      if (roleFilter !== 'all') {
+        params.append('role', roleFilter);
+      }
+      if (regionFilter !== 'all') {
+        params.append('region', regionFilter);
+      }
+
+      const response = await fetch(`/api/admin/users?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
       const data = await response.json();
       setUsers(data.users || []);
+      setTotalPages(data.pagination?.totalPages || 1);
+      setTotalCount(data.pagination?.totalCount || 0);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Không thể tải danh sách người dùng');
@@ -111,28 +142,25 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
     }
   };
 
-  const filterUsers = () => {
-    let filtered = users;
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(user => 
-        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const handleSearch = () => {
+    setSearchTerm(searchInput);
+    setCurrentPage(1); // Reset to page 1 when searching
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
+  };
 
-    // Role filter
-    if (roleFilter !== "all") {
-      filtered = filtered.filter(user => user.role === roleFilter);
-    }
-
-    // Region filter
-    if (regionFilter !== "all") {
-      filtered = filtered.filter(user => user.region === regionFilter);
-    }
-
-    setFilteredUsers(filtered);
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearchTerm("");
+    setCurrentPage(1);
   };
 
   const handleEditUser = (user: User) => {
@@ -161,10 +189,8 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
         throw new Error('Failed to update user');
       }
 
-      // Update local state
-      setUsers(prev => prev.map(user => 
-        user.id === editingUser.id ? editingUser : user
-      ));
+      // Refresh the current page to show updated data
+      await fetchUsers();
 
       toast.success('Cập nhật thông tin người dùng thành công');
       setIsEditDialogOpen(false);
@@ -208,44 +234,88 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
           Quản lý người dùng
+          <span className="text-sm font-normal text-muted-foreground">
+            ({totalCount} người dùng)
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Tìm kiếm theo tên hoặc email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+        <div className="space-y-4 mb-6">
+          {/* Search Row */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Tìm kiếm theo tên hoặc email..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} variant="outline" size="sm" className="px-4">
+              <Search className="h-4 w-4 mr-1" />
+              Tìm
+            </Button>
+            {searchTerm && (
+              <Button onClick={handleClearSearch} variant="outline" size="sm" className="px-4">
+                Xóa
+              </Button>
+            )}
           </div>
-          
-          <Select value={roleFilter} onValueChange={(value: UserRole | "all") => setRoleFilter(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Lọc theo vai trò" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả vai trò</SelectItem>
-              {Object.entries(roleLabels).map(([role, label]) => (
-                <SelectItem key={role} value={role}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          <Select value={regionFilter} onValueChange={(value: RegionType | "all") => setRegionFilter(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Lọc theo khu vực" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả khu vực</SelectItem>
-              {Object.entries(regionLabels).map(([region, label]) => (
-                <SelectItem key={region} value={region}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Filters Row */}
+          <div className="flex gap-4 items-center flex-wrap">
+            <div className="text-sm font-medium text-gray-700">Lọc theo:</div>
+
+            <div className="flex gap-3 flex-wrap">
+              <div className="min-w-[160px]">
+                <Select value={roleFilter} onValueChange={(value: UserRole | "all") => setRoleFilter(value)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Vai trò" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả vai trò</SelectItem>
+                    {Object.entries(roleLabels).map(([role, label]) => (
+                      <SelectItem key={role} value={role}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {currentUserRole === "super_admin" && (
+                <div className="min-w-[160px]">
+                  <Select value={regionFilter} onValueChange={(value: RegionType | "all") => setRegionFilter(value)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Khu vực" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tất cả khu vực</SelectItem>
+                      {Object.entries(regionLabels).map(([region, label]) => (
+                        <SelectItem key={region} value={region}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Clear Filters Button */}
+              {(roleFilter !== 'all' || regionFilter !== 'all') && (
+                <Button
+                  onClick={() => {
+                    setRoleFilter('all');
+                    setRegionFilter('all');
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Xóa bộ lọc
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Users Table */}
@@ -262,7 +332,7 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user) => (
+              {users.map((user) => (
                 <tr key={user.id} className="border-b hover:bg-gray-50">
                   <td className="p-3">
                     <div>
@@ -271,7 +341,7 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
                   </td>
                   <td className="p-3">{user.email}</td>
                   <td className="p-3">
-                    <Badge variant={user.role === 'super_admin' ? 'destructive' : 
+                    <Badge variant={user.role === 'super_admin' ? 'destructive' :
                                    user.role === 'regional_admin' ? 'default' : 'secondary'}>
                       {roleLabels[user.role]}
                     </Badge>
@@ -299,11 +369,20 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
             </tbody>
           </table>
 
-          {filteredUsers.length === 0 && (
+          {users.length === 0 && !isLoading && (
             <div className="text-center py-8 text-gray-500">
               Không tìm thấy người dùng nào
             </div>
           )}
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-6">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
 
         {/* Edit User Dialog */}
