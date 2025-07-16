@@ -13,11 +13,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 interface PaymentInstructionsProps {
+  registrationDate: string;
   amount: number;
   invoiceCode: string;
 }
 
-export function PaymentInstructions({ amount, invoiceCode }: PaymentInstructionsProps) {
+export function PaymentInstructions({ registrationDate, amount, invoiceCode }: PaymentInstructionsProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const bankInfo = {
@@ -176,6 +177,8 @@ export function PaymentInstructions({ amount, invoiceCode }: PaymentInstructions
             <li>Vui lòng ghi chính xác mã đăng ký <strong className="text-xl">{invoiceCode.split("-")[1]}</strong> trong nội dung chuyển khoản</li>
             <li>Sau khi chuyển khoản, vui lòng upload hóa đơn/ảnh chụp màn hình xác nhận</li>
             <li>Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc sau khi nhận được thanh toán</li>
+            <li>Hạn chuyển khoản là 10 ngày kể từ ngày đăng ký và trước ngày 10/09/2025</li>
+            <li>Vui lòng chuyển khoản trước ngày <strong className="text-xl">{new Date(new Date(registrationDate).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong> </li>
             <li>Nếu có thắc mắc, vui lòng liên hệ trực tiếp qua fanpage nhóm giới trẻ công giáo tại Nhật.</li>
           </ul>
           <a className="text-blue-600 mt-2 p-4 text-sm" href="https://www.facebook.com/GTCGVNtaiNhat/" target="_blank" rel="noopener noreferrer">facebook.com/GTCGVNtaiNhat</a>
