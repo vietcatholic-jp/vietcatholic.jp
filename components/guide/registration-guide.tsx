@@ -76,7 +76,7 @@ export function RegistrationGuide() {
             ĐẠI HỘI TOÀN QUỐC NĂM THÁNH 2025 - Những Người Hành Hương của Hy Vọng
           </p>
           <div className="flex justify-center">
-            <Badge variant="outline" className="text-base px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <Badge variant="outline" className="text-base px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 dark:from-slate-700 dark:to-slate-800">
               <Calendar className="h-4 w-4 mr-2" />
               14-15/09/2025
             </Badge>
@@ -149,11 +149,11 @@ function OverviewSection() {
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Mức phí tham gia</h3>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-slate-800 rounded-lg">
                   <span>Người lớn (từ 12 tuổi trở lên)</span>
                   <Badge variant="secondary">¥6,000</Badge>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-slate-800 rounded-lg">
                   <span>Trẻ em (dưới 12 tuổi)</span>
                   <Badge variant="secondary">¥3,000</Badge>
                 </div>
@@ -172,7 +172,7 @@ function OverviewSection() {
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-4 gap-4">
-            <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
+            <div className="flex flex-col items-center p-4 bg-blue-50 dark:bg-slate-800 rounded-lg">
               <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-3">
                 <UserPlus className="h-6 w-6 text-white" />
               </div>
@@ -181,8 +181,8 @@ function OverviewSection() {
                 Tạo tài khoản và điền thông tin đăng ký
               </p>
             </div>
-            
-            <div className="flex flex-col items-center p-4 bg-green-50 rounded-lg">
+
+            <div className="flex flex-col items-center p-4 bg-green-50 dark:bg-slate-800 rounded-lg">
               <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-3">
                 <CreditCard className="h-6 w-6 text-white" />
               </div>
@@ -192,7 +192,7 @@ function OverviewSection() {
               </p>
             </div>
             
-            <div className="flex flex-col items-center p-4 bg-purple-50 rounded-lg">
+            <div className="flex flex-col items-center p-4 bg-purple-50 dark:bg-slate-800 rounded-lg">
               <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mb-3">
                 <ShieldCheck className="h-6 w-6 text-white" />
               </div>
@@ -201,8 +201,8 @@ function OverviewSection() {
                 Chờ ban tổ chức xác nhận thanh toán
               </p>
             </div>
-            
-            <div className="flex flex-col items-center p-4 bg-orange-50 rounded-lg">
+
+            <div className="flex flex-col items-center p-4 bg-orange-50 dark:bg-slate-800 rounded-lg">
               <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mb-3">
                 <Award className="h-6 w-6 text-white" />
               </div>
@@ -305,7 +305,7 @@ function RegisterSection() {
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Bước 3: Điền thông tin đăng ký</h3>
               <div className="space-y-3">
-                <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="p-4 bg-blue-50 dark:bg-slate-800 rounded-lg">
                   <h4 className="font-medium mb-2">Thông tin cá nhân</h4>
                   <div className="space-y-1 text-sm">
                     <p>• Tên Thánh (không bắt buộc)</p>
@@ -316,7 +316,7 @@ function RegisterSection() {
                   </div>
                 </div>
                 
-                <div className="p-4 bg-green-50 rounded-lg">
+                <div className="p-4 bg-green-50 dark:bg-slate-800 rounded-lg">
                   <h4 className="font-medium mb-2">Thông tin liên hệ</h4>
                   <div className="space-y-1 text-sm">
                     <p>• Email</p>
@@ -334,7 +334,7 @@ function RegisterSection() {
 
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Bước 4: Thêm người tham gia khác (nếu có)</h3>
-              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="p-4 bg-amber-50 dark:bg-slate-800 rounded-lg border border-amber-200">
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 text-amber-600 mt-0.5" />
                   <div>
@@ -382,7 +382,7 @@ function PaymentSection() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="p-4 bg-green-50 dark:bg-slate-800 rounded-lg border border-green-200">
               <h3 className="font-semibold mb-3">Phương thức thanh toán duy nhất: Chuyển khoản ngân hàng</h3>
               <p className="text-sm text-green-700">
                 Hiện tại chúng tôi chỉ hỗ trợ thanh toán qua chuyển khoản ngân hàng Nhật Bản.
@@ -490,7 +490,7 @@ function PaymentSection() {
               </div>
             </div>
 
-            <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+            <div className="p-4 bg-red-50 dark:bg-slate-800 rounded-lg border border-red-200">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
                 <div>
@@ -524,7 +524,7 @@ function ManageSection() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="p-4 bg-blue-50 dark:bg-slate-800 rounded-lg">
               <h3 className="font-semibold mb-2">Truy cập trang quản lý</h3>
               <p className="text-sm text-blue-700 mb-3">
                 Sau khi đăng ký thành công, bạn có thể quản lý đăng ký tại trang &quot;Trang cá nhân&quot; trong menu.
@@ -540,7 +540,7 @@ function ManageSection() {
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Các trạng thái đăng ký</h3>
               <div className="grid gap-3">
-                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-orange-600" />
                     <span className="font-medium">Chờ thanh toán</span>
@@ -550,7 +550,7 @@ function ManageSection() {
                   </Badge>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-blue-600" />
                     <span className="font-medium">Đã báo thanh toán</span>
@@ -560,7 +560,7 @@ function ManageSection() {
                   </Badge>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <span className="font-medium">Đã xác nhận</span>
@@ -570,7 +570,7 @@ function ManageSection() {
                   </Badge>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-red-600" />
                     <span className="font-medium">Thanh toán bị từ chối</span>
@@ -660,7 +660,7 @@ function CancelSection() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="p-4 bg-amber-50 dark:bg-slate-800 rounded-lg border border-amber-200">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
                 <div>
@@ -762,7 +762,7 @@ function CancelSection() {
               </div>
             </div>
 
-            <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+            <div className="p-4 bg-red-50 dark:bg-slate-800 rounded-lg border border-red-200">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
                 <div>
