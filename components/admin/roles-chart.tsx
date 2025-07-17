@@ -6,51 +6,8 @@ interface RolesChartProps {
   roleStats: { event_role: string; count: number }[];
 }
 
-// Mapping từ tên vai trò tiếng Anh sang tiếng Việt
-const roleLabels: Record<string, string> = {
-  'participant': 'Người tham gia',
-  // Media team roles
-  'volunteer_media_leader': 'Trưởng ban Truyền thông',
-  'volunteer_media_sub_leader': 'Phó ban Truyền thông',
-  'volunteer_media_member': 'Thành viên ban Truyền thông',
-  // Activity team roles
-  'volunteer_activity_leader': 'Trưởng ban Sinh hoạt',
-  'volunteer_activity_sub_leader': 'Phó ban Sinh hoạt',
-  'volunteer_activity_member': 'Thành viên ban Sinh hoạt',
-  // Discipline team roles
-  'volunteer_discipline_leader': 'Trưởng ban Kỷ luật',
-  'volunteer_discipline_sub_leader': 'Phó ban Kỷ luật',
-  'volunteer_discipline_member': 'Thành viên ban Kỷ luật',
-  // Logistics team roles
-  'volunteer_logistics_leader': 'Trưởng ban Hậu cần',
-  'volunteer_logistics_sub_leader': 'Phó ban Hậu cần',
-  'volunteer_logistics_member': 'Thành viên ban Hậu cần',
-  // Security team roles
-  'volunteer_security_leader': 'Trưởng ban An ninh',
-  'volunteer_security_sub_leader': 'Phó ban An ninh',
-  'volunteer_security_member': 'Thành viên ban An ninh',
-  // Registration team roles
-  'volunteer_registration_leader': 'Trưởng ban Đăng ký',
-  'volunteer_registration_sub_leader': 'Phó ban Đăng ký',
-  'volunteer_registration_member': 'Thành viên ban Đăng ký',
-  // Medical team roles
-  'volunteer_medical_leader': 'Trưởng ban Y tế',
-  'volunteer_medical_sub_leader': 'Phó ban Y tế',
-  'volunteer_medical_member': 'Thành viên ban Y tế',
-  // Audio/Light team roles
-  'volunteer_audio_light_leader': 'Trưởng ban Âm thanh Ánh sáng',
-  'volunteer_audio_light_sub_leader': 'Phó ban Âm thanh Ánh sáng',
-  'volunteer_audio_light_member': 'Thành viên ban Âm thanh Ánh sáng',
-  // Group leadership roles
-  'volunteer_group_leader': 'Trưởng nhóm các đội',
-  'volunteer_group_sub_leader': 'Phó trưởng nhóm các đội',
-  // Organizer roles
-  'organizer_core': 'Ban Tổ chức chính',
-  'organizer_regional': 'Ban Tổ chức khu vực',
-  // Special roles
-  'speaker': 'Diễn giả',
-  'performer': 'Nghệ sĩ biểu diễn'
-};
+// Note: Role names are now fetched dynamically from the database
+// The API returns Vietnamese role names directly from event_roles.name field
 
 export function RolesChart({ roleStats }: RolesChartProps) {
   // Sort data by count in descending order for better visualization
@@ -59,11 +16,11 @@ export function RolesChart({ roleStats }: RolesChartProps) {
   // Find max value for percentage calculation
   const maxValue = Math.max(...sortedData.map(item => item.count));
   
-  // Calculate percentage for each bar and add Vietnamese labels
+  // Calculate percentage for each bar - use role names directly from database
   const dataWithPercentage = sortedData.map(item => ({
     ...item,
     percentage: (item.count / maxValue) * 100,
-    label: roleLabels[item.event_role] || item.event_role
+    label: item.event_role // Vietnamese role names come directly from database
   }));
 
   return (
