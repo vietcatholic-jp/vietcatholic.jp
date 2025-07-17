@@ -90,12 +90,12 @@ export function RolesChart({ roleStats }: RolesChartProps) {
             {dataWithPercentage.map((item, index) => (
               <div key={item.event_role} className="flex items-center gap-4">
                 {/* Role Name */}
-                <div className="w-48 text-right text-sm font-medium text-gray-700 pr-4">
+                <div className="w-48 md:w-48 sm:w-1/2 text-right text-sm font-medium text-gray-700 pr-4">
                   {item.label}
                 </div>
 
                 {/* Bar Container */}
-                <div className="flex-1 relative">
+                <div className="flex-1 md:flex-1 sm:w-1/2 relative">
                   <div className="w-full bg-gray-200 rounded-r-md h-6 relative overflow-hidden">
                     {/* Animated Bar */}
                     <div
