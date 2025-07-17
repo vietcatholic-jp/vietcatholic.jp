@@ -107,7 +107,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   const [selectedRole, setSelectedRole] = useState<EventParticipationRole>('participant');
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
   const [eventRoles, setEventRoles] = useState<EventRole[]>([]);
-  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  //const [isLoadingRoles, setIsLoadingRoles] = useState(false);
   const supabase = createClient();
 
   // Utility function to get role display name
@@ -132,7 +132,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   // Fetch active event config and roles
   useEffect(() => {
     const fetchEventData = async () => {
-      setIsLoadingRoles(true);
+      //setIsLoadingRoles(true);
       try {
         // Fetch event config
         const response = await fetch('/api/admin/events');
@@ -159,7 +159,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       } catch (error) {
         console.error('Failed to fetch event data:', error);
       } finally {
-        setIsLoadingRoles(false);
+       // setIsLoadingRoles(false);
       }
     };
 
@@ -328,18 +328,11 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   if (currentStep === 'role-selection') {
     return (
       <div className="max-w-4xl mx-auto">
-        {isLoadingRoles ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Đang tải vai trò...</p>
-          </div>
-        ) : (
-          <RoleSelection
+        <RoleSelection
             selectedRole={selectedRole}
             onRoleSelect={handleRoleSelection}
             onContinue={proceedToRegistration}
           />
-        )}
       </div>
     );
   }
