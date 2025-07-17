@@ -33,7 +33,7 @@ export function Pagination({
     } else {
       // Show pages around current page
       let start = Math.max(1, currentPage - 2);
-      let end = Math.min(totalPages, start + maxVisible - 1);
+      const end = Math.min(totalPages, start + maxVisible - 1);
       
       // Adjust start if we're near the end
       if (end - start < maxVisible - 1) {
