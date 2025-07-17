@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminData } from "@/components/admin/admin-context";
 import { DiocesesChart } from "@/components/admin/dioceses-chart";
 import { ProvincesChart } from "@/components/admin/provinces-chart";
+import { RolesChart } from "@/components/admin/roles-chart";
 
 export function AdminOverview() {
   const { data, isLoading } = useAdminData();
@@ -26,23 +27,7 @@ export function AdminOverview() {
 
       {/* Event Role Stats (for super admin) */}
       {data.roleStats && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Thống kê theo vai trò</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {data.roleStats.map((stat) => (
-                <div key={stat.event_role} className="text-center">
-                  <div className="font-semibold text-lg">{stat.count}</div>
-                  <div className="text-sm text-muted-foreground capitalize">
-                    {stat.event_role.replace(/_/g, ' ')}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <RolesChart roleStats={data.roleStats} />
       )}
     </div>
   );
