@@ -227,11 +227,11 @@ export function CancelRequestForm({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bank_name">Tên ngân hàng *</Label>
+                  <Label htmlFor="bank_name">Tên ngân hàng và chi nhánh *</Label>
                   <Input
                     id="bank_name"
                     {...register("bank_name")}
-                    placeholder="VD: Mizuho Bank, MUFG Bank, Sumitomo Mitsui Banking Corporation"
+                    placeholder="VD: Ngân hàng Yucho, chi nhánh 二四八(ニヨンハチ）"
                   />
                   {errors.bank_name && (
                     <p className="text-sm text-destructive">
