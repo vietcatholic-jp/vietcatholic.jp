@@ -66,7 +66,7 @@ export default async function RegisterPage() {
             </div>
           </div>
           {/* Registration Info */}
-            <div className="space-y-6">
+            <div className="space-y-6 mt-6 max-w-screen-md rounded-sm shadow-lg">
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-xl transition-all duration-300">
                 <CardHeader>
                   <CardTitle className="text-lg text-blue-800 flex items-center gap-2">

@@ -282,7 +282,6 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       return;
     }
     setIsSubmitting(true);
-    
     try {
       const response = await fetch('/api/registrations', {
         method: 'POST',
@@ -293,8 +292,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           registrants: data.registrants.map(registrant => ({
             ...registrant,
             saint_name: registrant.saint_name?.toUpperCase() || "",
-            full_name: registrant.full_name.toUpperCase(), // Ensure full name is uppercase
-            // For additional registrants, inherit contact info from primary
+            full_name: registrant.full_name.toUpperCase(),
             email: registrant.is_primary ? registrant.email : data.registrants[0].email,
             phone: registrant.is_primary ? registrant.phone : data.registrants[0].phone,
             address: registrant.is_primary ? registrant.address : data.registrants[0].address,
@@ -315,10 +313,9 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       
       // Redirect to payment page
       window.location.href = `/payment/${result.invoiceCode}`;
-      
+
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error("Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.");
+      toast.error(`Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại. ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     } finally {
       setIsSubmitting(false);
     }
