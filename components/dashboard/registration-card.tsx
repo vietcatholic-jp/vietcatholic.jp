@@ -234,8 +234,8 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
                   <div className="text-sm font-medium">Chờ xác nhận thanh toán</div>
                 </div>
                 <div className="text-xs text-blue-600 dark:text-blue-400 mt-3 ml-11">
-                  Thanh toán của bạn đang chờ xác nhận. Sau khi được xác nhận, bạn sẽ có thể tạo vé tham dự.
-                  Vui lòng đợi trong thời gian ngắn. Nếu quá lâu, bạn có thể liên hệ với admin để được hỗ trợ.
+                  Thanh toán của bạn đang chờ xác nhận. <strong>Sau khi được xác nhận, bạn sẽ có thể tạo vé tham dự.</strong>
+                  <br />Vui lòng đợi trong thời gian ngắn. Nếu quá lâu, bạn có thể liên hệ với admin để được hỗ trợ.
                 </div>
               </div>
             )}
