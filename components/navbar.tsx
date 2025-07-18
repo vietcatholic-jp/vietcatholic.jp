@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, Cross, Sparkles } from "lucide-react";
+import { Menu, X, Sparkles } from "lucide-react";
 import { ThemeSwitcher } from "./theme-switcher";
 import { ClientAuthButton } from "./client-auth-button";
 import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import Image from "next/image";
 
 interface UserProfile {
   role: string;
@@ -61,8 +62,14 @@ export function Navbar() {
           {/* Logo / Brand */}
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <Cross className="h-5 w-5 text-white" />
+              <div className="h-10 w-10 rounded-full">
+                <Image
+                  src="/logo-dh-2025.jpg"
+                  alt="Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain rounded-full"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg bg-gradient-to-r from-blue-700 to-purple-600 bg-clip-text text-transparent">
@@ -70,7 +77,7 @@ export function Navbar() {
                 </span>
                 <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  Pilgrims of Hope
+                  Những Người Hành Hương Của Hy Vọng
                 </span>
               </div>
             </Link>

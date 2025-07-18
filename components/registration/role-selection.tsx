@@ -72,6 +72,7 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
     if (category === 'participant') {
       onRoleSelect('participant');
     } else {
+      onRoleSelect(''); // Reset role when switching to organization
       // Reset role when switching to organization - don't set to 'organization'
       // Let user select a specific role
     }
@@ -150,12 +151,12 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
   return (
     <div className="space-y-6">
       {/* Progress indicator */}
-      <div className="flex items-center justify-center space-x-4 mb-6">
+      <div className="flex items-center justify-center space-x-4 mb-8">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-medium shadow-lg">
             1
           </div>
-          <span className="text-sm font-medium text-primary">Chọn vai trò</span>
+          <span className="text-sm font-medium text-blue-600">Chọn vai trò</span>
         </div>
         <div className="h-px bg-gray-300 w-8"></div>
         <div className="flex items-center space-x-2">
@@ -166,45 +167,67 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
         </div>
       </div>
 
-      <div className="text-center space-y-2">
-        <p className="text-muted-foreground">
+      <div className="text-center space-y-4">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-600 bg-clip-text text-transparent">
+          Chọn vai trò tham gia
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Bạn tham gia sự kiện với vai trò gì?
         </p>
+        <div className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-full px-4 py-2">
+          <span className="text-sm text-blue-700 font-medium">
+            ✨ Mỗi vai trò đều quan trọng trong hành trình này ✨
+          </span>
+        </div>
       </div>
 
       {/* Step 1: Category Selection */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card 
-          className={`cursor-pointer transition-all ${selectedCategory === 'participant' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+          className={`cursor-pointer transition-all duration-300 transform hover:-translate-y-2 ${
+            selectedCategory === 'participant' 
+              ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl' 
+              : 'hover:border-blue-400 hover:shadow-lg bg-gradient-to-br from-blue-50/30 to-blue-100/30'
+          }`}
           onClick={() => handleCategorySelect('participant')}
         >
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-              <Users className="h-6 w-6 text-blue-600" />
+            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center mb-4 shadow-lg">
+              <Users className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-lg">Người tham gia</CardTitle>
+            <CardTitle className="text-xl font-bold text-blue-800">🙋‍♂️ Người tham gia</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-700 leading-relaxed">
               Tham gia sự kiện như một người tham dự thông thường
             </p>
+            <div className="mt-3 inline-block bg-blue-600/10 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
+              ✨ Hành trình Hy vọng
+            </div>
           </CardContent>
         </Card>
 
         <Card 
-          className={`cursor-pointer transition-all ${selectedCategory === 'organization' ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`}
+          className={`cursor-pointer transition-all duration-300 transform hover:-translate-y-2 ${
+            selectedCategory === 'organization' 
+              ? 'border-green-600 bg-gradient-to-br from-green-50 to-green-100 shadow-xl' 
+              : 'hover:border-green-400 hover:shadow-lg bg-gradient-to-br from-green-50/30 to-green-100/30'
+          }`}
           onClick={() => handleCategorySelect('organization')}
         >
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
-              <UserCog className="h-6 w-6 text-green-600" />
+            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-600 to-green-700 rounded-full flex items-center justify-center mb-4 shadow-lg">
+              <UserCog className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-lg">Thành viên Ban tổ chức</CardTitle>
+            <CardTitle className="text-xl font-bold text-green-800">🤝 Thành viên Ban tổ chức</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-700 leading-relaxed">
               Tham gia với vai trò cụ thể trong ban tổ chức, các ban
             </p>
+            <div className="mt-3 inline-block bg-green-600/10 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+              🛠️ Xây dựng cộng đồng
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -238,11 +261,17 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
                         key={role.id}
                         variant={selectedRole === role.id ? "default" : "outline"}
                         onClick={() => handleOrganizationRoleSelect(role.id)}
-                        className="h-auto p-3 flex flex-col items-start justify-start space-y-1 text-left"
+                        className={`h-auto p-3 flex flex-col items-start justify-start space-y-1 text-left transition-all duration-200 ${
+                          selectedRole === role.id 
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md transform scale-[1.02]' 
+                            : 'border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 hover:transform hover:scale-[1.01]'
+                        }`}
                       >
                         <div className="font-medium text-sm">{role.name}</div>
                         {role.description && (
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2 text-wrap">
+                            <p className={`text-xs mt-1 line-clamp-2 text-wrap ${
+                              selectedRole === role.id ? 'text-blue-100' : 'text-gray-600'
+                            }`}>
                               {role.description}
                             </p>
                         )}
@@ -266,10 +295,10 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
 
       {/* Selected role indicator */}
       {selectedRole && (
-        <div className="flex justify-center py-4 border rounded-lg bg-primary/5">
+        <div className="flex justify-center py-4 border-2 border-blue-200 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Bạn đã chọn: <span className="font-medium text-primary">
+            <p className="text-sm text-gray-600">
+              🎯 Bạn đã chọn: <span className="font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
                 {getSelectedRoleDisplay()}
               </span>
             </p>
@@ -278,15 +307,28 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
       )}
 
       {/* Floating Continue Button */}
-      {selectedRole && selectedRole !== '' && (
+      {selectedCategory === 'participant' && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-white rounded-full shadow-lg border border-gray-200 px-6 py-3">
+          <div className="bg-white rounded-full shadow-xl border-2 border-blue-200 px-6 py-3">
             <Button 
               onClick={onContinue}
               size="lg"
-              className="min-w-[200px] rounded-full"
+              className="min-w-[200px] rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg transform hover:scale-105 transition-all"
             >
-              {selectedRole === 'participant' ? 'Tiếp tục →' : 'Tiếp tục đăng ký →'}
+              ✨ Tiếp tục → 
+            </Button>
+          </div>
+        </div>
+      )}
+      {selectedCategory === 'organization' && selectedRole !== '' && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-white rounded-full shadow-xl border-2 border-blue-200 px-6 py-3">
+            <Button 
+              onClick={onContinue}
+              size="lg"
+              className="min-w-[200px] rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg transform hover:scale-105 transition-all"
+            >
+              ✨ Tiếp tục đăng ký →
             </Button>
           </div>
         </div>

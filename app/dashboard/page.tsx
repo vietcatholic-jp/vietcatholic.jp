@@ -78,7 +78,7 @@ export default async function DashboardPage({
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Quản lý đăng ký</h1>
                 <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
                   Xin chào, {profile.full_name || user.email}
                 </p>

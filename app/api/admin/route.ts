@@ -130,8 +130,8 @@ export async function GET() {
         if (r.province) provinceCounts[r.province] = (provinceCounts[r.province] || 0) + 1;
         if (r.diocese) dioceseCounts[r.diocese] = (dioceseCounts[r.diocese] || 0) + 1;
         // Handle both old and new role structures
-        if (r.event_roles && r.event_roles.name) {
-          roleCounts[r.event_roles.name] = (roleCounts[r.event_roles.name] || 0) + 1;
+        if (r.event_roles && r.event_roles[0]?.name) {
+          roleCounts[r.event_roles[0].name] = (roleCounts[r.event_roles[0].name] || 0) + 1;
         }
       });
     }

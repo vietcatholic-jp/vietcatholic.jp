@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { EventParticipationRole } from "@/lib/types";
 import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
+import { EventLogger } from "@/lib/logging/event-logger";
+import { createRequestContext, calculateDuration } from "@/lib/logging/request-context";
+import { REGISTRATION_EVENT_TYPES, EVENT_CATEGORIES } from "@/lib/logging/types";
 
 const RegistrantSchema = z.object({
   email: z.string().email().optional(),
@@ -30,19 +33,62 @@ const RegistrationSchema = z.object({
   registrants: z.array(RegistrantSchema).min(1),
   notes: z.string().optional(),
 });
-
 export async function POST(request: NextRequest) {
+  
+  const context = createRequestContext(request);
+  const logger = new EventLogger();
+  //const startTime = Date.now();
   try {
     const supabase = await createClient();
     
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      await logger.logWarning(
+        REGISTRATION_EVENT_TYPES.AUTHENTICATION_ERROR,
+        EVENT_CATEGORIES.REGISTRATION,
+        {
+          ...context,
+          errorDetails: { authError: authError?.message },
+          durationMs: calculateDuration(context),
+        }
+      );
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Log registration attempt start
+    await logger.logInfo(
+      REGISTRATION_EVENT_TYPES.REGISTRATION_STARTED,
+      EVENT_CATEGORIES.REGISTRATION,
+      {
+        ...context,
+        userId: user.id,
+        userEmail: user.email,
+      }
+    );
+
     const body = await request.json();
-    const validated = RegistrationSchema.parse(body);
+    let validated;
+    try {
+      validated = RegistrationSchema.parse(body);
+    } catch (error) {
+      await logger.logError(
+        REGISTRATION_EVENT_TYPES.REGISTRANT_VALIDATION_ERROR,
+        EVENT_CATEGORIES.REGISTRATION,
+        error as Error,
+        {
+          ...context,
+          userId: user.id,
+          userEmail: user.email,
+          eventData: {
+            submittedData: body,
+            validationErrors: error instanceof z.ZodError ? error.errors : undefined
+          },
+          durationMs: calculateDuration(context),
+        }
+      );
+      return NextResponse.json({ error: "Validation failed", details: error }, { status: 400 });
+    }
 
     // Get active event config
     const { data: eventConfig } = await supabase
@@ -51,12 +97,10 @@ export async function POST(request: NextRequest) {
       .eq("is_active", true)
       .single();
 
-    const basePrice = eventConfig?.base_price || 6000; // Default 50,000 yen
-    
+    const basePrice = eventConfig?.base_price || 6000;
     // Generate invoice code using the existing function
     const { data: invoiceResult } = await supabase.rpc('generate_invoice_code');
     const invoiceCode = invoiceResult || `INV-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-
     const totalAmount = validated.registrants.reduce((total, registrant) => {
       const price = registrant.age_group === 'under_12' ? basePrice * 0.5 : basePrice;
       return total + price;
@@ -78,7 +122,28 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (regError) {
-      console.error("Registration error:", regError);
+      await logger.logError(
+        REGISTRATION_EVENT_TYPES.REGISTRATION_FAILED,
+        EVENT_CATEGORIES.REGISTRATION,
+        new Error(regError.message),
+        {
+          ...context,
+          userId: user.id,
+          userEmail: user.email,
+          eventData: { registrationData: {
+            user_id: user.id,
+            event_config_id: eventConfig?.id,
+            invoice_code: invoiceCode,
+            status: "pending",
+            total_amount: totalAmount,
+            participant_count: validated.registrants.length,
+            notes: validated.notes,
+          } },
+          errorDetails: { databaseError: regError },
+          durationMs: calculateDuration(context),
+          tags: ['database_error'],
+        }
+      );
       return NextResponse.json({ error: "Failed to create registration" }, { status: 500 });
     }
 
@@ -117,18 +182,13 @@ export async function POST(request: NextRequest) {
         is_primary: registrant.is_primary,
         notes: registrant.notes,
       };
-
-      // Handle role assignment based on the new structure
       if (registrant.event_role === 'participant') {
-        // For participants, we don't set event_team_id or event_role_id
         data.event_team_id = null;
         data.event_role_id = null;
       } else {
-        // For organization members, the event_role contains the role ID
-        data.event_team_id = null; // Will be set by admin later if needed
+        data.event_team_id = null;
         data.event_role_id = registrant.event_role;
       }
-
       return data;
     });
 
@@ -137,24 +197,65 @@ export async function POST(request: NextRequest) {
       .insert(registrantsData);
 
     if (registrantsError) {
-      console.error("Registrants error:", registrantsError);
+      await logger.logError(
+        REGISTRATION_EVENT_TYPES.REGISTRATION_FAILED,
+        EVENT_CATEGORIES.REGISTRATION,
+        new Error(registrantsError.message),
+        {
+          ...context,
+          userId: user.id,
+          userEmail: user.email,
+          registrationId: registration.id,
+          eventData: { registrantsError },
+          errorDetails: { databaseError: registrantsError },
+          durationMs: calculateDuration(context),
+          tags: ['database_error'],
+        }
+      );
       // Try to clean up the registration record
       await supabase.from("registrations").delete().eq("id", registration.id);
       return NextResponse.json({ error: "Failed to create registrants" }, { status: 500 });
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    await logger.logInfo(
+      REGISTRATION_EVENT_TYPES.REGISTRATION_CREATED,
+      EVENT_CATEGORIES.REGISTRATION,
+      {
+        ...context,
+        userId: user.id,
+        userEmail: user.email,
+        registrationId: registration.id,
+        invoiceCode: registration.invoice_code,
+        eventData: {
+          registrantCount: validated.registrants.length,
+          totalAmount: registration.total_amount
+        },
+        durationMs: calculateDuration(context),
+      }
+    );
+
+    return NextResponse.json({
+      success: true,
       registration,
-      invoiceCode 
+      invoiceCode
     });
 
   } catch (error) {
+    await logger.logCritical(
+      REGISTRATION_EVENT_TYPES.REGISTRATION_FAILED,
+      EVENT_CATEGORIES.REGISTRATION,
+      error as Error,
+      {
+        ...context,
+        durationMs: calculateDuration(context),
+        tags: ['unexpected_error'],
+      }
+    );
     console.error("Registration API error:", error);
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: "Validation failed", 
-        details: error.errors 
+      return NextResponse.json({
+        error: "Validation failed",
+        details: error.errors
       }, { status: 400 });
     }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

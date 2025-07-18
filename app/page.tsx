@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
@@ -25,7 +26,7 @@ export default async function Home() {
         <div className="container mx-auto text-center relative z-10">
           <div className="flex justify-center mb-6">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
-              ✨ Năm Thánh 2025 - Pilgrims of Hope ✨
+              ✨ Năm Thánh 2025 - Những Người Hành Hương Của Hy Vọng ✨
             </div>
           </div>
           
@@ -38,7 +39,15 @@ export default async function Home() {
           <div className="text-xl text-blue-600 mb-8 font-medium">
             🙏 &ldquo;Những Người Hành Hương Hy Vọng&rdquo; 🙏
           </div>
-          
+          <div className="flex justify-center mb-4">
+              <Image
+                src="/logo-dh-2025.jpg"
+                alt="Logo"
+                width={192}
+                height={192}
+                className="object-contain rounded-full"
+              />
+            </div>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
             Cùng nhau thực hiện hành trình đức tin, mang hy vọng và tình yêu đến cộng đồng Công giáo Việt Nam tại Nhật Bản
           </p>
