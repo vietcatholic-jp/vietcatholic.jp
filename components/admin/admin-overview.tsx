@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminData } from "@/components/admin/admin-context";
 import { DiocesesChart } from "@/components/admin/dioceses-chart";
 import { ProvincesChart } from "@/components/admin/provinces-chart";
