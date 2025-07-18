@@ -356,19 +356,19 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         </div>
       </div>
       {/* Progress indicator */}
-      <div className="flex items-center justify-center space-x-4 mb-6">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-medium border-2 border-green-300">
+      <div className="flex items-center justify-center space-x-6 mb-8">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 text-green-500 rounded-full flex items-center justify-center text-sm font-bold border-2 border-green-200 shadow-lg">
             ✓
           </div>
-          <span className="text-sm text-green-600 font-medium">Chọn vai trò</span>
+          <span className="text-sm text-green-600 dark:text-green-400 font-semibold">Chọn vai trò</span>
         </div>
-        <div className="h-px bg-gradient-to-r from-green-300 to-blue-300 w-8"></div>
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-medium shadow-lg">
+        <div className="h-1 bg-gradient-to-r from-green-400 to-blue-400 w-12 rounded-full"></div>
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg transform hover:scale-105 transition-transform">
             2
           </div>
-          <span className="text-sm font-medium text-blue-600">Điền thông tin</span>
+          <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Điền thông tin</span>
         </div>
       </div>
 
@@ -383,13 +383,13 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           Thay đổi vai trò
         </Button>
         
-        <div className="text-center space-y-4">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-600 bg-clip-text text-transparent">
-            Đăng ký tham gia
+        <div className="text-center space-y-6">
+          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-700 to-purple-600 bg-clip-text text-transparent">
+            ✨ Đăng ký tham gia
           </h2>
-          <div className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-full px-6 py-3">
-            <p className="text-gray-700">
-              Vai trò: <span className="font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+          <div className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border-2 border-blue-200 dark:border-blue-700 rounded-full px-8 py-4 shadow-lg">
+            <p className="text-gray-700 dark:text-gray-200 text-lg">
+              Vai trò: <span className="font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full shadow-md">
                 {getRoleDisplayName(selectedRole)}
               </span>
             </p>
@@ -399,11 +399,13 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Registrants */}
-        <Card>
-          <CardHeader>
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-purple-950/30 border-blue-200 dark:border-blue-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <CardHeader className="bg-gradient-to-r from-white/80 to-blue-50/80 dark:from-blue-900/30 dark:to-purple-900/30 rounded-t-lg">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full">
+                  <Users className="h-5 w-5 text-white" />
+                </div>
                 Thông tin người tham gia ({registrants.length})
               </CardTitle>
               <Button
@@ -411,7 +413,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                 variant="outline"
                 size="sm"
                 onClick={addRegistrant}
-                className="hidden sm:flex border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transform hover:scale-105 transition-all"
+                className="hidden sm:flex bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-600 text-blue-600 hover:from-blue-100 hover:to-purple-100 hover:border-blue-700 transform hover:scale-105 transition-all shadow-md"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Thêm người
@@ -423,7 +425,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
               variant="outline"
               size="sm"
               onClick={addRegistrant}
-              className="sm:hidden w-full mt-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+              className="sm:hidden w-full mt-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-600 text-blue-600 hover:from-blue-100 hover:to-purple-100 hover:border-blue-700 shadow-md"
             >
               <Plus className="h-4 w-4 mr-2" />
               Thêm người tham gia
@@ -835,14 +837,14 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         </Card>
 
         {/* Submit */}
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-8">
           <Button 
             type="submit" 
             size="lg" 
             disabled={isSubmitting}
-            className="min-w-[200px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all disabled:transform-none disabled:opacity-50"
+            className="min-w-[280px] h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-4 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 disabled:transform-none disabled:opacity-50 border-2 border-white/20"
           >
-            {isSubmitting ? "Đang xử lý..." : "🎉 Hoàn tất đăng ký"}
+            {isSubmitting ? "⏳ Đang xử lý..." : "✨ Hoàn tất đăng ký 🎉"}
           </Button>
         </div>
       </form>
