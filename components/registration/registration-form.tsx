@@ -352,7 +352,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
             type="button"
             size="lg"
             onClick={addRegistrant}
-            className="rounded-full h-12 w-12 shadow-lg"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full h-12 w-12 shadow-lg transform hover:scale-105 transition-all"
           >
             <Plus className="h-6 w-6" />
           </Button>
@@ -361,17 +361,17 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       {/* Progress indicator */}
       <div className="flex items-center justify-center space-x-4 mb-6">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">
-            1
+          <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-medium border-2 border-green-300">
+            ✓
           </div>
-          <span className="text-sm text-gray-500">Chọn vai trò</span>
+          <span className="text-sm text-green-600 font-medium">Chọn vai trò</span>
         </div>
-        <div className="h-px bg-gray-300 w-8"></div>
+        <div className="h-px bg-gradient-to-r from-green-300 to-blue-300 w-8"></div>
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-medium shadow-lg">
             2
           </div>
-          <span className="text-sm font-medium text-primary">Điền thông tin</span>
+          <span className="text-sm font-medium text-blue-600">Điền thông tin</span>
         </div>
       </div>
 
@@ -380,19 +380,23 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           type="button"
           variant="ghost"
           onClick={goBackToRoleSelection}
-          className="mb-4"
+          className="mb-4 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Thay đổi vai trò
         </Button>
         
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold">Đăng ký tham gia</h2>
-          <p className="text-muted-foreground">
-            Vai trò: <span className="font-medium">
-              {getRoleDisplayName(selectedRole)}
-            </span>
-          </p>
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-purple-600 bg-clip-text text-transparent">
+            Đăng ký tham gia
+          </h2>
+          <div className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-full px-6 py-3">
+            <p className="text-gray-700">
+              Vai trò: <span className="font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+                {getRoleDisplayName(selectedRole)}
+              </span>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -410,7 +414,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                 variant="outline"
                 size="sm"
                 onClick={addRegistrant}
-                className="hidden sm:flex"
+                className="hidden sm:flex border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transform hover:scale-105 transition-all"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Thêm người
@@ -422,7 +426,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
               variant="outline"
               size="sm"
               onClick={addRegistrant}
-              className="sm:hidden w-full mt-3"
+              className="sm:hidden w-full mt-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
             >
               <Plus className="h-4 w-4 mr-2" />
               Thêm người tham gia
@@ -745,7 +749,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                 type="button"
                 variant="outline"
                 onClick={addRegistrant}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transform hover:scale-105 transition-all"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Thêm người tham gia
@@ -839,9 +843,9 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
             type="submit" 
             size="lg" 
             disabled={isSubmitting}
-            className="min-w-[200px]"
+            className="min-w-[200px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all disabled:transform-none disabled:opacity-50"
           >
-            {isSubmitting ? "Đang xử lý..." : "Hoàn tất đăng ký"}
+            {isSubmitting ? "Đang xử lý..." : "🎉 Hoàn tất đăng ký"}
           </Button>
         </div>
       </form>
