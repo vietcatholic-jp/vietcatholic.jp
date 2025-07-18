@@ -10,10 +10,19 @@ import {
   FileText, 
   CheckCircle, 
   X,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  Loader2
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { 
+  compressImages, 
+  formatFileSize, 
+  shouldCompressFile,
+  DEFAULT_RECEIPT_COMPRESSION,
+  type CompressionResult 
+} from "@/lib/image-compression";
 
 interface ReceiptUploadProps {
   invoiceCode: string;
@@ -25,11 +34,13 @@ export function ReceiptUpload({
   hasExistingReceipts 
 }: ReceiptUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [compressedFiles, setCompressedFiles] = useState<CompressionResult[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [uploadedReceipts, setUploadedReceipts] = useState<string[]>([]);
   const supabase = createClient();
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     // Filter for valid file types
     const validFiles = acceptedFiles.filter(file => {
       const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
@@ -40,7 +51,52 @@ export function ReceiptUpload({
       toast.error("Một số file không hợp lệ. Chỉ chấp nhận JPG, PNG, PDF dưới 10MB");
     }
 
+    if (validFiles.length === 0) return;
+
     setUploadedFiles(prev => [...prev, ...validFiles]);
+
+    // Check if any files need compression
+    const filesToCompress = validFiles.filter(file => shouldCompressFile(file));
+    
+    if (filesToCompress.length > 0) {
+      setIsCompressing(true);
+      toast.info(`🔧 Đang nén ${filesToCompress.length} ảnh để tối ưu kích thước...`);
+      
+      try {
+        const compressionResults = await compressImages(validFiles, DEFAULT_RECEIPT_COMPRESSION);
+        setCompressedFiles(prev => [...prev, ...compressionResults]);
+        
+        const totalOriginalSize = compressionResults.reduce((sum, result) => sum + result.originalSize, 0);
+        const totalCompressedSize = compressionResults.reduce((sum, result) => sum + result.compressedSize, 0);
+        const savings = totalOriginalSize - totalCompressedSize;
+        
+        if (savings > 0) {
+          toast.success(`✅ Nén ảnh thành công! Tiết kiệm ${formatFileSize(savings)} dung lượng`);
+        }
+      } catch (error) {
+        console.error('Compression error:', error);
+        toast.warning("Không thể nén ảnh, sẽ sử dụng ảnh gốc");
+        // Create fallback compression results
+        const fallbackResults = validFiles.map(file => ({
+          file,
+          originalSize: file.size,
+          compressedSize: file.size,
+          compressionRatio: 0
+        }));
+        setCompressedFiles(prev => [...prev, ...fallbackResults]);
+      } finally {
+        setIsCompressing(false);
+      }
+    } else {
+      // For non-image files, create compression results without actual compression
+      const results = validFiles.map(file => ({
+        file,
+        originalSize: file.size,
+        compressedSize: file.size,
+        compressionRatio: 0
+      }));
+      setCompressedFiles(prev => [...prev, ...results]);
+    }
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -56,10 +112,11 @@ export function ReceiptUpload({
 
   const removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setCompressedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const uploadFiles = async () => {
-    if (uploadedFiles.length === 0) {
+    if (compressedFiles.length === 0) {
       toast.error("Vui lòng chọn file để upload");
       return;
     }
@@ -69,15 +126,17 @@ export function ReceiptUpload({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Không thể xác thực người dùng");
 
-      // Upload files to storage first
-      const uploadPromises = uploadedFiles.map(async (file) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${invoiceCode}/${Date.now()}.${fileExt}`;
+      // Upload compressed files to storage
+      const uploadPromises = compressedFiles.map(async (compressedResult, index) => {
+        const originalFile = uploadedFiles[index];
+        const fileToUpload = compressedResult.file;
+        const fileExt = originalFile.name.split('.').pop();
+        const fileName = `${user.id}/${invoiceCode}/${Date.now()}_${index}.${fileExt}`;
         
         // Upload to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('receipts')
-          .upload(fileName, file);
+          .upload(fileName, fileToUpload);
 
         if (uploadError) throw uploadError;
 
@@ -89,8 +148,10 @@ export function ReceiptUpload({
         return {
           path: uploadData.path,
           url: publicUrl,
-          fileName: file.name,
-          size: file.size
+          fileName: originalFile.name,
+          originalSize: compressedResult.originalSize,
+          compressedSize: compressedResult.compressedSize,
+          compressionRatio: compressedResult.compressionRatio
         };
       });
 
@@ -106,7 +167,11 @@ export function ReceiptUpload({
           invoiceCode,
           receiptUrl: uploadedData[0].url, // Use first uploaded file
           amount: 6000, // This should be calculated based on registration
-          notes: uploadedData.length > 1 ? `Multiple files uploaded: ${uploadedData.map(d => d.fileName).join(', ')}` : undefined,
+          notes: uploadedData.length > 1 
+            ? `Multiple files uploaded: ${uploadedData.map(d => d.fileName).join(', ')}. Compression saved ${formatFileSize(uploadedData.reduce((sum, d) => sum + (d.originalSize - d.compressedSize), 0))} total.`
+            : uploadedData[0].compressionRatio > 0 
+              ? `File compressed from ${formatFileSize(uploadedData[0].originalSize)} to ${formatFileSize(uploadedData[0].compressedSize)} (${Math.round(uploadedData[0].compressionRatio * 100)}% reduction)`
+              : undefined,
         }),
       });
 
@@ -118,6 +183,7 @@ export function ReceiptUpload({
       
       setUploadedReceipts(prev => [...prev, ...uploadedData.map(d => d.path)]);
       setUploadedFiles([]);
+      setCompressedFiles([]);
       
       toast.success("Upload hóa đơn thành công! Đăng ký sẽ được xem xét trong vòng 24 giờ.");
       
@@ -187,25 +253,53 @@ export function ReceiptUpload({
         {/* File List */}
         {uploadedFiles.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-medium">File đã chọn:</h4>
-            {uploadedFiles.map((file, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  <span className="text-sm">{file.name}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {(file.size / 1024 / 1024).toFixed(1)}MB
-                  </Badge>
+            <h4 className="font-medium flex items-center gap-2">
+              File đã chọn:
+              {isCompressing && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
+            </h4>
+            {uploadedFiles.map((file, index) => {
+              const compressionResult = compressedFiles[index];
+              const needsCompression = shouldCompressFile(file);
+              
+              return (
+                <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg border">
+                  <div className="flex items-center gap-3 flex-1">
+                    <FileText className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{file.name}</div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Gốc: {formatFileSize(file.size)}</span>
+                        {compressionResult && compressionResult.compressionRatio > 0 && (
+                          <>
+                            <span>→</span>
+                            <span className="text-green-600 font-medium">
+                              Nén: {formatFileSize(compressionResult.compressedSize)}
+                            </span>
+                            <Badge variant="secondary" className="text-xs">
+                              -{Math.round(compressionResult.compressionRatio * 100)}%
+                            </Badge>
+                          </>
+                        )}
+                        {needsCompression && !compressionResult && (
+                          <Badge variant="outline" className="text-xs text-amber-600">
+                            <Zap className="h-3 w-3 mr-1" />
+                            Sẽ nén
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(index)}
+                    disabled={isCompressing}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeFile(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -213,10 +307,12 @@ export function ReceiptUpload({
         {uploadedFiles.length > 0 && (
           <Button 
             onClick={uploadFiles} 
-            disabled={isUploading}
+            disabled={isUploading || isCompressing}
             className="w-full"
           >
-            {isUploading ? "Đang upload..." : `Upload ${uploadedFiles.length} file`}
+            {isUploading ? "Đang upload..." : 
+             isCompressing ? "Đang nén ảnh..." : 
+             `Upload ${uploadedFiles.length} file`}
           </Button>
         )}
 
@@ -240,6 +336,10 @@ export function ReceiptUpload({
           <p>• Upload ảnh chụp màn hình xác nhận chuyển khoản hoặc hóa đơn ngân hàng</p>
           <p>• Đảm bảo thông tin tài khoản và số tiền hiển thị rõ ràng</p>
           <p>• Có thể upload nhiều file nếu cần</p>
+          <p className="flex items-center gap-1 text-green-600">
+            <Zap className="h-3 w-3" />
+            Ảnh lớn sẽ được tự động nén để tối ưu tốc độ upload
+          </p>
         </div>
       </CardContent>
     </Card>
