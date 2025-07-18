@@ -43,12 +43,12 @@ export function ProvincesChart({ provinceStats }: ProvincesChartProps) {
             {dataWithPercentage.map((item, index) => (
               <div key={item.province} className="flex items-center gap-4">
                 {/* Province Name */}
-                <div className="w-48 text-right text-sm font-medium text-gray-700 pr-4">
+                <div className="w-1/4 sm:w-48 text-right text-sm font-medium text-gray-700 pr-4">
                   {item.province}
                 </div>
-                
+
                 {/* Bar Container */}
-                <div className="flex-1 relative">
+                <div className="w-3/4 sm:flex-1 relative">
                   <div className="w-full bg-gray-200 rounded-r-md h-6 relative overflow-hidden">
                     {/* Animated Bar */}
                     <div 
