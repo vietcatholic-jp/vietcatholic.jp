@@ -130,13 +130,8 @@ export async function GET() {
         if (r.province) provinceCounts[r.province] = (provinceCounts[r.province] || 0) + 1;
         if (r.diocese) dioceseCounts[r.diocese] = (dioceseCounts[r.diocese] || 0) + 1;
         // Handle both old and new role structures
-        if (r.event_roles && Array.isArray(r.event_roles) && r.event_roles.length > 0) {
-          const role = r.event_roles[0];
-          if (role.name) roleCounts[role.name] = (roleCounts[role.name] || 0) + 1;
-          //if (role.event_teams && Array.isArray(role.event_teams) && role.event_teams.length > 0) {
-          //  const team = role.event_teams[0];
-          //  if (team.name) teamCounts[team.name] = (teamCounts[team.name] || 0) + 1;
-          //}
+        if (r.event_roles && r.event_roles.name) {
+          roleCounts[r.event_roles.name] = (roleCounts[r.event_roles.name] || 0) + 1;
         }
       });
     }
