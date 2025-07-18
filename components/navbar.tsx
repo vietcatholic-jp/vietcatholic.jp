@@ -159,28 +159,28 @@ export function Navbar() {
                     className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    🏠 Trang cá nhân
+                    Quản lý đăng ký
                   </Link>
                   <Link 
                     href="/register" 
                     className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    📝 Đăng ký
+                    Đăng ký mới
                   </Link>
                   <Link 
                     href="/guide" 
                     className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    📖 Hướng dẫn
+                    Hướng dẫn
                   </Link>
                   <Link 
                     href="/agenda" 
                     className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    📅 Chương trình
+                    Chương trình
                   </Link>
                   {isAdmin && (
                     <Link 
@@ -188,7 +188,7 @@ export function Navbar() {
                       className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-orange-600 hover:bg-orange-50 px-3 py-3 rounded-lg"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      ⚙️ Quản trị
+                      Quản trị
                     </Link>
                   )}
                   <div className="border-t pt-3 mt-3">
@@ -206,7 +206,7 @@ export function Navbar() {
                     className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    📖 Hướng dẫn
+                    Hướng dẫn
                   </Link>
                   <div className="flex items-center justify-between px-3">
                     <ThemeSwitcher />
