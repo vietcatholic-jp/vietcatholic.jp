@@ -104,13 +104,13 @@ export default async function DashboardPage({
             {/* Mobile: 2 column grid - admin users get 4 buttons, regular users get 3 */}
             <div className="grid grid-cols-2 gap-3 md:hidden">
               <Link href="/register">
-                <Button className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
+                <Button className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white " size="sm">
                   <Users className="h-4 w-4" />
                   <span className="hidden xs:inline text-center leading-tight">
                     {registrations && registrations.length > 0 ? 'Thêm đăng ký' : 'Đăng ký mới'}
                   </span>
                   <span className="xs:hidden text-center leading-tight">
-                    {registrations && registrations.length > 0 ? 'Thêm' : 'Đăng ký'}
+                    {registrations && registrations.length > 0 ? 'Thêm đăng ký' : 'Đăng ký'}
                   </span>
                 </Button>
               </Link>
