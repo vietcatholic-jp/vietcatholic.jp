@@ -168,7 +168,7 @@ export function RegistrationActions({
           disabled={isDeleting}
         >
           <Trash2 className="h-3 w-3 mr-1" />
-          {isDeleting ? 'Đang xóa...' : 'Xóa'}
+          {isDeleting ? 'Đang huỷ...' : 'Huỷ đăng ký'}
         </Button>
       )}
 

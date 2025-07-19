@@ -276,12 +276,6 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       setIsSubmitting(false);
       return;
     }
-    // Prompt user to confirm before submitting
-    if (!window.confirm("Vui lòng kiểm tra lại thông tin đăng ký của bạn trước khi hoàn tất. Bạn có chắc chắn muốn gửi đăng ký?")) {
-      setIsSubmitting(false);
-      return;
-    }
-    setIsSubmitting(true);
     try {
       const response = await fetch('/api/registrations', {
         method: 'POST',
