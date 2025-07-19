@@ -265,6 +265,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
   const onSubmit = async (data: FormData) => {
     // Extra manual check for primary registrant
+    setIsSubmitting(true);
     const primary = data.registrants[0];
     if (!primary.province || primary.province.trim() === "") {
       toast.error("Người đăng ký chính phải chọn Tỉnh/Phủ.");
@@ -276,12 +277,6 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       setIsSubmitting(false);
       return;
     }
-    // Prompt user to confirm before submitting
-    if (!window.confirm("Vui lòng kiểm tra lại thông tin đăng ký của bạn trước khi hoàn tất. Bạn có chắc chắn muốn gửi đăng ký?")) {
-      setIsSubmitting(false);
-      return;
-    }
-    setIsSubmitting(true);
     try {
       const response = await fetch('/api/registrations', {
         method: 'POST',
@@ -321,6 +316,13 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
     }
   };
 
+  // Always call useEffect, check currentStep inside
+  useEffect(() => {
+    if (currentStep === 'registration') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentStep]);
+
   // Step 1: Role Selection
   if (currentStep === 'role-selection') {
     return (
@@ -333,8 +335,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       </div>
     );
   }
-
-  // Step 2: Registration Form
+  
   return (
     <div className="max-w-4xl mx-auto relative">
       {/* Floating Add Button for Mobile */}
@@ -358,7 +359,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       {/* Progress indicator */}
       <div className="flex items-center justify-center space-x-6 mb-8">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 text-green-500 rounded-full flex items-center justify-center text-sm font-bold border-2 border-green-200 shadow-lg">
+          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold border-2 border-green-200 shadow-lg">
             ✓
           </div>
           <span className="text-sm text-green-600 dark:text-green-400 font-semibold">Chọn vai trò</span>
