@@ -15,7 +15,6 @@ import {
   AGE_GROUPS, 
   SHIRT_SIZES,
   EventParticipationRole,
-  EVENT_PARTICIPATION_ROLES,
   JAPANESE_PROVINCES,
   PROVINCE_DIOCESE_MAPPING,
   Registration
@@ -42,6 +41,7 @@ const RegistrantSchema = z.object({
     }),
   shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
+  go_with: z.boolean(),
   is_primary: z.boolean(),
   notes: z.string().optional(),
 });
@@ -125,6 +125,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
         shirt_size: r.shirt_size,
         event_role: r.event_role || "participant",
         is_primary: r.is_primary || false,
+        go_with: r.go_with || false,
         notes: r.notes || "",
       })) || [],
       notes: registration.notes || "",
@@ -159,6 +160,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
       shirt_size: "M" as const,
       event_role: "participant",
       is_primary: false,
+      go_with: false,
       notes: "",
     });
   };
@@ -427,24 +429,16 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor={`registrants.${index}.event_role`}>Vai trò *</Label>
-                      <select
-                        id={`registrants.${index}.event_role`}
-                        {...register(`registrants.${index}.event_role`)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="">Chọn vai trò</option>
-                        {EVENT_PARTICIPATION_ROLES.map((role) => (
-                          <option key={role.value} value={role.value}>
-                            {role.label}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.registrants?.[index]?.event_role && (
-                        <p className="text-sm text-destructive">
-                          {errors.registrants[index]?.event_role?.message}
-                        </p>
-                      )}
+                      <Label htmlFor={`registrants.${index}.go_with`}>Đi cùng nhóm?</Label>
+                      <Input
+                        type="checkbox"
+                        id={`registrants.${index}.go_with`}
+                        {...register(`registrants.${index}.go_with`)}
+                        className="h-4 w-4"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Nếu bạn muốn đi cùng nhóm, hãy chọn ô này.
+                      </p>
                     </div>
 
                     <div className="space-y-2">

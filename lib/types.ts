@@ -108,6 +108,7 @@ export interface Registrant {
   // Backward compatibility: some legacy components may still expect this
   event_role?: string;
   is_primary?: boolean;  // Marks the main registrant
+  go_with?: boolean; // Indicates if this registrant is going with the primary registrant
   notes?: string;
   portrait_url?: string;
   group_id?: string;
@@ -633,7 +634,6 @@ export const EVENT_PARTICIPATION_ROLES = [
   
   // Organizer roles
   { value: 'organizer_core', label: 'Ban Tổ chức chính' },
-  { value: 'organizer_regional', label: 'Ban Tổ chức khu vực' },
   
   // Special roles
   { value: 'speaker', label: 'Diễn giả' },

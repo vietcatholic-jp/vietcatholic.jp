@@ -31,7 +31,7 @@ const primaryRegistrantSchema = z.object({
   gender: z.enum(['male', 'female', 'other'] as const, {
     required_error: "Vui lòng chọn giới tính"
   }),
-  age_group: z.enum(['under_18', '18_25', '26_35', '36_50', 'over_50'] as const, {
+  age_group: z.enum(['under_12','12_17', '18_25', '26_35', '36_50', 'over_50'] as const, {
     required_error: "Vui lòng chọn độ tuổi"
   }),
   province: z.string().min(1, "Tỉnh/Phủ là bắt buộc").refine((val) => val && val.trim() !== '', {
@@ -43,6 +43,7 @@ const primaryRegistrantSchema = z.object({
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
+  go_with: z.boolean(),
   notes: z.string().optional(),
   // Facebook link is required for primary registrant
   facebook_link: z.string().url("Link Facebook không hợp lệ").min(1, "Link Facebook là bắt buộc cho người đăng ký chính").refine((val) => val && val.trim() !== '', {
@@ -74,6 +75,7 @@ const additionalRegistrantSchema = z.object({
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
+  go_with: z.boolean(),
   notes: z.string().optional(),
   // Optional contact fields
   email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
@@ -187,6 +189,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           shirt_size: "M" as const,
           event_role: "participant",
           is_primary: true,
+          go_with: false,
           notes: "",
           // Optional fields
           email: userEmail || "",
@@ -236,6 +239,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       shirt_size: "M" as const,
       event_role: selectedRole === 'participant' ? selectedRole : 'participant', // Default to participant unless primary is already participant
       is_primary: false,
+      go_with: false,
       notes: "",
       // Optional fields
       email: "",
@@ -649,7 +653,19 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                               Bấm vào dấu ... bên cạnh nút chỉnh sửa trang cá nhân → Kéo xuống phía dưới cùng, bạn sẽ thấy chữ copy link, bấm vào đó để sao chép → dán vào đây.
                             </div>
                           )}
-                        </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.go_with`}>Đi cùng nhóm?</Label>
+                      <Input
+                        type="checkbox"
+                        id={`registrants.${index}.go_with`}
+                        {...register(`registrants.${index}.go_with`)}
+                        className="h-4 w-4"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Nếu bạn muốn đi cùng nhóm, hãy chọn ô này.
+                      </p>
+                    </div>
 
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Ghi chú</Label>
