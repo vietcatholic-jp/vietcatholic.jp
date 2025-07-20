@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
   const publicRoutes = [
     '/',
     '/guide',
+    '/agenda',
     '/auth/login',
     '/auth/sign-up',
     '/auth/confirm',
@@ -59,10 +60,10 @@ export async function updateSession(request: NextRequest) {
 
   // Protected routes that require authentication
   const protectedRoutes = [
+    '/registration-manager',
     '/dashboard',
     '/profile',
     '/register',
-    '/agenda',
     '/admin',
   ];
 
