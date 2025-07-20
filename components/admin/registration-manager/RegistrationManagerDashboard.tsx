@@ -68,6 +68,7 @@ export function RegistrationManagerDashboard() {
       console.error('Error fetching registration manager data:', error);
       toast.error('Failed to load registration data');
     } finally {
+      setCurrentPage(page);
       setIsLoading(false);
       setIsRefreshing(false);
     }
@@ -76,16 +77,6 @@ export function RegistrationManagerDashboard() {
   useEffect(() => {
     fetchData(currentPage, searchTerm, statusFilter);
   }, [currentPage, searchTerm, statusFilter]);
-
-  // Auto-refresh every 30 seconds when on the overview tab
-  useEffect(() => {
-    if (activeTab === "overview") {
-      const interval = setInterval(() => {
-        fetchData(currentPage, searchTerm, statusFilter, false);
-      }, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [activeTab, currentPage, searchTerm, statusFilter]);
 
   const handleDataRefresh = () => {
     fetchData(currentPage, searchTerm, statusFilter, false);
@@ -98,16 +89,18 @@ export function RegistrationManagerDashboard() {
 
   const handleSearch = (search: string) => {
     setSearchTerm(search);
+    console.log("Search term:", search);
     setCurrentPage(1);
   };
 
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
+    console.log("Status filter:", status);
     setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    fetchData(page, searchTerm, statusFilter);
   };
 
   if (isLoading) {
@@ -124,7 +117,7 @@ export function RegistrationManagerDashboard() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <p className="text-muted-foreground">Failed to load registration data</p>
+          <p className="text-muted-foreground">Không có dữ liệu</p>
         </div>
       </div>
     );
