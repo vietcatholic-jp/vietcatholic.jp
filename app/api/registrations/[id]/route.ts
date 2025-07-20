@@ -22,7 +22,7 @@ const UpdateRegistrationSchema = z.object({
       .refine((val) => !val || isValidJapanesePhoneNumber(val), {
         message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
       }),
-    shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL']),
+    shirt_size: z.enum(['1','2','3','4','5','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL']),
     event_role: z.string() as z.ZodType<EventParticipationRole>,
     is_primary: z.boolean(),
     notes: z.string().optional(),
@@ -132,23 +132,49 @@ export async function PUT(
     }
 
     // Insert updated registrants
-    const registrantsData = validated.registrants.map(registrant => ({
-      registration_id: id,
-      email: registrant.email,
-      saint_name: registrant.saint_name,
-      full_name: registrant.full_name,
-      gender: registrant.gender,
-      age_group: registrant.age_group,
-      province: registrant.province,
-      diocese: registrant.diocese,
-      address: registrant.address,
-      facebook_link: registrant.facebook_link,
-      phone: registrant.phone,
-      shirt_size: registrant.shirt_size,
-      event_role: registrant.event_role,
-      is_primary: registrant.is_primary,
-      notes: registrant.notes,
-    }));
+    const registrantsData = validated.registrants.map(registrant => {
+      const data: {
+        registration_id: string;
+        email?: string;
+        saint_name?: string;
+        full_name: string;
+        gender: string;
+        age_group: string;
+        province?: string;
+        diocese?: string;
+        address?: string;
+        facebook_link?: string;
+        phone?: string;
+        shirt_size: string;
+        is_primary: boolean;
+        notes?: string;
+        event_team_id?: string | null;
+        event_role_id?: string | null;
+      } = {
+        registration_id: registration.id,
+        email: registrant.email,
+        saint_name: registrant.saint_name?.toUpperCase(),
+        full_name: registrant.full_name.toUpperCase(),
+        gender: registrant.gender,
+        age_group: registrant.age_group,
+        province: registrant.province,
+        diocese: registrant.diocese,
+        address: registrant.address,
+        facebook_link: registrant.facebook_link,
+        phone: registrant.phone,
+        shirt_size: registrant.shirt_size,
+        is_primary: registrant.is_primary,
+        notes: registrant.notes,
+      };
+      if (registrant.event_role === 'participant') {
+        data.event_team_id = null;
+        data.event_role_id = null;
+      } else {
+        data.event_team_id = null;
+        data.event_role_id = registrant.event_role;
+      }
+      return data;
+    });
 
     const { error: insertError } = await supabase
       .from("registrants")
