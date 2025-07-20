@@ -47,13 +47,15 @@ export function RegistrationManagerList({
   const [viewingRegistration, setViewingRegistration] = useState<Registration | null>(null);
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
 
-  // Debounced search
+  // Debounced search - only trigger when search term actually changes
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onSearch(localSearchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [localSearchTerm, onSearch]);
+    if (localSearchTerm !== searchTerm) {
+      const timer = setTimeout(() => {
+        onSearch(localSearchTerm);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [localSearchTerm, searchTerm, onSearch]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -288,16 +290,16 @@ export function RegistrationManagerList({
                     </Button>
                     {[...Array(Math.min(5, totalPages))].map((_, i) => {
                       const page = i + 1;
-                      return (
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => onPageChange(page)}
-                        >
-                          {page}
-                        </Button>
-                      );
+                        return (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => onPageChange(page)}
+                          >
+                            {page}
+                          </Button>
+                        );
                     })}
                     <Button
                       variant="outline"

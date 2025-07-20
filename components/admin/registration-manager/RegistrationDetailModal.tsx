@@ -9,7 +9,8 @@ import {
   Users, 
   CreditCard,
   FileText,
-  Receipt
+  Receipt,
+  ExternalLink
 } from "lucide-react";
 
 interface RegistrationDetailModalProps {
@@ -284,25 +285,45 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {registration.receipts.map((receipt, index) => (
-                    <div key={receipt.id && index} className="flex items-center justify-between border rounded-lg p-3">
-                      <div>
-                        <div className="font-medium">{receipt.file_name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Tải lên: {new Date(receipt.uploaded_at).toLocaleDateString('vi-VN')}
+                <div className="space-y-4">
+                  {registration.receipts.map((receipt, index) => {
+                    const isImage = receipt.file_name.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                    
+                    return (
+                      <div key={receipt.id || index} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <div className="font-medium">{receipt.file_name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              Tải lên: {new Date(receipt.uploaded_at).toLocaleDateString('vi-VN')}
+                            </div>
+                          </div>
+                          <a
+                            href={receipt.file_path}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-blue-600 hover:underline text-sm"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Mở file
+                          </a>
                         </div>
+                        
+                        {isImage && (
+                          <div className="mt-3">
+                            <img
+                              src={receipt.file_path}
+                              alt={receipt.file_name}
+                              className="max-w-full h-auto max-h-64 object-contain border rounded-md"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
-                      <a
-                        href={receipt.file_path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline text-sm"
-                      >
-                        Xem file
-                      </a>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
