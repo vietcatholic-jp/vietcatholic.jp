@@ -34,7 +34,7 @@ export function RegistrationManagerStats({ stats }: RegistrationManagerStatsProp
       priority: false
     },
     {
-      title: "Chờ thanh toán",
+      title: "Chờ xác nhận thanh toán",
       value: stats.pending_payments,
       icon: Clock,
       variant: "secondary" as const,

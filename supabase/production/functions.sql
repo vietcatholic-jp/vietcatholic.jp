@@ -109,7 +109,7 @@ as $$
 begin
   return query
   select
-    coalesce(sum(registrations.participant_count), 0) as total_registrations,
+    coalesce(sum(registrations.participant_count) filter (where registrations.status in ('pending','report_paid','donation','confirm_paid', 'confirmed','checked_in','checked_out')), 0) as total_registrations,
     coalesce(count(*) filter (where registrations.status = 'report_paid'), 0) as pending_payments,
     coalesce(count(*) filter (where registrations.status in ('confirm_paid', 'confirmed')), 0) as confirmed_registrations,
     coalesce(count(*) filter (where registrations.status = 'payment_rejected'), 0) as rejected_payments,
