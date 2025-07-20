@@ -2,7 +2,7 @@ export type UserRole = 'participant' | 'registration_manager' | 'event_organizer
 export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | 'shikoku' | 'tohoku' | 'hokkaido';
 export type GenderType = 'male' | 'female' | 'other';
 export type AgeGroupType = 'under_12' | '12_17' | '18_25' | '26_35' | '36_50' | 'over_50';
-export type ShirtSizeType = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
+export type ShirtSizeType = '1'|'2'|'3'|'4'|'5'|'M-XS' | 'M-S' | 'M-M' | 'M-L' | 'M-XL' | 'M-XXL' | 'M-3XL' | 'M-4XL'|'F-XS' | 'F-S' | 'F-M' | 'F-L' | 'F-XL' | 'F-XXL';
 
 // For registration role selection - can be 'participant' or an event role ID
 export type EventParticipationRole = string;
@@ -351,7 +351,6 @@ export const ROLES: { value: UserRole; label: string }[] = [
 export const GENDERS: { value: GenderType; label: string }[] = [
   { value: 'male', label: 'Nam' },
   { value: 'female', label: 'Nữ' },
-  { value: 'other', label: 'Khác' },
 ];
 
 export const AGE_GROUPS: { value: AgeGroupType; label: string }[] = [
@@ -364,12 +363,25 @@ export const AGE_GROUPS: { value: AgeGroupType; label: string }[] = [
 ];
 
 export const SHIRT_SIZES: { value: ShirtSizeType; label: string }[] = [
-  { value: 'XS', label: 'XS' },
-  { value: 'S', label: 'S' },
-  { value: 'M', label: 'M' },
-  { value: 'L', label: 'L' },
-  { value: 'XL', label: 'XL' },
-  { value: 'XXL', label: 'XXL' },
+  { value: 'M-XS', label: 'Nam (40-47) Kg' },
+  { value: 'M-S', label: 'Nam (48-53) Kg' },
+  { value: 'M-M', label: 'Nam (54-60) Kg' },
+  { value: 'M-L', label: 'Nam (61-67) Kg' },
+  { value: 'M-XL', label: 'Nam (68-74) Kg' },
+  { value: 'M-XXL', label: 'Nam (75-82) Kg' },
+  { value: 'M-3XL', label: 'Nam (83-90) Kg' },
+  { value: 'M-4XL', label: 'Nam (>90) Kg' },
+  { value: 'F-XS', label: 'Nữ (28-34) Kg' },
+  { value: 'F-S', label: 'Nữ (35-42) Kg' },
+  { value: 'F-M', label: 'Nữ (43-47) Kg' },
+  { value: 'F-L', label: 'Nữ (48-53) Kg' },
+  { value: 'F-XL', label: 'Nữ (54-60) Kg' },
+  { value: 'F-XXL', label: 'Nữ (61-67) Kg' },
+  { value: '1', label: 'Em bé (9-11) Kg' },
+  { value: '2', label: 'Em bé (12-14) Kg' },
+  { value: '3', label: 'Em bé (15-17) Kg' },
+  { value: '4', label: 'Em bé (18-21) Kg' },
+  { value: '5', label: 'Em bé (22-26) Kg' },
 ];
 
 // Province to Diocese mapping

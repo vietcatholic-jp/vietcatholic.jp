@@ -18,7 +18,8 @@ import {
   JAPANESE_PROVINCES,
   PROVINCE_DIOCESE_MAPPING,
   EventConfig,
-  EventRole
+  EventRole,
+  GenderType
 } from "@/lib/types";
 import { toast } from "sonner";
 import { RoleSelection } from "./role-selection";
@@ -38,7 +39,7 @@ const primaryRegistrantSchema = z.object({
     message: "Tỉnh/Phủ là bắt buộc cho người đăng ký chính"
   }),
   diocese: z.string().min(1, "Giáo phận là bắt buộc"),
-  shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const, {
+  shirt_size: z.enum(['1','2','3','4','5','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
@@ -70,7 +71,7 @@ const additionalRegistrantSchema = z.object({
   }),
   province: z.string().optional(),
   diocese: z.string().optional(),
-  shirt_size: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const, {
+  shirt_size: z.enum(['1','2','3','4','5','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
@@ -186,7 +187,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           age_group: "18_25" as const,
           province: "",
           diocese: "",
-          shirt_size: "M" as const,
+          shirt_size: "M-M" as const,
           event_role: "participant",
           is_primary: true,
           go_with: false,
@@ -236,7 +237,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       full_name: "",
       gender: "male" as const,
       age_group: "26_35" as const,
-      shirt_size: "M" as const,
+      shirt_size: "M-M" as const,
       event_role: selectedRole === 'participant' ? selectedRole : 'participant', // Default to participant unless primary is already participant
       is_primary: false,
       go_with: false,
@@ -265,6 +266,16 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
     if (selectedProvince && PROVINCE_DIOCESE_MAPPING[selectedProvince]) {
       setValue(`registrants.${index}.diocese` as const, PROVINCE_DIOCESE_MAPPING[selectedProvince]);
     }
+  };
+
+  const handleGenderChange = (index: number, selectedGender: string) => {
+      setValue(`registrants.${index}.gender` as const, selectedGender as GenderType);
+      if (selectedGender === "female") {
+        setValue(`registrants.${index}.shirt_size` as const, "F-M" as const);
+      }
+      if (selectedGender === "male") {
+        setValue(`registrants.${index}.shirt_size` as const, "M-M" as const);
+      }
   };
 
   const onSubmit = async (data: FormData) => {
@@ -500,6 +511,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                       <select
                         id={`registrants.${index}.gender`}
                         {...register(`registrants.${index}.gender`)}
+                        onChange={(e) => handleGenderChange(index, e.target.value)}
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="">Chọn giới tính</option>
@@ -621,6 +633,10 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           </option>
                         ))}
                       </select>
+                      <p className="text-xs text-muted-foreground">
+                          Chọn size áo theo cân nặng và giới tính.
+                          Áo dành cho trẻ em dưới 12 tuổi sẽ không phân biệt giới tính.
+                      </p>
                       {errors.registrants?.[index]?.shirt_size && (
                         <p className="text-sm text-destructive">
                           {errors.registrants[index]?.shirt_size?.message}
@@ -655,7 +671,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor={`registrants.${index}.go_with`}>Đi cùng nhóm?</Label>
+                      <Label htmlFor={`registrants.${index}.go_with`}>Bạn có nhu cầu đi xe chung không?</Label>
                       <Input
                         type="checkbox"
                         id={`registrants.${index}.go_with`}
@@ -663,7 +679,9 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                         className="h-4 w-4"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Nếu bạn muốn đi cùng nhóm, hãy chọn ô này.
+                        Lưu ý: Nếu bạn muốn đi chung với nhóm hoặc cộng đoàn ở gần bạn, hãy chọn ô này.
+                        Thông tin về các nhóm hoặc cộng đoàn có tổ chức xe chung sẽ được cập nhật sau,
+                        vui lòng theo dõi trang web hoặc nhóm Facebook của sự kiện để biết thêm chi tiết.
                       </p>
                     </div>
 
