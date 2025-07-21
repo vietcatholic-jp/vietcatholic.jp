@@ -98,6 +98,10 @@ export function LoginForm({
           <CardDescription>
             Nhập email của bạn để đăng nhập vào tài khoản
           </CardDescription>
+          <p className="text-xs text-orange-500">
+            Vui lòng mở trang web này qua trình duyệt Safari hoặc Chrome trên điện thoại.
+            Không đăng nhập hoặc đăng ký trực tiếp trên trình duyệt của Messenger.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
