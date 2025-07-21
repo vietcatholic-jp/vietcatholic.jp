@@ -10,6 +10,7 @@ import { Registrant } from "@/lib/types";
 import { 
   FileText,
 } from "lucide-react";
+import Link from "next/link";
 
 interface PaymentPageProps {
   params: Promise<{
@@ -62,6 +63,18 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
             <p className="text-muted-foreground">
               Mã đăng ký: <span className="font-mono font-medium">{registration.invoice_code}</span>
             </p>
+            <p className="text-muted-foreground">
+              <ul className="text-sm text-amber-800 space-y-1 ml-6 list-disc">
+                <li>Hạn chuyển khoản là 10 ngày kể từ ngày đăng ký và trước ngày 10/09/2025</li>
+                <li>Vui lòng chuyển khoản trước ngày <strong className="text-xl">{new Date(new Date(registration.created_at).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong> </li>
+              </ul>
+            </p>
+            <p className="text-muted-foreground mt-2 mb-2">
+              Bạn có thể quay lại trang này để xem hướng dẫn thanh toán và tải lên biên lai sau khi chuyển khoản.
+            </p>
+            <Link className="mt-2 border border-blue-500 p-2 rounded-md hover:bg-blue-600 hover:text-white dark:border-blue-700 dark:hover:bg-blue-700" href={`/dashboard`}>
+              Quay lại quản lý đăng ký
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
