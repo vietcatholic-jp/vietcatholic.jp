@@ -1,0 +1,285 @@
+import jsPDF from 'jspdf';
+import { format } from 'date-fns';
+import { Registration, Registrant, RegistrationStatus } from './types';
+
+// Vietnamese font support
+const VIETNAMESE_FONT = 'helvetica';
+
+// PDF page settings
+const PAGE_WIDTH = 210; // A4 width in mm
+const PAGE_HEIGHT = 297; // A4 height in mm
+const MARGIN = 20;
+const CONTENT_WIDTH = PAGE_WIDTH - (MARGIN * 2);
+
+// Helper function to get Vietnamese status label
+function getStatusLabel(status: RegistrationStatus): string {
+  const statusMap: Record<RegistrationStatus, string> = {
+    'pending': 'Chờ thanh toán',
+    'report_paid': 'Đã báo thanh toán',
+    'confirm_paid': 'Đã xác nhận thanh toán',
+    'payment_rejected': 'Thanh toán bị từ chối',
+    'donation': 'Đã chuyển thành quyên góp',
+    'cancel_pending': 'Chờ xử lý hủy',
+    'cancel_accepted': 'Đã chấp nhận hủy',
+    'cancel_rejected': 'Đã từ chối hủy',
+    'cancelled': 'Đã hủy',
+    'confirmed': 'Đã xác nhận',
+    'checked_in': 'Đã check-in',
+    'checked_out': 'Đã check-out'
+  };
+  return statusMap[status] || status;
+}
+
+// Helper function to format Vietnamese currency
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(amount);
+}
+
+// Helper function to format participant names
+function formatParticipantNames(registrants: Registrant[]): string {
+  if (!registrants || registrants.length === 0) return '';
+  if (registrants.length === 1) return registrants[0].full_name;
+  
+  const primary = registrants.find(r => r.is_primary)?.full_name || registrants[0].full_name;
+  const others = registrants.filter(r => !r.is_primary).length;
+  
+  if (others > 0) {
+    return `${primary} (+ ${others} người khác)`;
+  }
+  return primary;
+}
+
+// Add text with automatic wrapping
+function addTextWithWrap(doc: jsPDF, text: string, x: number, y: number, maxWidth: number, lineHeight: number = 6): number {
+  const lines = doc.splitTextToSize(text, maxWidth);
+  let currentY = y;
+  
+  for (const line of lines) {
+    doc.text(line, x, currentY);
+    currentY += lineHeight;
+  }
+  
+  return currentY;
+}
+
+// Add header with title and current date
+function addHeader(doc: jsPDF, title: string): number {
+  doc.setFontSize(18);
+  doc.text(title, MARGIN, 30);
+  
+  doc.setFontSize(10);
+  doc.text(`Ngày xuất: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, MARGIN, 40);
+  
+  return 50;
+}
+
+// Add table header
+function addTableHeader(doc: jsPDF, headers: string[], x: number, y: number, columnWidths: number[]): number {
+  doc.setFontSize(10);
+  doc.setFont(VIETNAMESE_FONT, 'bold');
+  
+  let currentX = x;
+  for (let i = 0; i < headers.length; i++) {
+    doc.rect(currentX, y - 5, columnWidths[i], 10);
+    doc.text(headers[i], currentX + 2, y + 1);
+    currentX += columnWidths[i];
+  }
+  
+  return y + 10;
+}
+
+// Add table row
+function addTableRow(doc: jsPDF, values: string[], x: number, y: number, columnWidths: number[], rowHeight: number = 15): number {
+  doc.setFont(VIETNAMESE_FONT, 'normal');
+  doc.setFontSize(9);
+  
+  let currentX = x;
+  let maxY = y;
+  
+  for (let i = 0; i < values.length; i++) {
+    doc.rect(currentX, y - 5, columnWidths[i], rowHeight);
+    const textY = addTextWithWrap(doc, values[i], currentX + 2, y + 1, columnWidths[i] - 4, 4);
+    maxY = Math.max(maxY, textY);
+    currentX += columnWidths[i];
+  }
+  
+  return y + rowHeight;
+}
+
+export async function exportRegistrationList(registrations: Registration[]): Promise<void> {
+  const doc = new jsPDF();
+  
+  let currentY = addHeader(doc, 'DANH SÁCH ĐĂNG KÝ THAM GIA ĐẠI HỘI CÔNG GIÁO VIỆT NAM TẠI NHẬT BẢN 2025');
+  
+  // Summary statistics
+  doc.setFontSize(12);
+  doc.text('THỐNG KÊ TỔNG QUAN', MARGIN, currentY + 10);
+  
+  currentY += 20;
+  doc.setFontSize(10);
+  
+  const totalRegistrations = registrations.length;
+  const totalParticipants = registrations.reduce((sum, reg) => sum + reg.participant_count, 0);
+  const confirmedRegistrations = registrations.filter(reg => 
+    ['confirm_paid', 'confirmed', 'checked_in', 'checked_out'].includes(reg.status)
+  ).length;
+  const totalAmount = registrations.reduce((sum, reg) => sum + reg.total_amount, 0);
+  
+  const summaryText = [
+    `• Tổng số đăng ký: ${totalRegistrations}`,
+    `• Tổng số người tham gia: ${totalParticipants}`,
+    `• Số đăng ký đã xác nhận: ${confirmedRegistrations}`,
+    `• Tổng số tiền: ${formatCurrency(totalAmount)}`
+  ];
+  
+  for (const text of summaryText) {
+    doc.text(text, MARGIN, currentY);
+    currentY += 7;
+  }
+  
+  currentY += 15;
+  
+  // Registration table
+  doc.setFontSize(12);
+  doc.text('CHI TIẾT ĐĂNG KÝ', MARGIN, currentY);
+  currentY += 15;
+  
+  const headers = ['Mã đăng ký', 'Người đăng ký', 'Số người', 'Trạng thái', 'Số tiền', 'Ngày đăng ký'];
+  const columnWidths = [25, 50, 20, 35, 25, 25];
+  
+  currentY = addTableHeader(doc, headers, MARGIN, currentY, columnWidths);
+  
+  for (const registration of registrations) {
+    // Check if we need a new page
+    if (currentY > PAGE_HEIGHT - 30) {
+      doc.addPage();
+      currentY = 30;
+    }
+    
+    const values = [
+      registration.invoice_code,
+      formatParticipantNames(registration.registrants || []),
+      registration.participant_count.toString(),
+      getStatusLabel(registration.status),
+      formatCurrency(registration.total_amount),
+      format(new Date(registration.created_at), 'dd/MM/yyyy')
+    ];
+    
+    currentY = addTableRow(doc, values, MARGIN, currentY, columnWidths);
+  }
+  
+  // Add footer with page numbers
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.text(`Trang ${i}/${pageCount}`, PAGE_WIDTH - 30, PAGE_HEIGHT - 10);
+  }
+  
+  // Save the PDF
+  const fileName = `danh-sach-dang-ky-${format(new Date(), 'dd-MM-yyyy')}.pdf`;
+  doc.save(fileName);
+}
+
+export async function exportPaymentReport(registrations: Registration[]): Promise<void> {
+  const doc = new jsPDF();
+  
+  let currentY = addHeader(doc, 'BÁO CÁO THANH TOÁN ĐẠI HỘI CÔNG GIÁO VIỆT NAM TẠI NHẬT BẢN 2025');
+  
+  // Payment statistics
+  doc.setFontSize(12);
+  doc.text('THỐNG KÊ THANH TOÁN', MARGIN, currentY + 10);
+  
+  currentY += 20;
+  doc.setFontSize(10);
+  
+  const paymentStats = {
+    pending: registrations.filter(r => r.status === 'pending'),
+    reported: registrations.filter(r => r.status === 'report_paid'),
+    confirmed: registrations.filter(r => ['confirm_paid', 'confirmed', 'checked_in', 'checked_out'].includes(r.status)),
+    rejected: registrations.filter(r => r.status === 'payment_rejected'),
+    cancelled: registrations.filter(r => ['cancelled', 'cancel_accepted'].includes(r.status))
+  };
+  
+  const statsText = [
+    `• Chờ thanh toán: ${paymentStats.pending.length} đăng ký - ${formatCurrency(paymentStats.pending.reduce((sum, r) => sum + r.total_amount, 0))}`,
+    `• Đã báo thanh toán: ${paymentStats.reported.length} đăng ký - ${formatCurrency(paymentStats.reported.reduce((sum, r) => sum + r.total_amount, 0))}`,
+    `• Đã xác nhận thanh toán: ${paymentStats.confirmed.length} đăng ký - ${formatCurrency(paymentStats.confirmed.reduce((sum, r) => sum + r.total_amount, 0))}`,
+    `• Thanh toán bị từ chối: ${paymentStats.rejected.length} đăng ký - ${formatCurrency(paymentStats.rejected.reduce((sum, r) => sum + r.total_amount, 0))}`,
+    `• Đã hủy: ${paymentStats.cancelled.length} đăng ký - ${formatCurrency(paymentStats.cancelled.reduce((sum, r) => sum + r.total_amount, 0))}`
+  ];
+  
+  for (const text of statsText) {
+    currentY = addTextWithWrap(doc, text, MARGIN, currentY, CONTENT_WIDTH, 7);
+    currentY += 3;
+  }
+  
+  currentY += 15;
+  
+  // Payment status breakdown
+  doc.setFontSize(12);
+  doc.text('CHI TIẾT THEO TRẠNG THÁI THANH TOÁN', MARGIN, currentY);
+  currentY += 15;
+  
+  const statusGroups = [
+    { title: 'ĐÃ XÁC NHẬN THANH TOÁN', data: paymentStats.confirmed },
+    { title: 'ĐÃ BÁO THANH TOÁN (CHỜ XÁC NHẬN)', data: paymentStats.reported },
+    { title: 'CHỜ THANH TOÁN', data: paymentStats.pending },
+    { title: 'THANH TOÁN BỊ TỪ CHỐI', data: paymentStats.rejected }
+  ];
+  
+  for (const group of statusGroups) {
+    if (group.data.length === 0) continue;
+    
+    // Check if we need a new page
+    if (currentY > PAGE_HEIGHT - 60) {
+      doc.addPage();
+      currentY = 30;
+    }
+    
+    doc.setFontSize(11);
+    doc.setFont(VIETNAMESE_FONT, 'bold');
+    doc.text(group.title, MARGIN, currentY);
+    currentY += 10;
+    
+    const headers = ['Mã đăng ký', 'Người đăng ký', 'Số tiền', 'Ngày tạo', 'Ghi chú'];
+    const columnWidths = [30, 60, 30, 30, 20];
+    
+    currentY = addTableHeader(doc, headers, MARGIN, currentY, columnWidths);
+    
+    for (const registration of group.data) {
+      // Check if we need a new page
+      if (currentY > PAGE_HEIGHT - 30) {
+        doc.addPage();
+        currentY = 30;
+      }
+      
+      const values = [
+        registration.invoice_code,
+        formatParticipantNames(registration.registrants || []),
+        formatCurrency(registration.total_amount),
+        format(new Date(registration.created_at), 'dd/MM/yyyy'),
+        registration.notes || ''
+      ];
+      
+      currentY = addTableRow(doc, values, MARGIN, currentY, columnWidths);
+    }
+    
+    currentY += 10;
+  }
+  
+  // Add footer with page numbers
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.text(`Trang ${i}/${pageCount}`, PAGE_WIDTH - 30, PAGE_HEIGHT - 10);
+  }
+  
+  // Save the PDF
+  const fileName = `bao-cao-thanh-toan-${format(new Date(), 'dd-MM-yyyy')}.pdf`;
+  doc.save(fileName);
+}
