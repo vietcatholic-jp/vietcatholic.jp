@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { AdminStats } from "@/components/admin/admin-stats";
 import { ExportButton } from "@/components/admin/export-button";
 import { AdminProvider } from "@/components/admin/admin-context";
 import { 
@@ -14,7 +13,8 @@ import {
   UserCheck,
   BarChart3,
   Wrench,
-  Truck
+  Truck,
+  Database
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -134,6 +134,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: CreditCard,
       roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
     },
+    {
+      href: '/admin/backup',
+      label: 'Backup',
+      icon: Database,
+      roles: ['super_admin']
+    },
   ];
 
   const visibleNavItems = navItems.filter(item => 
@@ -155,14 +161,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <ExportButton registrations={data.recentRegistrations} />
           </div>
         </div>
-
-        {/* Statistics */}
-        <AdminStats
-          totalRegistrations={data.stats.totalRegistrations}
-          totalParticipants={data.stats.totalParticipants}
-          paidRegistrations={data.stats.confirmedRegistrations}
-          pendingRegistrations={data.stats.pendingRegistrations}
-        />
 
         {/* Navigation */}
         <div className="mb-6">
