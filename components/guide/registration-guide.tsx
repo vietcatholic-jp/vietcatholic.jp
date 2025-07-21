@@ -547,7 +547,7 @@ function ManageSection() {
                     <span className="font-medium">Chờ thanh toán</span>
                   </div>
                   <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                    Chờ
+                    Chờ thanh toán
                   </Badge>
                 </div>
                 
@@ -557,7 +557,7 @@ function ManageSection() {
                     <span className="font-medium">Đã báo thanh toán</span>
                   </div>
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    Đã báo
+                    Chờ xác nhận
                   </Badge>
                 </div>
                 
@@ -574,7 +574,7 @@ function ManageSection() {
                 <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-red-600" />
-                    <span className="font-medium">Thanh toán bị từ chối</span>
+                    <span className="font-medium">Xác nhận thanh toán bị từ chối</span>
                   </div>
                   <Badge variant="destructive">
                     Thanh toán bị từ chối
