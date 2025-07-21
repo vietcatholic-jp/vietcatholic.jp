@@ -9,8 +9,10 @@ import {
   AlertCircle, 
   Download,
   Users,
-  FileText
+  FileText,
+  ExternalLink
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface QuickActionsProps {
   stats: {
@@ -26,6 +28,17 @@ interface QuickActionsProps {
 }
 
 export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
+  const router = useRouter();
+
+  const handleExport = (type: 'registrations' | 'payments') => {
+    // Navigate to export page with pre-selected filters based on type
+    const params = new URLSearchParams();
+    if (type === 'payments') {
+      params.set('filter', 'payment-focused');
+    }
+    router.push(`/registration-manager/export?${params.toString()}`);
+  };
+
   const quickActionItems = [
     {
       title: "Xem đăng ký chờ xác nhận",
@@ -101,13 +114,25 @@ export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
             Xuất dữ liệu
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" className="justify-start">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="justify-start"
+              onClick={() => handleExport('registrations')}
+            >
               <FileText className="h-4 w-4 mr-2" />
               Xuất danh sách đăng ký
+              <ExternalLink className="h-3 w-3 ml-2" />
             </Button>
-            <Button variant="outline" size="sm" className="justify-start">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="justify-start"
+              onClick={() => handleExport('payments')}
+            >
               <FileText className="h-4 w-4 mr-2" />
               Xuất báo cáo thanh toán
+              <ExternalLink className="h-3 w-3 ml-2" />
             </Button>
           </div>
         </div>

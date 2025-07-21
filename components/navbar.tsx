@@ -114,7 +114,7 @@ export function Navbar() {
                     href={profile?.role === 'registration_manager' ? '/registration-manager' : '/admin'}
                     className="text-sm font-medium transition-colors hover:text-orange-600 hover:bg-orange-50 px-3 py-2 rounded-lg"
                   >
-                    ⚙️ Quản trị
+                    {profile?.role === 'registration_manager' ? 'Quản lý đăng ký' : 'Quản trị'}
                   </Link>
                 )}
               </div>
