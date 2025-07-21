@@ -37,7 +37,7 @@ interface RegistrationCardProps {
   isLast: boolean;
 }
 
-export function RegistrationCard({ registration, eventConfig, isLast }: RegistrationCardProps) {
+export function RegistrationCard({ registration, eventConfig }: RegistrationCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   const getStatusColor = (status: string) => {
@@ -77,7 +77,7 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending': return 'Chờ thanh toán';
-      case 'report_paid': return 'Chờ xác nhận từ admin';
+      case 'report_paid': return 'Chờ xác nhận';
       case 'confirm_paid': return 'Đã xác nhận thanh toán';
       case 'payment_rejected': return 'Thanh toán bị từ chối';
       case 'donation': return 'Huỷ và quyên góp';
@@ -93,7 +93,7 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
   };
 
   return (
-    <div className={`bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-purple-950/30 border-blue-200 dark:border-blue-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-lg border ${isLast ? 'mb-0' : 'mb-6'}`}>
+    <div className={`bg-gradient-to-br mt-4 from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-purple-950/30 border-blue-200 dark:border-blue-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-lg border`}>
       <div className="p-6 hover:bg-white/50 dark:hover:bg-black/20 transition-colors rounded-lg">
         {/* Header - Always visible */}
         <div className="flex items-center justify-between mb-3">

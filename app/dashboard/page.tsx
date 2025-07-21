@@ -233,7 +233,7 @@ export default async function DashboardPage({
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-4 space-x-4">
+                <div>
                   {registrations.map((registration, index) => (
                     <RegistrationCard 
                       key={registration.id} 
