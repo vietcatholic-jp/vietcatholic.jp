@@ -18,7 +18,8 @@ import {
   JAPANESE_PROVINCES,
   PROVINCE_DIOCESE_MAPPING,
   Registration,
-  GenderType
+  GenderType,
+  AgeGroupType
 } from "@/lib/types";
 import { toast } from "sonner";
 import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
@@ -156,6 +157,14 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
         setValue(`registrants.${index}.shirt_size` as const, "M-M" as const);
       }
   };
+
+  const handleAgeGroupChange = (index: number, selectedAgeGroup: string) => {
+        setValue(`registrants.${index}.age_group` as const, selectedAgeGroup as AgeGroupType);
+        // Automatically adjust shirt size based on age group
+        if (selectedAgeGroup === 'under_12') {
+          setValue(`registrants.${index}.shirt_size` as const, "2" as const); // Default to smallest size for under 12
+        }
+    };
 
   const addRegistrant = () => {
     append({
@@ -403,6 +412,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                       <select
                         id={`registrants.${index}.age_group`}
                         {...register(`registrants.${index}.age_group`)}
+                        onChange={(e) => handleAgeGroupChange(index, e.target.value)}
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="">Chọn độ tuổi</option>

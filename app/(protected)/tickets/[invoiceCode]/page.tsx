@@ -3,7 +3,6 @@ import { getServerUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Navbar } from "@/components/navbar";
 import { TicketGenerator } from "@/components/tickets/ticket-generator";
 import { PortraitUpload } from "@/components/tickets/portrait-upload";
 import { Registrant } from "@/lib/types";
@@ -58,9 +57,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
     .in('registrant_id', registration.registrants?.map((r: Registrant) => r.id) || []);
 
   return (
-    <main className="min-h-screen bg-background">
-      <Navbar />
-      
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -193,6 +190,6 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
