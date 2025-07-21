@@ -13,7 +13,8 @@ import {
   XCircle,
   Clock,
   AlertCircle,
-  DollarSign
+  DollarSign,
+  ArrowLeft
 } from "lucide-react";
 
 interface CancelRequestsManagerProps {
@@ -58,14 +59,14 @@ export function CancelRequestsManager({ cancelRequests, onDataRefresh }: CancelR
       case 'processed':
         return <Badge className="bg-blue-500">
           <DollarSign className="h-3 w-3 mr-1" />
-          Đã xử lý
+          Đã hoàn tiền
         </Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const handleProcessRequest = async (requestId: string, action: 'approve' | 'reject', adminNotes?: string) => {
+  const handleProcessRequest = async (requestId: string, action: 'approve' | 'reject' | 'processed', adminNotes?: string) => {
     setProcessingId(requestId);
 
     try {
@@ -131,7 +132,7 @@ export function CancelRequestsManager({ cancelRequests, onDataRefresh }: CancelR
               <option value="pending">Chờ xử lý</option>
               <option value="approved">Đã duyệt</option>
               <option value="rejected">Từ chối</option>
-              <option value="processed">Đã xử lý</option>
+              <option value="processed">Đã hoàn tiền</option>
             </select>
           </div>
         </div>
@@ -217,7 +218,7 @@ export function CancelRequestsManager({ cancelRequests, onDataRefresh }: CancelR
                       )}
                     </div>
                   </div>
-
+                  {/** Actions for pending requests */}
                   {request.status === 'pending' && (
                     <div className="flex items-center gap-2 ml-4">
                       <Button
@@ -239,6 +240,21 @@ export function CancelRequestsManager({ cancelRequests, onDataRefresh }: CancelR
                       >
                         <XCircle className="h-4 w-4 mr-1" />
                         Từ chối
+                      </Button>
+                    </div>
+                  )}
+                  {/** Actions for processed requests */}
+                  {request.status === 'approved' && (
+                    <div className="flex items-center gap-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleProcessRequest(request.id, 'processed')}
+                        disabled={processingId === request.id}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-1" />
+                        Đã chuyển khoản
                       </Button>
                     </div>
                   )}
