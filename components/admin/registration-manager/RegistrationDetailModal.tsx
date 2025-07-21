@@ -12,6 +12,7 @@ import {
   Receipt,
   ExternalLink
 } from "lucide-react";
+import Image from "next/image";
 
 interface RegistrationDetailModalProps {
   registration: Registration;
@@ -287,7 +288,6 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
               <CardContent>
                 <div className="space-y-4">
                   {registration.receipts.map((receipt, index) => {
-                    const isImage = receipt.file_name.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                     
                     return (
                       <div key={receipt.id || index} className="border rounded-lg p-4">
@@ -309,18 +309,18 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
                           </a>
                         </div>
                         
-                        {isImage && (
-                          <div className="mt-3">
-                            <img
-                              src={receipt.file_path}
-                              alt={receipt.file_name}
-                              className="max-w-full h-auto max-h-64 object-contain border rounded-md"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          </div>
-                        )}
+                        <div className="mt-3">
+                          <Image
+                            src={receipt.file_path}
+                            alt={receipt.file_name}
+                            width={300}
+                            height={800}
+                            className="object-fill w-full h-full"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
                       </div>
                     );
                   })}
