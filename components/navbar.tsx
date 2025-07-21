@@ -89,25 +89,25 @@ export function Navbar() {
                   href="/dashboard" 
                   className="text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg"
                 >
-                  🏠 Trang cá nhân
+                Quản lý đăng ký
                 </Link>
                 <Link 
                   href="/register" 
                   className="text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg"
                 >
-                  📝 Đăng ký
+                Đăng ký mới
                 </Link>
                 <Link 
                   href="/guide" 
                   className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
                 >
-                  📖 Hướng dẫn
+                  Hướng dẫn
                 </Link>
                 <Link 
                   href="/agenda" 
                   className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
                 >
-                  📅 Chương trình
+                  Chương trình
                 </Link>
                 {isAdmin && (
                   <Link 
@@ -129,7 +129,7 @@ export function Navbar() {
                   href="/guide" 
                   className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
                 >
-                  📖 Hướng dẫn
+                  Hướng dẫn
                 </Link>
               )}
               <ThemeSwitcher />
@@ -188,7 +188,7 @@ export function Navbar() {
                       className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-orange-600 hover:bg-orange-50 px-3 py-3 rounded-lg"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Quản trị
+                     {profile?.role === 'registration_manager' ? 'Quản lý đăng ký' : 'Quản trị'}
                     </Link>
                   )}
                   <div className="border-t pt-3 mt-3">
