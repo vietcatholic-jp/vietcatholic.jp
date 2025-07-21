@@ -671,6 +671,21 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           )}
                     </div>
 
+                      <div className="space-y-2 mt-2">
+                        <Label htmlFor={`registrants.${index}.go_with`}>Bạn có nhu cầu đi xe chung không?</Label>
+                        <Input
+                          type="checkbox"
+                          id={`registrants.${index}.go_with`}
+                          {...register(`registrants.${index}.go_with`)}
+                          className="h-4 w-4"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Lưu ý: Nếu bạn muốn đi chung với nhóm hoặc cộng đoàn ở gần bạn, hãy chọn ô này.
+                          Thông tin về các nhóm hoặc cộng đoàn có tổ chức xe chung sẽ được cập nhật sau,
+                          vui lòng theo dõi trang web hoặc nhóm Facebook của sự kiện để biết thêm chi tiết.
+                        </p>
+                      </div>
+
                     {/* Optional contact information section */}
                     <div className="md:col-span-2 border-t border-gray-800 pt-4 mt-6">
                       <h5 className="font-medium mb-3">
@@ -729,21 +744,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           </div>
                         </div>
                         )}
-                      <div className="space-y-2">
-                        <Label htmlFor={`registrants.${index}.go_with`}>Bạn có nhu cầu đi xe chung không?</Label>
-                        <Input
-                          type="checkbox"
-                          id={`registrants.${index}.go_with`}
-                          {...register(`registrants.${index}.go_with`)}
-                          className="h-4 w-4"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Lưu ý: Nếu bạn muốn đi chung với nhóm hoặc cộng đoàn ở gần bạn, hãy chọn ô này.
-                          Thông tin về các nhóm hoặc cộng đoàn có tổ chức xe chung sẽ được cập nhật sau,
-                          vui lòng theo dõi trang web hoặc nhóm Facebook của sự kiện để biết thêm chi tiết.
-                        </p>
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
+                      <div className="space-y-2 md:col-span-2 mt-2">
                           <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Ghi chú</Label>
                           <Textarea
                             id={`registrants.${index}.notes`}

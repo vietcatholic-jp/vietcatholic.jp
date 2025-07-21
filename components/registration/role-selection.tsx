@@ -88,8 +88,11 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
     const teams: { [key: string]: EventRole[] } = {};
     
     eventRoles.forEach(role => {
-      let teamName = 'Khác'; // Default category
-      
+      const teamName = role.team_name || 'Khác'; // Default category
+      if (!teams[teamName]) {
+        teams[teamName] = [];
+      }
+      /**
       if (role.name.includes('Truyền thông')) {
         teamName = 'Ban Truyền thông';
       } else if (role.name.includes('Sinh hoạt')) {
@@ -118,7 +121,7 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
       
       if (!teams[teamName]) {
         teams[teamName] = [];
-      }
+      } */
       teams[teamName].push(role);
     });
     
