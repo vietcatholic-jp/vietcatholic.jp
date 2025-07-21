@@ -266,7 +266,7 @@ function RegisterSection() {
                   <CheckCircle className="h-4 w-4 text-green-500" />
                   <span>Truy cập trang web và nhấn &quot;Đăng ký&quot; trong menu</span>
                 </div>
-				<p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+				        <p className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
                   💡 <strong>Khuyến nghị:</strong> Sử dụng Google để đăng ký thuận tiện và nhanh chóng hơn!
                 </p>
                 <div className="flex items-center gap-2">
@@ -286,15 +286,15 @@ function RegisterSection() {
               <h3 className="font-semibold text-lg">Bước 2: Chọn vai trò tham gia</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Thành viên tham gia</h4>
+                  <h4 className="font-medium mb-2">Tham dự viên</h4>
                   <p className="text-sm text-muted-foreground">
                     Dành cho các thành viên muốn tham gia sự kiện với đầy đủ các hoạt động
                   </p>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Trưởng nhóm</h4>
+                  <h4 className="font-medium mb-2">Thành viên ban tổ chức</h4>
                   <p className="text-sm text-muted-foreground">
-                    Dành cho những người có kinh nghiệm và muốn hỗ trợ dẫn dắt nhóm
+                    Dành cho những người người có vai trò hỗ trợ tổ chức sự kiện
                   </p>
                 </div>
               </div>
@@ -319,12 +319,12 @@ function RegisterSection() {
                 <div className="p-4 bg-green-50 dark:bg-slate-800 rounded-lg">
                   <h4 className="font-medium mb-2">Thông tin liên hệ</h4>
                   <div className="space-y-1 text-sm">
-                    <p>• Email</p>
-                    <p>• Số điện thoại</p>
-                    <p>• Địa chỉ</p>
                     <p>• Tỉnh/thành phố</p>
                     <p>• Giáo phận</p>
-                    <p>• Facebook (không bắt buộc)</p>
+                    <p>• Facebook (bắt buộc với người đăng ký chính)</p>
+                    <p>• Email (tuỳ chọn)</p>
+                    <p>• Số điện thoại (tuỳ chọn)</p>
+                    <p>• Địa chỉ (tuỳ chọn)</p>
                   </div>
                 </div>
               </div>
@@ -528,12 +528,12 @@ function ManageSection() {
             <div className="p-4 bg-blue-50 dark:bg-slate-800 rounded-lg">
               <h3 className="font-semibold mb-2">Truy cập trang quản lý</h3>
               <p className="text-sm text-blue-700 mb-3">
-                Sau khi đăng ký thành công, bạn có thể quản lý đăng ký tại trang &quot;Trang cá nhân&quot; trong menu.
+                Sau khi đăng ký thành công, bạn có thể quản lý đăng ký tại trang &quot;Quản lý đăng ký&quot; trong menu.
               </p>
               <Button asChild variant="outline">
                 <Link href="/dashboard">
                   <ArrowRight className="h-4 w-4 mr-2" />
-                  Đi tới trang cá nhân
+                  Đi tới trang quản lý đăng ký
                 </Link>
               </Button>
             </div>
@@ -547,7 +547,7 @@ function ManageSection() {
                     <span className="font-medium">Chờ thanh toán</span>
                   </div>
                   <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                    Pending
+                    Chờ
                   </Badge>
                 </div>
                 
@@ -557,7 +557,7 @@ function ManageSection() {
                     <span className="font-medium">Đã báo thanh toán</span>
                   </div>
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    Reported
+                    Đã báo
                   </Badge>
                 </div>
                 
@@ -567,7 +567,7 @@ function ManageSection() {
                     <span className="font-medium">Đã xác nhận</span>
                   </div>
                   <Badge variant="default" className="bg-green-500">
-                    Confirmed
+                    Đã xác nhận
                   </Badge>
                 </div>
                 
@@ -577,7 +577,27 @@ function ManageSection() {
                     <span className="font-medium">Thanh toán bị từ chối</span>
                   </div>
                   <Badge variant="destructive">
-                    Rejected
+                    Thanh toán bị từ chối
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-slate-800 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-orange-600" />
+                    <span className="font-medium">Đã quyên góp</span>
+                  </div>
+                  <Badge variant="default" className="bg-orange-500">
+                    Đã quyên góp
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-slate-800 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-red-600" />
+                    <span className="font-medium">Đã huỷ </span>
+                  </div>
+                  <Badge variant="default" className="bg-red-500">
+                    Đã huỷ
                   </Badge>
                 </div>
               </div>
@@ -801,7 +821,7 @@ function FAQSection() {
     },
     {
       question: "Tôi có thể hủy đăng ký không?",
-      answer: "Có, bạn có thể hủy đăng ký trước hạn chót (sẽ được thông báo cụ thể). Bạn có thể chọn hoàn tiền hoặc quyên góp cho tổ chức. Hoàn tiền sẽ được thực hiện sau ngày 15 tháng 9."
+      answer: "Có, bạn có thể hủy đăng ký trước hạn chót (được thông báo trong quá trình đăng ký). Bạn có thể chọn hoàn tiền hoặc quyên góp cho tổ chức. Hoàn tiền sẽ được thực hiện sau ngày 15 tháng 9."
     },
     {
       question: "Phí tham gia bao gồm những gì?",
@@ -809,11 +829,11 @@ function FAQSection() {
     },
     {
       question: "Tôi cần chuẩn bị gì để tham gia?",
-      answer: "Sau khi đăng ký được xác nhận, bạn sẽ nhận được thông tin chi tiết về địa điểm, thời gian và những gì cần chuẩn bị. Hãy theo dõi email và fanpage để cập nhật thông tin."
+      answer: "Sau khi đăng ký được xác nhận, bạn hãy tạo vé điện tử, mang theo để checkin khi tới Đại Hội. Hãy theo dõi fanpage để cập nhật thông tin."
     },
     {
       question: "Có hỗ trợ phương tiện di chuyển không?",
-      answer: "Thông tin về phương tiện di chuyển và hỗ trợ giao thông sẽ được cập nhật sau. Vui lòng theo dõi fanpage để biết thêm chi tiết."
+      answer: "Thông tin về phương tiện di chuyển và hỗ trợ giao thông sẽ được cập nhật sau trong mục quản lý đăng ký. Vui lòng theo dõi fanpage để biết thêm chi tiết."
     },
     {
       question: "Tôi quên mật khẩu tài khoản thì làm sao?",
