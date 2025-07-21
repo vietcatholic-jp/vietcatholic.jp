@@ -111,7 +111,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
 
           {/* Participants and Tickets */}
           <div className="space-y-6">
-            {registration.registrants?.map((registrant: Registrant, index: number) => {
+            {registration.registrants?.map((registrant: Registrant) => {
               const existingTicket = tickets?.find(t => t.registrant_id === registrant.id);
               
               return (
@@ -120,10 +120,9 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <User className="h-5 w-5" />
-                        Người tham gia {index + 1}: {registrant.full_name}
-                        {registrant.saint_name && (
-                          <span className="text-muted-foreground">({registrant.saint_name})</span>
-                        )}
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground text-sm">{registrant.saint_name}</span> {registrant.full_name}
+                        </div>
                       </div>
                       {registrant.portrait_url ? (
                         <Badge className="bg-green-500">Đã có vé</Badge>
