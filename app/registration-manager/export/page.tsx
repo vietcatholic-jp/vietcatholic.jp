@@ -142,19 +142,28 @@ function generateProvinceStats(registrations: Registration[]) {
 }
 
 function generateDioceseStats(registrations: Registration[]) {
-  const stats: { [diocese: string]: number } = {};
+  const stats: { [diocese: string]: { total: number; goWith: number; individual: number } } = {};
   
   registrations.forEach(reg => {
     reg.registrants?.forEach(registrant => {
       if (registrant.diocese) {
-        stats[registrant.diocese] = (stats[registrant.diocese] || 0) + 1;
+        if (!stats[registrant.diocese]) {
+          stats[registrant.diocese] = { total: 0, goWith: 0, individual: 0 };
+        }
+        stats[registrant.diocese].total += 1;
+        
+        if (registrant.go_with) {
+          stats[registrant.diocese].goWith += 1;
+        } else {
+          stats[registrant.diocese].individual += 1;
+        }
       }
     });
   });
   
   return Object.entries(stats)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([diocese, count]) => ({ diocese, count }));
+    .map(([diocese, counts]) => ({ diocese, ...counts }));
 }
 
 export default function ExportPage() {
@@ -625,24 +634,37 @@ export default function ExportPage() {
                 <thead>
                   <tr className="bg-gray-50">
                     <th className="border border-gray-300 p-2 text-left">Giáo phận</th>
-                    <th className="border border-gray-300 p-2 text-left">Số lượng</th>
+                    <th className="border border-gray-300 p-2 text-left">Tổng số</th>
+                    <th className="border border-gray-300 p-2 text-left">Đăng ký riêng</th>
+                    <th className="border border-gray-300 p-2 text-left">Đi cùng</th>
                     <th className="border border-gray-300 p-2 text-left">Tỷ lệ %</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {generateDioceseStats(state.filteredRegistrations).map(({ diocese, count }) => {
-                    const total = state.filteredRegistrations.reduce((sum, reg) => sum + (reg.registrants?.length || 0), 0);
-                    const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0';
+                  {generateDioceseStats(state.filteredRegistrations).map(({ diocese, total, individual, goWith }) => {
+                    const grandTotal = state.filteredRegistrations.reduce((sum, reg) => sum + (reg.registrants?.length || 0), 0);
+                    const percentage = grandTotal > 0 ? ((total / grandTotal) * 100).toFixed(1) : '0';
                     return (
                       <tr key={diocese} className="hover:bg-gray-50">
                         <td className="border border-gray-300 p-2 font-medium">{diocese}</td>
-                        <td className="border border-gray-300 p-2 text-center">{count}</td>
+                        <td className="border border-gray-300 p-2 text-center font-semibold">{total}</td>
+                        <td className="border border-gray-300 p-2 text-center">{individual}</td>
+                        <td className="border border-gray-300 p-2 text-center text-blue-600">{goWith}</td>
                         <td className="border border-gray-300 p-2 text-center">{percentage}%</td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+            </div>
+            
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium mb-2">Giải thích:</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li><strong>Đăng ký riêng:</strong> Người tự đăng ký di chuyển tự do</li>
+                <li><strong className="text-blue-600">Đi cùng:</strong> Người được đăng ký có nhu cầu đi xe bus chung</li>
+                <li><strong>Tổng số:</strong> Tổng cộng tất cả người tham gia từ giáo phận này</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
