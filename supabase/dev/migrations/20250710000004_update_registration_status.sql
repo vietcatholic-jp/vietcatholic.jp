@@ -80,7 +80,7 @@ BEGIN
   SELECT 
     r.event_role::text as role_name,
     CASE r.event_role
-      WHEN 'participant' THEN 'Người tham gia'
+      WHEN 'participant' THEN 'Tham dự viên'
       WHEN 'volunteer_media' THEN 'Ban Truyền thông'
       WHEN 'volunteer_logistics' THEN 'Ban Hậu cần'
       WHEN 'volunteer_liturgy' THEN 'Ban Phụng vụ'

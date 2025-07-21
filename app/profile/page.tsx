@@ -86,7 +86,7 @@ export default async function ProfilePage() {
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-muted-foreground" />
                       <Badge variant={profile.role === 'super_admin' ? 'default' : 'secondary'}>
-                        {profile.role === 'participant' && 'Người tham gia'}
+                        {profile.role === 'participant' && 'Tham dự viên'}
                         {profile.role === 'event_organizer' && 'Tổ chức sự kiện'}
                         {profile.role === 'regional_admin' && 'Quản trị khu vực'}
                         {profile.role === 'super_admin' && 'Quản trị tổng'}

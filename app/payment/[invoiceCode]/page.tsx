@@ -56,23 +56,29 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold mb-4">
+            <div className="mb-8 text-center">
+            <h1 className="text-4xl font-semibold mb-3 text-blue-700 dark:text-blue-400">
               Thanh toán đăng ký
             </h1>
-            <p className="text-muted-foreground">
-              Mã đăng ký: <span className="font-mono font-medium">{registration.invoice_code}</span>
-            </p>
-            <p className="text-muted-foreground">
-              <ul className="text-sm text-amber-800 space-y-1 ml-6 list-disc">
-                <li>Hạn chuyển khoản là 10 ngày kể từ ngày đăng ký và trước ngày 10/09/2025</li>
-                <li>Vui lòng chuyển khoản trước ngày <strong className="text-xl">{new Date(new Date(registration.created_at).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong> </li>
+            <div className="bg-amber-50 dark:bg-amber-900/40 rounded-lg p-4 mb-3 inline-block text-left shadow">
+              <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1 ml-6 list-disc">
+              <li>
+                <strong>Hạn chuyển khoản:</strong> 10 ngày kể từ ngày đăng ký và trước ngày <span className="font-semibold">10/09/2025</span>
+              </li>
+              <li>
+                Vui lòng chuyển khoản trước ngày 
+                <strong className="text-xl ml-1">{new Date(new Date(registration.created_at).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong>
+              </li>
               </ul>
-            </p>
-            <p className="text-muted-foreground mt-2 mb-2">
+            </div>
+            <p className="text-muted-foreground mt-2 mb-2 text-base">
               Bạn có thể quay lại trang này để xem hướng dẫn thanh toán và tải lên biên lai sau khi chuyển khoản.
             </p>
-            <Link className="mt-2 border border-blue-500 p-2 rounded-md hover:bg-blue-600 hover:text-white dark:border-blue-700 dark:hover:bg-blue-700" href={`/dashboard`}>
+            <Link
+              className="inline-flex items-center gap-2 mt-2 border border-blue-500 px-4 py-2 rounded-md font-medium transition-colors hover:bg-blue-600 hover:text-white dark:border-blue-700 dark:hover:bg-blue-700"
+              href={`/dashboard`}
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1"><path d="M15 12l-6-6-6 6"/></svg>
               Quay lại quản lý đăng ký
             </Link>
           </div>
@@ -163,6 +169,16 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
                 hasExistingReceipts={Array.isArray(registration.receipts) && registration.receipts.length > 0}
               />
             </div>
+            <p className="text-muted-foreground mt-2 mb-2 text-base">
+              Bạn có thể quay lại trang này để xem hướng dẫn thanh toán và tải lên biên lai sau khi chuyển khoản.
+            </p>
+            <Link
+              className="inline-flex items-center gap-2 mt-2 border border-blue-500 px-4 py-2 rounded-md font-medium transition-colors hover:bg-blue-600 hover:text-white dark:border-blue-700 dark:hover:bg-blue-700"
+              href={`/dashboard`}
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1"><path d="M15 12l-6-6-6 6"/></svg>
+              Quay lại quản lý đăng ký
+            </Link>
           </div>
         </div>
       </div>

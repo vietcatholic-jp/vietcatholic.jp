@@ -142,7 +142,7 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
 
   // Get display name for selected role
   const getSelectedRoleDisplay = () => {
-    if (selectedRole === 'participant') return 'Người tham gia';
+    if (selectedRole === 'participant') return 'Tham dự viên';
     if (!selectedRole || selectedRole === '') return 'Chưa chọn';
     const role = eventRoles.find(r => r.id === selectedRole);
     return role ? role.name : 'Chưa chọn';
@@ -195,7 +195,7 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
             <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center mb-4 shadow-lg">
               <Users className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-xl font-bold text-blue-800">🙋‍♂️ Người tham gia</CardTitle>
+            <CardTitle className="text-xl font-bold text-blue-800">🙋‍♂️ Tham dự viên</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-sm text-gray-700 leading-relaxed">

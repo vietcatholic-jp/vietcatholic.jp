@@ -588,7 +588,7 @@ export const JAPANESE_PROVINCES: { value: string; label: string }[] = [
 // Backwards compatibility: Static role definitions for legacy components
 // NOTE: New components should use the dynamic event_roles from the database
 export const EVENT_PARTICIPATION_ROLES = [
-  { value: 'participant', label: 'Người tham gia' },
+  { value: 'participant', label: 'Tham dự viên' },
   
   // Media team roles
   { value: 'volunteer_media_leader', label: 'Trưởng ban Truyền thông' },
