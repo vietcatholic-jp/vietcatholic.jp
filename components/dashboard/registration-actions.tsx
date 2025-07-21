@@ -112,7 +112,7 @@ export function RegistrationActions({
 
   const showCancelButton = () => {
     // Show cancel button for paid statuses
-    const cancellableStatuses = ['report_paid', 'confirmed'];
+    const cancellableStatuses = ['confirmed'];
     return cancellableStatuses.includes(status) && canCancel();
   };
 
