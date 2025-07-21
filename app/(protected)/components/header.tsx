@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X, Sparkles } from "lucide-react";
-import { ThemeSwitcher } from "./theme-switcher";
-import { ClientAuthButton } from "./client-auth-button";
-import { Button } from "./ui/button";
+import { ThemeSwitcher } from "../../../components/theme-switcher";
+import { ClientAuthButton } from "../../../components/client-auth-button";
+import { Button } from "../../../components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
