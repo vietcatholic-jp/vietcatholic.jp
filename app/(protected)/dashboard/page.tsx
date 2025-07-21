@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/navbar";
 import { 
   Users, 
   FileText, 
@@ -53,8 +52,7 @@ export default async function DashboardPage({
     : null;
 
   return (
-    <main className="min-h-screen bg-background">
-      <Navbar />
+    <div className="container mx-auto px-3 sm:px-4 py-6">
       
       {/* Error message display */}
       {errorMessage && (
@@ -248,6 +246,6 @@ export default async function DashboardPage({
           </Card>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
