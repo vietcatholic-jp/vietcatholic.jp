@@ -6,6 +6,7 @@ import { Heart, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { Footer } from "@/components/footer";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -206,6 +207,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }

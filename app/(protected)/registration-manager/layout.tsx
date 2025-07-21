@@ -1,5 +1,4 @@
 import { requireRole } from "@/lib/auth";
-import { Navbar } from "@/components/navbar";
 
 export default async function AdminLayoutPage({
   children,
@@ -10,9 +9,8 @@ export default async function AdminLayoutPage({
   await requireRole(['registration_manager', 'super_admin']);
 
   return (
-	<main className="min-h-screen bg-background">
-	  <Navbar />
+	<div className="min-h-screen bg-background">
 	  {children}
-	</main>
+	</div>
   );
 }

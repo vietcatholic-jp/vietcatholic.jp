@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/navbar";
 import { RegistrationForm } from "@/components/registration/registration-form";
 import { getServerUser, getServerUserProfile } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -14,8 +13,7 @@ export default async function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
       
       {/* Hero Section */}
       <section className="relative overflow-hidden py-16 px-4">
@@ -150,6 +148,6 @@ export default async function RegisterPage() {
             </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
