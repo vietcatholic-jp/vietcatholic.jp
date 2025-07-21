@@ -11,10 +11,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Filter, 
   Printer,
+  BarChart3,
+  Users,
+  MapPin,
+  Church
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import {Registrant,Registration, RegistrationStatus } from "@/lib/types";
+import {Registrant,Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES } from "@/lib/types";
 import { format } from "date-fns";
 
 interface ExportFilters {
@@ -25,6 +29,7 @@ interface ExportFilters {
   includePersonalInfo: boolean;
   includePaymentInfo: boolean;
   includeRegistrants: boolean;
+  reportType: string;
 }
 
 interface ExportPageState {
@@ -43,6 +48,13 @@ const STATUS_OPTIONS = [
   { value: 'confirmed', label: 'Đã xác nhận' },
   { value: 'checked_in', label: 'Đã check-in' },
   { value: 'cancelled', label: 'Đã hủy' }
+];
+
+const REPORT_TYPES = [
+  { value: 'detailed', label: 'Báo cáo chi tiết', icon: Users },
+  { value: 'shirt-size', label: 'Thống kê size áo', icon: BarChart3 },
+  { value: 'province', label: 'Thống kê tỉnh thành', icon: MapPin },
+  { value: 'diocese', label: 'Thống kê giáo phận', icon: Church }
 ];
 
 function getStatusLabel(status: RegistrationStatus): string {
@@ -96,6 +108,55 @@ function formatParticipantNames(registrants: Registrant[]): string {
   return primary;
 }
 
+// Analytics helper functions
+function generateShirtSizeStats(registrations: Registration[]) {
+  const stats: { [size: string]: number } = {};
+  
+  registrations.forEach(reg => {
+    reg.registrants?.forEach(registrant => {
+      if (registrant.shirt_size) {
+        stats[registrant.shirt_size] = (stats[registrant.shirt_size] || 0) + 1;
+      }
+    });
+  });
+  
+  return Object.entries(stats)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([size, count]) => ({ size, count }));
+}
+
+function generateProvinceStats(registrations: Registration[]) {
+  const stats: { [province: string]: number } = {};
+  
+  registrations.forEach(reg => {
+    reg.registrants?.forEach(registrant => {
+      if (registrant.province) {
+        stats[registrant.province] = (stats[registrant.province] || 0) + 1;
+      }
+    });
+  });
+  
+  return Object.entries(stats)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([province, count]) => ({ province, count }));
+}
+
+function generateDioceseStats(registrations: Registration[]) {
+  const stats: { [diocese: string]: number } = {};
+  
+  registrations.forEach(reg => {
+    reg.registrants?.forEach(registrant => {
+      if (registrant.diocese) {
+        stats[registrant.diocese] = (stats[registrant.diocese] || 0) + 1;
+      }
+    });
+  });
+  
+  return Object.entries(stats)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([diocese, count]) => ({ diocese, count }));
+}
+
 export default function ExportPage() {
   const [state, setState] = useState<ExportPageState>({
     registrations: [],
@@ -108,7 +169,8 @@ export default function ExportPage() {
       search: '',
       includePersonalInfo: true,
       includePaymentInfo: true,
-      includeRegistrants: true
+      includeRegistrants: true,
+      reportType: 'detailed'
     }
   });
 
@@ -212,7 +274,8 @@ export default function ExportPage() {
         search: '',
         includePersonalInfo: true,
         includePaymentInfo: true,
-        includeRegistrants: true
+        includeRegistrants: true,
+        reportType: 'detailed'
       }
     }));
   };
@@ -256,6 +319,28 @@ export default function ExportPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Report Type Selector */}
+          <div>
+            <Label htmlFor="reportType">Loại báo cáo</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+              {REPORT_TYPES.map(type => {
+                const Icon = type.icon;
+                return (
+                  <Button
+                    key={type.value}
+                    variant={state.filters.reportType === type.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => updateFilter('reportType', type.value)}
+                    className="justify-start"
+                  >
+                    <Icon className="h-4 w-4 mr-2" />
+                    {type.label}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="status">Trạng thái</Label>
@@ -304,32 +389,34 @@ export default function ExportPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="includePersonalInfo"
-                checked={state.filters.includePersonalInfo}
-                onCheckedChange={(checked) => updateFilter('includePersonalInfo', checked as boolean)}
-              />
-              <Label htmlFor="includePersonalInfo">Thông tin cá nhân</Label>
+          {state.filters.reportType === 'detailed' && (
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="includePersonalInfo"
+                  checked={state.filters.includePersonalInfo}
+                  onCheckedChange={(checked) => updateFilter('includePersonalInfo', checked as boolean)}
+                />
+                <Label htmlFor="includePersonalInfo">Thông tin cá nhân</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="includePaymentInfo"
+                  checked={state.filters.includePaymentInfo}
+                  onCheckedChange={(checked) => updateFilter('includePaymentInfo', checked as boolean)}
+                />
+                <Label htmlFor="includePaymentInfo">Thông tin thanh toán</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="includeRegistrants"
+                  checked={state.filters.includeRegistrants}
+                  onCheckedChange={(checked) => updateFilter('includeRegistrants', checked as boolean)}
+                />
+                <Label htmlFor="includeRegistrants">Chi tiết người tham gia</Label>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="includePaymentInfo"
-                checked={state.filters.includePaymentInfo}
-                onCheckedChange={(checked) => updateFilter('includePaymentInfo', checked as boolean)}
-              />
-              <Label htmlFor="includePaymentInfo">Thông tin thanh toán</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="includeRegistrants"
-                checked={state.filters.includeRegistrants}
-                onCheckedChange={(checked) => updateFilter('includeRegistrants', checked as boolean)}
-              />
-              <Label htmlFor="includeRegistrants">Chi tiết người tham gia</Label>
-            </div>
-          </div>
+          )}
 
           <div className="flex gap-2">
             <Button variant="outline" onClick={clearFilters}>
@@ -373,12 +460,13 @@ export default function ExportPage() {
         </CardContent>
       </Card>
 
-      {/* Registration List */}
-      <Card className="print-include">
-        <CardHeader>
-          <CardTitle>Chi tiết đăng ký ({state.filteredRegistrations.length} kết quả)</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Conditional Report Content */}
+      {state.filters.reportType === 'detailed' && (
+        <Card className="print-include">
+          <CardHeader>
+            <CardTitle>Chi tiết đăng ký ({state.filteredRegistrations.length} kết quả)</CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300">
               <thead>
@@ -444,13 +532,121 @@ export default function ExportPage() {
             </table>
           </div>
 
-          {state.filteredRegistrations.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              Không có dữ liệu phù hợp với bộ lọc
+            {state.filteredRegistrations.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                Không có dữ liệu phù hợp với bộ lọc
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Shirt Size Report */}
+      {state.filters.reportType === 'shirt-size' && (
+        <Card className="print-include">
+          <CardHeader>
+            <CardTitle>Thống kê size áo ({state.filteredRegistrations.length} đăng ký)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-300 p-2 text-left">Size áo</th>
+                    <th className="border border-gray-300 p-2 text-left">Số lượng</th>
+                    <th className="border border-gray-300 p-2 text-left">Tỷ lệ %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generateShirtSizeStats(state.filteredRegistrations).map(({ size, count }) => {
+                    const total = state.filteredRegistrations.reduce((sum, reg) => sum + (reg.registrants?.length || 0), 0);
+                    const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0';
+                    const sizeLabel = SHIRT_SIZES.find(s => s.value === size)?.label || size;
+                    return (
+                      <tr key={size} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 p-2 font-medium">{sizeLabel}</td>
+                        <td className="border border-gray-300 p-2 text-center">{count}</td>
+                        <td className="border border-gray-300 p-2 text-center">{percentage}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Province Report */}
+      {state.filters.reportType === 'province' && (
+        <Card className="print-include">
+          <CardHeader>
+            <CardTitle>Thống kê tỉnh thành ({state.filteredRegistrations.length} đăng ký)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-300 p-2 text-left">Tỉnh thành</th>
+                    <th className="border border-gray-300 p-2 text-left">Số lượng</th>
+                    <th className="border border-gray-300 p-2 text-left">Tỷ lệ %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generateProvinceStats(state.filteredRegistrations).map(({ province, count }) => {
+                    const total = state.filteredRegistrations.reduce((sum, reg) => sum + (reg.registrants?.length || 0), 0);
+                    const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0';
+                    const provinceLabel = JAPANESE_PROVINCES.find(p => p.value === province)?.label || province;
+                    return (
+                      <tr key={province} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 p-2 font-medium">{provinceLabel}</td>
+                        <td className="border border-gray-300 p-2 text-center">{count}</td>
+                        <td className="border border-gray-300 p-2 text-center">{percentage}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Diocese Report */}
+      {state.filters.reportType === 'diocese' && (
+        <Card className="print-include">
+          <CardHeader>
+            <CardTitle>Thống kê giáo phận ({state.filteredRegistrations.length} đăng ký)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-300 p-2 text-left">Giáo phận</th>
+                    <th className="border border-gray-300 p-2 text-left">Số lượng</th>
+                    <th className="border border-gray-300 p-2 text-left">Tỷ lệ %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generateDioceseStats(state.filteredRegistrations).map(({ diocese, count }) => {
+                    const total = state.filteredRegistrations.reduce((sum, reg) => sum + (reg.registrants?.length || 0), 0);
+                    const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0';
+                    return (
+                      <tr key={diocese} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 p-2 font-medium">{diocese}</td>
+                        <td className="border border-gray-300 p-2 text-center">{count}</td>
+                        <td className="border border-gray-300 p-2 text-center">{percentage}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Print styles */}
       <style jsx global>{`

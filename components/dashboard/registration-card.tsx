@@ -17,7 +17,7 @@ import {
   XCircle
 } from "lucide-react";
 import Link from "next/link";
-import { EVENT_PARTICIPATION_ROLES, Registrant } from "@/lib/types";
+import { EVENT_PARTICIPATION_ROLES, Registrant, SHIRT_SIZES } from "@/lib/types";
 
 interface RegistrationCardProps {
   registration: {
@@ -350,8 +350,12 @@ export function RegistrationCard({ registration, eventConfig, isLast }: Registra
                             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <span className="w-2 h-2 rounded-full bg-current opacity-50"></span>
-                                Size: {registrant.shirt_size}
-                              </span>
+                                  {SHIRT_SIZES.filter((size) => size.value === registrant.shirt_size).map((size) => (
+                                    <p key={size.value} className="text-sm">
+                                      Size: {size.label}
+                                    </p>
+                                  ))}
+                                </span>
                               {registrant.age_group && (
                                 <span className="flex items-center gap-1">
                                   <span className="w-2 h-2 rounded-full bg-current opacity-50"></span>
