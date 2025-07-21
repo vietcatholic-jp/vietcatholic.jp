@@ -209,7 +209,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <Input
                 id="role"
                 value={
-                  profile.role === 'participant' ? 'Người tham gia' :
+                  profile.role === 'participant' ? 'Tham dự viên' :
                   profile.role === 'event_organizer' ? 'Tổ chức sự kiện' :
                   profile.role === 'regional_admin' ? 'Quản trị khu vực' :
                   profile.role === 'super_admin' ? 'Quản trị tổng' : profile.role

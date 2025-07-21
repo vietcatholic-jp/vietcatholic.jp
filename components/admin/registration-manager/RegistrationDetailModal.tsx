@@ -42,7 +42,7 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
 
   const getRoleBadge = (role: string) => {
     const roleLabels: { [key: string]: string } = {
-      'participant': 'Người tham gia',
+      'participant': 'Tham dự viên',
       // Media team roles
       'volunteer_media_leader': 'Trưởng ban Truyền thông',
       'volunteer_media_sub_leader': 'Phó ban Truyền thông',

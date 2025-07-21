@@ -432,7 +432,7 @@ BEGIN
   SELECT 
     r.event_role::text as role_name,
     CASE r.event_role
-      WHEN 'participant' THEN 'Người tham gia'
+      WHEN 'participant' THEN 'Tham dự viên'
       -- Media team roles
       WHEN 'volunteer_media_leader' THEN 'Trưởng ban Truyền thông'
       WHEN 'volunteer_media_sub_leader' THEN 'Phó ban Truyền thông'
