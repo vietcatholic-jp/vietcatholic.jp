@@ -65,14 +65,14 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/register`,
           data: {
             full_name: fullName.trim(),
           },
         },
       });
       if (error) throw error;
-      router.push("/dashboard");
+      router.push("/register");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     } finally {
@@ -88,7 +88,7 @@ export function SignUpForm({
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/register`,
         },
       });
       if (error) throw error;
@@ -101,8 +101,12 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Đăng ký</CardTitle>
-          <CardDescription>Tạo tài khoản mới</CardDescription>
+          <CardTitle className="text-2xl text-center">Đăng ký Đại Hội Năm Thánh 2025</CardTitle>
+          <CardDescription className="text-center text-sm">Tạo tài khoản mới</CardDescription>
+          <p className="text-xs text-orange-500">
+            Vui lòng mở trang web đăng ký này qua trình duyệt Safari hoặc Chrome trên điện thoại.
+            Không đăng nhập hoặc đăng ký trực tiếp trên trình duyệt của Messenger.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>

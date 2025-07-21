@@ -405,7 +405,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           </h2>
           <div className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border-2 border-blue-200 dark:border-blue-700 rounded-full px-8 py-4 shadow-lg">
             <p className="text-gray-700 dark:text-gray-200 text-lg">
-              Vai trò: <span className="font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full shadow-md">
+              <span className="font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full shadow-md">
                 {getRoleDisplayName(selectedRole)}
               </span>
             </p>
