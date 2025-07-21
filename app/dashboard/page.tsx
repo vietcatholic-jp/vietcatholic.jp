@@ -85,7 +85,7 @@ export default async function DashboardPage({
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant={profile.role === 'super_admin' ? 'default' : 'secondary'} className="text-xs">
-                  {profile.role === 'participant' && 'Người tham gia'}
+                  {profile.role === 'participant' && 'Tham dự viên'}
                   {profile.role === 'event_organizer' && 'Tổ chức sự kiện'}
                   {profile.role === 'regional_admin' && 'Quản trị khu vực'}
                   {profile.role === 'super_admin' && 'Quản trị tổng'}

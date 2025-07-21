@@ -48,7 +48,7 @@ export function ReceiptUpload({
     });
 
     if (validFiles.length !== acceptedFiles.length) {
-      toast.error("Một số file không hợp lệ. Chỉ chấp nhận JPG, PNG, PDF dưới 10MB");
+      toast.error("Một số file không hợp lệ. Chỉ chấp nhận JPG, PNG, PDF dưới 5MB");
     }
 
     if (validFiles.length === 0) return;
@@ -244,7 +244,7 @@ export function ReceiptUpload({
                 Kéo thả file hoặc click để chọn
               </p>
               <p className="text-sm text-muted-foreground">
-                Hỗ trợ JPG, PNG, PDF (tối đa 10MB mỗi file)
+                Hỗ trợ JPG, PNG, PDF (tối đa 5MB mỗi file)
               </p>
             </div>
           )}

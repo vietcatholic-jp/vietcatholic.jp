@@ -115,14 +115,14 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
   // Utility function to get role display name
   const getRoleDisplayName = (role: EventParticipationRole): string => {
-    if (role === 'participant') return 'Người tham gia';
+    if (role === 'participant') return 'Tham dự viên';
     const eventRole = eventRoles.find(r => r.id === role);
     return eventRole ? eventRole.name : 'Chưa chọn';
   };
 
   // Utility function to get available roles for additional registrants
   const getAvailableRolesForAdditional = () => {
-    const baseRoles = [{ id: 'participant', name: 'Người tham gia' }];
+    const baseRoles = [{ id: 'participant', name: 'Tham dự viên' }];
     if (selectedRole !== 'participant') {
       const selectedRoleObj = eventRoles.find(r => r.id === selectedRole);
       if (selectedRoleObj) {
@@ -415,14 +415,14 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Registrants */}
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-purple-950/30 border-blue-200 dark:border-blue-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-          <CardHeader className="bg-gradient-to-r from-white/80 to-blue-50/80 dark:from-blue-900/30 dark:to-purple-900/30 rounded-t-lg">
+        <Card className=" border-blue-200 dark:border-blue-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-3 text-xl">
                 <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full">
                   <Users className="h-5 w-5 text-white" />
                 </div>
-                Thông tin người tham gia ({registrants.length})
+                Đăng ký cho {registrants.length} người
               </CardTitle>
               <Button
                 type="button"
@@ -444,7 +444,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
               className="sm:hidden w-full mt-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-600 text-blue-600 hover:from-blue-100 hover:to-purple-100 hover:border-blue-700 shadow-md"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Thêm người tham gia
+              Thêm người
             </Button>
           </CardHeader>
           <CardContent className="space-y-8">
@@ -452,7 +452,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
               const isPrimary = index === 0;
               
               return (
-                <div key={field.id} id={`registrant-${index}`} className="border rounded-lg p-4 sm:p-6 relative">
+                <div key={field.id} id={`registrant-${index}`} className="border border-gray-600 rounded-lg p-4 sm:p-6 relative">
                   {registrants.length > 1 && !isPrimary && (
                     <Button
                       type="button"
@@ -670,87 +670,88 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                             </div>
                           )}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`registrants.${index}.go_with`}>Bạn có nhu cầu đi xe chung không?</Label>
-                      <Input
-                        type="checkbox"
-                        id={`registrants.${index}.go_with`}
-                        {...register(`registrants.${index}.go_with`)}
-                        className="h-4 w-4"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Lưu ý: Nếu bạn muốn đi chung với nhóm hoặc cộng đoàn ở gần bạn, hãy chọn ô này.
-                        Thông tin về các nhóm hoặc cộng đoàn có tổ chức xe chung sẽ được cập nhật sau,
-                        vui lòng theo dõi trang web hoặc nhóm Facebook của sự kiện để biết thêm chi tiết.
-                      </p>
-                    </div>
-
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Ghi chú</Label>
-                      <Textarea
-                        id={`registrants.${index}.notes`}
-                        {...register(`registrants.${index}.notes`)}
-                        placeholder="Ý kiến đóng góp hoặc yêu cầu đặc biệt"
-                        className="min-h-[80px]"
-                      />
-                    </div>
 
                     {/* Optional contact information section */}
-                    <div className="md:col-span-2 border-t pt-4 mt-6">
-                      <h5 className="font-medium mb-3 text-muted-foreground text-sm">
-                        Thông tin liên lạc (tùy chọn)
+                    <div className="md:col-span-2 border-t border-gray-800 pt-4 mt-6">
+                      <h5 className="font-medium mb-3">
+                        Phần thông tin không bắt buộc (tùy chọn)
                       </h5>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.email`}>Email (tùy chọn)</Label>
-                          <Input
-                            id={`registrants.${index}.email`}
-                            {...register(`registrants.${index}.email`)}
-                            placeholder="example@email.com"
-                          />
-                          {errors.registrants?.[index]?.email && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.email?.message}
-                            </p>
-                          )}
-                          {isPrimary && userFacebookUrl && (
+                      {isPrimary && (
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor={`registrants.${index}.email`}>Email</Label>
+                            <Input
+                              id={`registrants.${index}.email`}
+                              {...register(`registrants.${index}.email`)}
+                              placeholder="example@email.com"
+                            />
+                            {errors.registrants?.[index]?.email && (
+                              <p className="text-sm text-destructive">
+                                {errors.registrants[index]?.email?.message}
+                              </p>
+                            )}
+                            {isPrimary && userFacebookUrl && (
+                              <p className="text-xs text-muted-foreground">
+                                Nếu bạn không có facebook hoặc không muốn cung cấp, hãy nhập email để ban tổ chức có thể liên hệ với bạn.
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor={`registrants.${index}.phone`}>Số điện thoại</Label>
+                            <Input
+                              id={`registrants.${index}.phone`}
+                              {...register(`registrants.${index}.phone`)}
+                              placeholder="090-1234-5678"
+                            />
+                            {errors.registrants?.[index]?.phone && (
+                              <p className="text-sm text-destructive">
+                                {errors.registrants[index]?.phone?.message}
+                              </p>
+                            )}
                             <p className="text-xs text-muted-foreground">
-                              Email là tùy chọn vì bạn đã đăng nhập bằng Facebook
+                              Ít nhất 10 số, có thể bao gồm +, dấu cách, dấu gạch ngang
                             </p>
-                          )}
-                        </div>
+                          </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.phone`}>Số điện thoại (tùy chọn)</Label>
-                          <Input
-                            id={`registrants.${index}.phone`}
-                            {...register(`registrants.${index}.phone`)}
-                            placeholder="090-1234-5678"
-                          />
-                          {errors.registrants?.[index]?.phone && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.phone?.message}
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground">
-                            Ít nhất 10 số, có thể bao gồm +, dấu cách, dấu gạch ngang
-                          </p>
+                          <div className="space-y-2">
+                            <Label htmlFor={`registrants.${index}.address`}>Địa chỉ</Label>
+                            <Input
+                              id={`registrants.${index}.address`}
+                              {...register(`registrants.${index}.address`)}
+                              placeholder="Địa chỉ hiện tại tại Nhật Bản"
+                            />
+                            {errors.registrants?.[index]?.address && (
+                              <p className="text-sm text-destructive">
+                                {errors.registrants[index]?.address?.message}
+                              </p>
+                            )}
+                          </div>
                         </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.address`}>Địa chỉ (tùy chọn)</Label>
-                          <Input
-                            id={`registrants.${index}.address`}
-                            {...register(`registrants.${index}.address`)}
-                            placeholder="Địa chỉ hiện tại tại Nhật Bản"
-                          />
-                          {errors.registrants?.[index]?.address && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.address?.message}
-                            </p>
-                          )}
-                        </div>
+                        )}
+                      <div className="space-y-2">
+                        <Label htmlFor={`registrants.${index}.go_with`}>Bạn có nhu cầu đi xe chung không?</Label>
+                        <Input
+                          type="checkbox"
+                          id={`registrants.${index}.go_with`}
+                          {...register(`registrants.${index}.go_with`)}
+                          className="h-4 w-4"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Lưu ý: Nếu bạn muốn đi chung với nhóm hoặc cộng đoàn ở gần bạn, hãy chọn ô này.
+                          Thông tin về các nhóm hoặc cộng đoàn có tổ chức xe chung sẽ được cập nhật sau,
+                          vui lòng theo dõi trang web hoặc nhóm Facebook của sự kiện để biết thêm chi tiết.
+                        </p>
                       </div>
+                      <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Ghi chú</Label>
+                          <Textarea
+                            id={`registrants.${index}.notes`}
+                            {...register(`registrants.${index}.notes`)}
+                            placeholder="Ý kiến đóng góp hoặc yêu cầu đặc biệt"
+                            className="min-h-[80px]"
+                          />
+                        </div>
                     </div>
 
                     {/* Hidden fields */}
@@ -769,7 +770,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                         className="text-muted-foreground hover:text-foreground"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        Thêm người khác
+                        Thêm người tham gia
                       </Button>
                     </div>
                   )}
