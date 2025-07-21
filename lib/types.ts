@@ -67,6 +67,7 @@ export interface EventRole {
   event_config_id: string;
   name: string;
   description?: string;
+  team_name: string;
   permissions?: Record<string, unknown>; // JSONB
   created_at: string;
   updated_at: string;

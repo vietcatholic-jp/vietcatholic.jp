@@ -17,3 +17,8 @@ ALTER TYPE shirt_size_type ADD VALUE IF NOT EXISTS 'F-M';
 ALTER TYPE shirt_size_type ADD VALUE IF NOT EXISTS 'F-L';
 ALTER TYPE shirt_size_type ADD VALUE IF NOT EXISTS 'F-XL';
 ALTER TYPE shirt_size_type ADD VALUE IF NOT EXISTS 'F-XXL';
+
+
+-- Add team_name column to event_roles table
+alter table public.event_roles
+  add column if not exists team_name text;
