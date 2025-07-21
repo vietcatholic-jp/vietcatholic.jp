@@ -149,7 +149,7 @@ export function PaymentInstructions({ registrationDate, amount, invoiceCode }: P
 
             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <div>
-                <p className="text-sm text-muted-foreground">Nội dung chuyển khoản</p>
+                <p className="text-sm text-muted-foreground">Nội dung chuyển khoản(依頼人名)</p>
                 <p className="font-medium text-xl font-mono">{invoiceCode.split("-")[1]}</p>
               </div>
               <Button
@@ -174,7 +174,7 @@ export function PaymentInstructions({ registrationDate, amount, invoiceCode }: P
             Lưu ý quan trọng
           </h4>
           <ul className="text-sm text-amber-800 space-y-1 ml-6 list-disc">
-            <li>Vui lòng ghi chính xác mã đăng ký <strong className="text-xl">{invoiceCode.split("-")[1]}</strong> trong nội dung chuyển khoản</li>
+            <li>Vui lòng ghi chính xác mã đăng ký <strong className="text-xl">{invoiceCode.split("-")[1]}</strong> trong nội dung chuyển khoản (依頼人名)</li>
             <li>Sau khi chuyển khoản, vui lòng upload hóa đơn/ảnh chụp màn hình xác nhận</li>
             <li>Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc sau khi nhận được thanh toán</li>
             <li>Hạn chuyển khoản là 10 ngày kể từ ngày đăng ký và trước ngày 10/09/2025</li>

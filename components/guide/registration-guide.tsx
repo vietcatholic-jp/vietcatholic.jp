@@ -468,7 +468,7 @@ function PaymentSection() {
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">2</div>
                   <div>
                     <p className="font-medium">Ghi mã đăng ký trong nội dung chuyển khoản</p>
-                    <p className="text-sm text-muted-foreground">Ghi chính xác mã đăng ký (phần sau dấu gạch ngang) vào nội dung chuyển khoản</p>
+                    <p className="text-sm text-muted-foreground">Ghi chính xác mã đăng ký (6 chữ số) vào nội dung chuyển khoản (依頼人名)</p>
                   </div>
                 </div>
                 
