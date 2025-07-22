@@ -25,7 +25,10 @@ import {
   Users,
   Edit2,
   Search,
-  Loader2
+  Loader2,
+  Mail,
+  Globe,
+  Github
 } from "lucide-react";
 import { toast } from "sonner";
 import { User, UserRole, RegionType } from "@/lib/types";
@@ -53,6 +56,91 @@ const regionLabels: Record<RegionType, string> = {
   'shikoku': 'Shikoku',
   'tohoku': 'Tohoku',
   'hokkaido': 'Hokkaido'
+};
+
+const providerLabels: Record<string, string> = {
+  'email': 'Email',
+  'google': 'Google',
+  'facebook': 'Facebook',
+  'github': 'GitHub',
+  'twitter': 'Twitter',
+  'discord': 'Discord'
+};
+
+const getAuthProviders = (user: User): string[] => {
+  if (user.auth_identities && user.auth_identities.length > 0) {
+    return user.auth_identities.map(identity => identity.provider);
+  }
+  // Fallback to email if no identities found
+  return ['email'];
+};
+
+const getProviderIcon = (provider: string) => {
+  const label = providerLabels[provider] || provider;
+
+  switch (provider) {
+    case 'email':
+      return (
+        <div title={label} className="inline-flex">
+          <Mail className="h-4 w-4 text-gray-600" />
+        </div>
+      );
+    case 'google':
+      return (
+        <div title={label} className="inline-flex">
+          <Globe className="h-4 w-4 text-blue-600" />
+        </div>
+      );
+    case 'facebook':
+      return (
+        <div title={label} className="inline-flex">
+          <Globe className="h-4 w-4 text-blue-800" />
+        </div>
+      );
+    case 'github':
+      return (
+        <div title={label} className="inline-flex">
+          <Globe className="h-4 w-4 text-gray-800" />
+        </div>
+      );
+    case 'twitter':
+      return (
+        <div title={label} className="inline-flex">
+          <Globe className="h-4 w-4 text-blue-400" />
+        </div>
+      );
+    case 'discord':
+      return (
+        <div title={label} className="inline-flex">
+          <Globe className="h-4 w-4 text-indigo-600" />
+        </div>
+      );
+    default:
+      return (
+        <div title={label} className="inline-flex">
+          <Globe className="h-4 w-4 text-gray-500" />
+        </div>
+      );
+  }
+};
+
+const ProviderIcons = ({ providers }: { providers: string[] }) => {
+  if (!providers || providers.length === 0) {
+    return <span className="text-xs text-gray-500">Email</span>;
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {providers.map((provider, index) => (
+        <div key={`${provider}-${index}`} className="inline-flex">
+          {getProviderIcon(provider)}
+        </div>
+      ))}
+      {providers.length > 3 && (
+        <span className="text-xs text-gray-500 ml-1">+{providers.length - 3}</span>
+      )}
+    </div>
+  );
 };
 
 export function UserManagement({ currentUserRole, currentUserRegion }: UserManagementProps) {
@@ -324,10 +412,11 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
             <thead>
               <tr className="border-b">
                 <th className="text-left p-3">Tên</th>
-                <th className="text-left p-3">Email</th>
+                <th className="text-left p-3 hidden sm:table-cell">Email</th>
                 <th className="text-left p-3">Vai trò</th>
-                <th className="text-left p-3">Khu vực</th>
-                <th className="text-left p-3">Ngày tạo</th>
+                <th className="text-left p-3 hidden md:table-cell">Khu vực</th>
+                <th className="text-left p-3 hidden lg:table-cell">Provider</th>
+                <th className="text-left p-3 hidden md:table-cell">Ngày tạo</th>
                 <th className="text-left p-3">Thao tác</th>
               </tr>
             </thead>
@@ -339,17 +428,20 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
                       <div className="font-medium">{user.full_name || 'Chưa cập nhật'}</div>
                     </div>
                   </td>
-                  <td className="p-3">{user.email}</td>
+                  <td className="p-3 hidden sm:table-cell">{user.email}</td>
                   <td className="p-3">
                     <Badge variant={user.role === 'super_admin' ? 'destructive' :
                                    user.role === 'regional_admin' ? 'default' : 'secondary'}>
                       {roleLabels[user.role]}
                     </Badge>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 hidden md:table-cell">
                     {user.region ? regionLabels[user.region] : 'Chưa cập nhật'}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 hidden lg:table-cell">
+                    <ProviderIcons providers={getAuthProviders(user)} />
+                  </td>
+                  <td className="p-3 hidden md:table-cell">
                     {new Date(user.created_at).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="p-3">
