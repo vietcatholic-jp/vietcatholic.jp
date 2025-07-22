@@ -143,7 +143,7 @@ create policy "Event organizers can view all cancel requests" on public.cancel_r
     exists (
       select 1 from public.users 
       where users.id = auth.uid() 
-      and users.role in ('event_organizer', 'super_admin')
+      and users.role in ('registration_manager', 'super_admin')
     )
   );
 
@@ -152,7 +152,7 @@ create policy "Event organizers can update cancel requests" on public.cancel_req
     exists (
       select 1 from public.users 
       where users.id = auth.uid() 
-      and users.role in ('event_organizer', 'super_admin')
+      and users.role in ('registration_manager', 'super_admin')
     )
   );
 

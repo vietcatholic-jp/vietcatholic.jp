@@ -16,6 +16,7 @@ export type RegistrationStatus =
   | 'cancel_pending'   // Cancellation request pending admin review
   | 'cancel_accepted'  // Admin accepted cancellation
   | 'cancel_rejected'  // Admin rejected cancellation
+  | 'cancel_processed' // Admin processed cancellation and refunded
   | 'cancelled'        // Registration cancelled
   | 'confirmed'        // Fully confirmed, tickets can be generated
   | 'checked_in'       // Participant checked in at event

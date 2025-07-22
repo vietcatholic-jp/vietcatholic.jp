@@ -29,7 +29,7 @@ export async function PATCH(
     const body = await request.json();
     const { action, admin_notes } = body;
 
-    if (!['approve', 'reject'].includes(action)) {
+    if (!['approved', 'rejected', 'processed'].includes(action)) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
 
@@ -47,18 +47,20 @@ export async function PATCH(
       return NextResponse.json({ error: 'Cancel request not found' }, { status: 404 });
     }
 
-    // Check if request is still pending
-    if (cancelRequest.status !== 'pending') {
-      return NextResponse.json({ error: 'Cancel request already processed' }, { status: 400 });
+    // Check if request is already processed
+    if (cancelRequest.status === 'processed') {
+      return NextResponse.json({ error: 'Yêu cầu huỷ này đã được xử lý, không thể thay đổi trạng thái!' }, { status: 400 });
     }
 
-    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    if (cancelRequest.status === 'rejected'){
+      return NextResponse.json({ error: 'Không thể xử lý yêu cầu huỷ đã bị từ chối!' }, { status: 400 });
+    }
 
     // Update cancel request
     const { error: updateError } = await supabase
       .from('cancel_requests')
       .update({
-        status: newStatus,
+        status: action,
         processed_at: new Date().toISOString(),
         processed_by: user.id,
         admin_notes: admin_notes || null,
@@ -70,7 +72,7 @@ export async function PATCH(
     }
 
     // If approved, also update the registration status
-    if (action === 'approve') {
+    if (action === 'approved') {
       const { error: updateRegError } = await supabase
         .from('registrations')
         .update({
@@ -82,12 +84,25 @@ export async function PATCH(
       if (updateRegError) {
         throw updateRegError;
       }
-    } else {
+    }else if (action === 'rejected') {
       // If rejected, update registration status back to previous state
       const { error: updateRegError } = await supabase
         .from('registrations')
         .update({
           status: 'cancel_rejected',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', cancelRequest.registration_id);
+
+      if (updateRegError) {
+        throw updateRegError;
+      }
+    } else if (action === 'processed') {
+      // If rejected, update registration status back to previous state
+      const { error: updateRegError } = await supabase
+        .from('registrations')
+        .update({
+          status: 'cancel_processed',
           updated_at: new Date().toISOString(),
         })
         .eq('id', cancelRequest.registration_id);

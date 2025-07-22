@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { EventLogger } from "@/lib/logging/event-logger";
+import { EVENT_CATEGORIES, REGISTRATION_EVENT_TYPES } from '@/lib/logging/types';
+import { calculateDuration, createRequestContext } from '@/lib/logging/request-context';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+
+  const logger = new EventLogger();
+  const context = createRequestContext(request);
+
   try {
     const { id } = await params;
     const user = await getServerUser();
-    
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -47,6 +53,20 @@ export async function PATCH(
     if (fetchError || !registration) {
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
     }
+    // Log registration attempt start
+    await logger.logInfo(
+      REGISTRATION_EVENT_TYPES.REGISTRATION_MODIFIED,
+      EVENT_CATEGORIES.REGISTRATION,
+      {
+        ...context,
+        userId: user.id,
+        userEmail: user.email,
+        eventData: {
+           status,
+          registrants,
+        }
+      }
+    );
 
     // Update registration
     const { error: updateRegError } = await supabase
@@ -85,7 +105,16 @@ export async function PATCH(
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error('Error updating registration:', error);
+    await logger.logCritical(
+      REGISTRATION_EVENT_TYPES.REGISTRATION_MODIFY_FAILED,
+      EVENT_CATEGORIES.REGISTRATION,
+      error as Error,
+      {
+        ...context,
+        durationMs: calculateDuration(context),
+        tags: ['unexpected_error'],
+      }
+    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
