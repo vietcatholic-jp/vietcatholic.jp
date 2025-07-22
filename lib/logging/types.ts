@@ -3,6 +3,8 @@ export const REGISTRATION_EVENT_TYPES = {
   REGISTRATION_STARTED: 'registration_started',
   REGISTRATION_CREATED: 'registration_created',
   REGISTRATION_FAILED: 'registration_failed',
+  REGISTRATION_MODIFIED: 'registration_modified',
+  REGISTRATION_MODIFY_FAILED: 'registration_modify_failed',
   REGISTRANT_VALIDATION_ERROR: 'registrant_validation_error',
   INVOICE_GENERATION_ERROR: 'invoice_generation_error',
   REGISTRATION_UPDATED: 'registration_updated',
