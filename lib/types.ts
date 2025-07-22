@@ -33,6 +33,7 @@ export interface User {
   role: UserRole;
   created_at: string;
   updated_at: string;
+  auth_identities?: { provider: string }[];
 }
 
 export interface EventConfig {
