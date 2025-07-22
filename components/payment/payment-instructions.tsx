@@ -18,6 +18,14 @@ interface PaymentInstructionsProps {
   invoiceCode: string;
 }
 
+// Function to convert half-width numbers to full-width (zenkaku) numbers
+const toZenkaku = (str: string): string => {
+  return str.replace(/[0-9]/g, (match) => {
+    const zenkakuNumbers = ['０', '１', '２', '３', '４', '５', '６', '７', '８', '９'];
+    return zenkakuNumbers[parseInt(match)];
+  });
+};
+
 export function PaymentInstructions({ registrationDate, amount, invoiceCode }: PaymentInstructionsProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -30,6 +38,9 @@ export function PaymentInstructions({ registrationDate, amount, invoiceCode }: P
     accountName: "在日カトリックベトナム青年会",
     swiftCode: "",
   };
+
+  // Get the registration code and convert to zenkaku
+  const zenkakuCode = toZenkaku(invoiceCode.split("-")[1]);
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -150,12 +161,12 @@ export function PaymentInstructions({ registrationDate, amount, invoiceCode }: P
             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <div>
                 <p className="text-sm text-muted-foreground">Nội dung chuyển khoản(依頼人名)</p>
-                <p className="font-medium text-xl font-mono">{invoiceCode.split("-")[1]}</p>
+                <p className="font-medium text-xl font-mono">{zenkakuCode}</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => copyToClipboard(invoiceCode.split("-")[1], "mã đăng ký")}
+                onClick={() => copyToClipboard(zenkakuCode, "mã đăng ký")}
               >
                 {copiedField === "mã đăng ký" ? (
                   <CheckCircle className="h-4 w-4 text-green-500" />
@@ -174,7 +185,7 @@ export function PaymentInstructions({ registrationDate, amount, invoiceCode }: P
             Lưu ý quan trọng
           </h4>
           <ul className="text-sm text-amber-800 space-y-1 ml-6 list-disc">
-            <li>Vui lòng ghi chính xác mã đăng ký <strong className="text-xl">{invoiceCode.split("-")[1]}</strong> trong nội dung chuyển khoản (依頼人名)</li>
+            <li>Vui lòng ghi chính xác mã đăng ký <strong className="text-xl">{zenkakuCode}</strong> trong nội dung chuyển khoản (依頼人名)</li>
             <li>Lưu ý một số ngân hàng sẽ yêu cầu bạn nhập kiểu Zenkaku (全角). 
               Trong trường hợp này, bạn hãy chọn bàn phím tiếng Nhật, chọn phím số, rồi bấm vào số cần nhập, chọn số có chữ 全 ở bên cạnh.</li>
             <li>Sau khi chuyển khoản, vui lòng upload hóa đơn/ảnh chụp màn hình xác nhận</li>
