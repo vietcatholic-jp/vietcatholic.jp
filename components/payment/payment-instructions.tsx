@@ -175,6 +175,8 @@ export function PaymentInstructions({ registrationDate, amount, invoiceCode }: P
           </h4>
           <ul className="text-sm text-amber-800 space-y-1 ml-6 list-disc">
             <li>Vui lòng ghi chính xác mã đăng ký <strong className="text-xl">{invoiceCode.split("-")[1]}</strong> trong nội dung chuyển khoản (依頼人名)</li>
+            <li>Lưu ý một số ngân hàng sẽ yêu cầu bạn nhập kiểu Zenkaku (全角). 
+              Trong trường hợp này, bạn hãy chọn bàn phím tiếng Nhật, chọn phím số, rồi bấm vào số cần nhập, chọn số có chữ 全 ở bên cạnh.</li>
             <li>Sau khi chuyển khoản, vui lòng upload hóa đơn/ảnh chụp màn hình xác nhận</li>
             <li>Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc sau khi nhận được thanh toán</li>
             <li>Hạn chuyển khoản là 10 ngày kể từ ngày đăng ký và trước ngày 10/09/2025</li>
