@@ -93,6 +93,13 @@ export function RegistrationManagerDashboard() {
     setCurrentPage(1);
   };
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === "registrations") {
+      setStatusFilter("report_paid");
+    }
+  };
+
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
     console.log("Status filter:", status);
@@ -174,7 +181,7 @@ export function RegistrationManagerDashboard() {
           <TabsContent value="overview" className="mt-6">
             <div className="space-y-6">
               <RegistrationManagerStats stats={data.stats} />
-              <QuickActions stats={data.stats} onTabChange={setActiveTab} />
+              <QuickActions stats={data.stats} onTabChange={handleTabChange} />
             </div>
           </TabsContent>
 
