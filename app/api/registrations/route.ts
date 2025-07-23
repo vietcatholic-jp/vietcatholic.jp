@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { EventParticipationRole } from "@/lib/types";
+import { EventParticipationRole, PROVINCE_REGION_MAPPING } from "@/lib/types";
 import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
 import { EventLogger } from "@/lib/logging/event-logger";
 import { createRequestContext, calculateDuration } from "@/lib/logging/request-context";
@@ -215,6 +215,62 @@ export async function POST(request: NextRequest) {
       // Try to clean up the registration record
       await supabase.from("registrations").delete().eq("id", registration.id);
       return NextResponse.json({ error: "Failed to create registrants" }, { status: 500 });
+    }
+
+    // Update user profile with primary registrant information if fields are empty
+    try {
+      // Find the primary registrant
+      const primaryRegistrant = validated.registrants.find(r => r.is_primary);
+      if (primaryRegistrant) {
+        // Get current user profile
+        const { data: currentProfile } = await supabase
+          .from("users")
+          .select("province, region, facebook_url")
+          .eq("id", user.id)
+          .single();
+
+        if (currentProfile) {
+          const updates: { province?: string; region?: string; facebook_url?: string } = {};
+
+          // Update province if empty and primary registrant has it
+          if (!currentProfile.province && primaryRegistrant.province) {
+            updates.province = primaryRegistrant.province;
+          }
+
+          // Update region if empty and we can derive it from province
+          if (!currentProfile.region && primaryRegistrant.province && PROVINCE_REGION_MAPPING[primaryRegistrant.province]) {
+            updates.region = PROVINCE_REGION_MAPPING[primaryRegistrant.province];
+          }
+
+          // Update facebook_url if empty and primary registrant has facebook_link
+          if (!currentProfile.facebook_url && primaryRegistrant.facebook_link) {
+            updates.facebook_url = primaryRegistrant.facebook_link;
+          }
+
+          // Apply updates if there are any
+          if (Object.keys(updates).length > 0) {
+            await supabase
+              .from("users")
+              .update(updates)
+              .eq("id", user.id);
+          }
+        }
+      }
+    } catch (profileUpdateError) {
+      // Log the error but don't fail the registration
+      await logger.logWarning(
+        REGISTRATION_EVENT_TYPES.REGISTRATION_CREATED,
+        EVENT_CATEGORIES.REGISTRATION,
+        {
+          ...context,
+          userId: user.id,
+          userEmail: user.email,
+          registrationId: registration.id,
+          eventData: { profileUpdateError: profileUpdateError instanceof Error ? profileUpdateError.message : 'Unknown profile update error' },
+          durationMs: calculateDuration(context),
+          tags: ['profile_update_failed'],
+        }
+      );
     }
 
     await logger.logInfo(
