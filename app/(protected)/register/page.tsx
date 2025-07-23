@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function RegisterPage() {
   const user = await getServerUser();
   const profile = await getServerUserProfile();
-  
-  if (!user) {
+
+  if (!user || !profile) {
     redirect('/auth/login?redirectTo=/register');
   }
 
