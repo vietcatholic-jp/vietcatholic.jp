@@ -105,6 +105,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
     },
     {
+      href: '/admin/teams-assignment',
+      label: 'Phân đội',
+      icon: UserCheck,
+      roles: ['event_organizer', 'super_admin']
+    },
+    {
       href: '/admin/tools',
       label: 'Công cụ',
       icon: Wrench,
