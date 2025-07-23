@@ -72,7 +72,21 @@ export function SignUpForm({
         },
       });
       if (error) throw error;
-      router.push("/register");
+
+      // Wait for session to be established before redirecting
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          setTimeout(() => {
+            router.push("/register");
+          }, 300); // Small delay to ensure cookie sync
+          subscription.unsubscribe();
+        }
+      });
+      // Fallback: if auth state change doesn't fire within 1 second, redirect anyway
+      setTimeout(() => {
+        router.push("/register");
+        subscription.unsubscribe();
+      }, 1000);
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     } finally {
