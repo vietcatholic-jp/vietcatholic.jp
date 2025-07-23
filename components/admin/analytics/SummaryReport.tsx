@@ -76,13 +76,6 @@ export function SummaryReport() {
       color: "text-indigo-600",
       bgColor: "bg-indigo-50",
       isAmount: true
-    },
-    {
-      title: "TB người/đăng ký",
-      value: stats.averageParticipantsPerRegistration,
-      icon: Users,
-      color: "text-gray-600",
-      bgColor: "bg-gray-50"
     }
   ];
 

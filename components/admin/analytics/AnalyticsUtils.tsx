@@ -69,7 +69,9 @@ export function generateDioceseStats(registrations: Registration[]) {
 export function calculateSummaryStats(registrations: Registration[]) {
   const totalRegistrations = registrations.length;
   const totalParticipants = registrations.reduce((sum, reg) => sum + reg.participant_count, 0);
-  const totalAmount = registrations.reduce((sum, reg) => sum + reg.total_amount, 0);
+  const totalAmount = registrations.filter(r => 
+    ['confirm_paid', 'confirmed', 'checked_in', 'checked_out','donation'].includes(r.status)
+  ).reduce((sum, reg) => sum + reg.total_amount, 0);
   const confirmedRegistrations = registrations.filter(r => 
     ['confirm_paid', 'confirmed', 'checked_in', 'checked_out'].includes(r.status)
   ).length;
