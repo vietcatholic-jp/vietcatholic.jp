@@ -9,7 +9,7 @@ const AssignTeamSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -34,7 +34,7 @@ export async function POST(
     // Parse and validate request body
     const body = await request.json();
     const { team_id, notes } = AssignTeamSchema.parse(body);
-    const registrantId = params.id;
+    const { id: registrantId } = await params;
 
     // Get registrant details with registration info
     const { data: registrant, error: registrantError } = await supabase
@@ -136,7 +136,7 @@ export async function POST(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -158,7 +158,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const registrantId = params.id;
+    const { id: registrantId } = await params;
 
     // Get registrant details with current team info
     const { data: registrant, error: registrantError } = await supabase
