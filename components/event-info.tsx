@@ -60,7 +60,7 @@ export function EventInfo() {
               <CardTitle className="ml-3 text-purple-800">Tham gia</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-700 mb-1">🇻🇳 Toàn quốc</div>
+              <div className="text-3xl font-bold text-purple-700 mb-1">Toàn quốc</div>
               <p className="text-sm text-purple-600 font-medium">
                 👥 Mọi người Việt tại Nhật Bản
               </p>
