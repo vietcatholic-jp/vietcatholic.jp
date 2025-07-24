@@ -24,6 +24,7 @@ import { UserPlus, User } from "lucide-react";
 import { useTeamAssignment } from "@/hooks/use-team-assignment";
 import { formatAgeGroup, formatGender } from "@/lib/utils";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
+import { EventRole } from "@/lib/role-utils";
 
 interface Team {
   id: string;
@@ -40,16 +41,7 @@ interface Registrant {
   age_group: string;
   province: string;
   diocese?: string;
-  event_roles?: {
-    id: string;
-    event_config_id: string;
-    name: string;
-    description?: string | null;
-    permissions?: any | null;
-    team_name?: string | null;
-    created_at: string;
-    updated_at: string;
-  } | null;
+  event_roles?: EventRole | null;
   registration: {
     invoice_code: string;
   };

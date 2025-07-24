@@ -131,7 +131,6 @@ export function RoleBadgeWithCategory({ role, className }: { role: EventRole | n
   }
 
   const category = getEventRoleCategory(role);
-  const roleLabel = formatRoleForDisplay(role);
 
   return (
     <div className={cn("flex items-center gap-2", className)}>

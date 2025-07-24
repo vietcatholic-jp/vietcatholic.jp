@@ -102,17 +102,17 @@ async function globalTeardown(config: FullConfig) {
       const dirPath = `tests/reports/${dir}`;
       if (fs.existsSync(dirPath)) {
         const files = fs.readdirSync(dirPath)
-          .map(file => ({
+          .map((file: string) => ({
             name: file,
             path: path.join(dirPath, file),
             time: fs.statSync(path.join(dirPath, file)).mtime.getTime()
           }))
-          .sort((a, b) => b.time - a.time);
+          .sort((a: { time: number }, b: { time: number }) => b.time - a.time);
         
         // Keep only the 50 most recent files
         const filesToDelete = files.slice(50);
         
-        filesToDelete.forEach(file => {
+        filesToDelete.forEach((file: { path: string }) => {
           try {
             fs.unlinkSync(file.path);
           } catch (error) {

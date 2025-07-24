@@ -1,0 +1,233 @@
+name: Build Check - Multi Environment
+
+on:
+  push:
+    branches: [ main, staging ]
+  pull_request:
+    branches: [ main, staging ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+        - development
+        - staging
+        - production
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+        environment: [development, staging]
+        include:
+          - node-version: 20.x
+            environment: production
+    
+    name: Build (Node ${{ matrix.node-version }}, ${{ matrix.environment }})
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Setup environment variables
+      run: |
+        case "${{ matrix.environment }}" in
+          "development")
+            echo "NEXT_PUBLIC_SUPABASE_URL=https://dev.supabase.co" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=dev-anon-key" >> $GITHUB_ENV
+            ;;
+          "staging")
+            echo "NEXT_PUBLIC_SUPABASE_URL=https://staging.supabase.co" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=staging-anon-key" >> $GITHUB_ENV
+            ;;
+          "production")
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://prod.supabase.co' }}" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'prod-anon-key' }}" >> $GITHUB_ENV
+            ;;
+        esac
+        
+    - name: Run build
+      run: npm run build
+      
+    - name: Verify build output
+      run: |
+        echo "🔍 Checking build output..."
+        
+        # Check if .next directory exists
+        if [ ! -d ".next" ]; then
+          echo "❌ Build failed - .next directory not found"
+          exit 1
+        fi
+        
+        # Check if static files exist
+        if [ ! -d ".next/static" ]; then
+          echo "❌ Build failed - static files not generated"
+          exit 1
+        fi
+        
+        # Check if server files exist
+        if [ ! -f ".next/server/app/page.js" ]; then
+          echo "❌ Build failed - server files not generated"
+          exit 1
+        fi
+        
+        # Get build size
+        BUILD_SIZE=$(du -sh .next | cut -f1)
+        echo "📦 Build size: $BUILD_SIZE"
+        
+        # Check for large bundles (warning only)
+        LARGE_FILES=$(find .next -name "*.js" -size +1M 2>/dev/null || true)
+        if [ -n "$LARGE_FILES" ]; then
+          echo "⚠️ Large JavaScript files found:"
+          echo "$LARGE_FILES" | while read file; do
+            size=$(du -h "$file" | cut -f1)
+            echo "  - $file ($size)"
+          done
+        fi
+        
+        echo "✅ Build verification completed successfully"
+        
+    - name: Test build startup
+      run: |
+        echo "🚀 Testing build startup..."
+        
+        # Start the built application in background
+        timeout 30s npm start &
+        SERVER_PID=$!
+        
+        # Wait for server to start
+        sleep 10
+        
+        # Test if server responds
+        if curl -f http://localhost:3000 > /dev/null 2>&1; then
+          echo "✅ Server started successfully"
+        else
+          echo "❌ Server failed to start or respond"
+          kill $SERVER_PID 2>/dev/null || true
+          exit 1
+        fi
+        
+        # Clean up
+        kill $SERVER_PID 2>/dev/null || true
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: build-${{ matrix.environment }}-node${{ matrix.node-version }}
+        path: |
+          .next/
+          !.next/cache/
+        retention-days: 1
+
+  build-analysis:
+    runs-on: ubuntu-latest
+    needs: build-matrix
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      
+    - name: Analyze builds
+      run: |
+        echo "## Build Analysis Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "### Build Artifacts Generated" >> $GITHUB_STEP_SUMMARY
+        for dir in build-*; do
+          if [ -d "$dir" ]; then
+            size=$(du -sh "$dir" | cut -f1)
+            echo "- **$dir**: $size" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Build Status Summary" >> $GITHUB_STEP_SUMMARY
+        
+        # Check if all builds succeeded
+        if [ "${{ needs.build-matrix.result }}" == "success" ]; then
+          echo "✅ All builds completed successfully" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Some builds failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Recommendations" >> $GITHUB_STEP_SUMMARY
+        echo "- Monitor bundle sizes to prevent bloat" >> $GITHUB_STEP_SUMMARY
+        echo "- Ensure builds work across all Node.js versions" >> $GITHUB_STEP_SUMMARY
+        echo "- Test in different environments before deployment" >> $GITHUB_STEP_SUMMARY
+
+  notify-status:
+    runs-on: ubuntu-latest
+    needs: [build-matrix, build-analysis]
+    if: always() && github.event_name == 'pull_request'
+    
+    steps:
+    - name: Comment on PR
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('🏗️ Build Check Results')
+          );
+          
+          const buildStatus = '${{ needs.build-matrix.result }}';
+          const statusEmoji = buildStatus === 'success' ? '✅' : '❌';
+          const statusText = buildStatus === 'success' ? 'All builds passed' : 'Some builds failed';
+          
+          const commentBody = `🏗️ **Build Check Results**
+          
+          ${statusEmoji} **Status**: ${statusText}
+          
+          **Environments tested**: Development, Staging${buildStatus === 'success' ? ', Production' : ''}
+          **Node.js versions**: 18.x, 20.x
+          
+          ${buildStatus === 'success' ? 
+            '🎉 All builds completed successfully! Ready for review.' : 
+            '⚠️ Build issues detected. Please check the workflow logs and fix any errors before merging.'
+          }
+          
+          <details>
+          <summary>View detailed results</summary>
+          
+          Check the [workflow run](${context.payload.pull_request.html_url}/checks) for detailed logs.
+          </details>`;
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: commentBody
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody
+            });
+          }

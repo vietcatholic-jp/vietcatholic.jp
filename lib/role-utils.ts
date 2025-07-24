@@ -8,7 +8,7 @@ export type EventRole = {
   event_config_id: string;
   name: string;
   description: string | null;
-  permissions: any | null;
+  permissions: Record<string, unknown> | null;
   team_name?: string | null;
   created_at: string;
   updated_at: string;

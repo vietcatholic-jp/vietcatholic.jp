@@ -24,11 +24,10 @@ import {
   Star,
   TrendingUp
 } from "lucide-react";
-import { 
-  getEventRoleCategory, 
+import {
+  getEventRoleCategory,
   getRoleCategoryColor,
-  getAllRoleCategories,
-  type RoleCategory 
+  type RoleCategory
 } from "@/lib/role-utils";
 
 interface RoleStatistic {
@@ -72,7 +71,7 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
 
   // Group statistics by category
   const categoryStats = statistics.reduce((acc, stat) => {
-    const category = getEventRoleCategory({ name: stat.role_name } as any);
+    const category = getEventRoleCategory(stat.role_name);
     if (!acc[category]) {
       acc[category] = {
         category,
@@ -175,7 +174,7 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
           <div className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.values(categoryStats).map((cat, index) => (
+              {Object.values(categoryStats).map((cat) => (
                 <div key={cat.category} className="text-center">
                   <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 ${getRoleCategoryColor(cat.category)}`}>
                     {cat.category === 'Tổ chức' && <Crown className="h-6 w-6" />}
@@ -211,14 +210,14 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {categoryChartData.map((entry, index) => (
+                      {categoryChartData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                       <LabelList dataKey="name" position="outside" />
                     </Pie>
                     <Tooltip 
                       formatter={(value: number) => [value, 'Số người']}
-                      labelFormatter={(label) => `${label}`}
+                      labelFormatter={(label: string) => `${label}`}
                     />
                   </PieChart>
                 </ResponsiveContainer>

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -49,10 +49,13 @@ export async function GET() {
     // Process the data to create statistics
     const roleStatsMap = new Map();
 
-    roleStats.forEach((registrant: any) => {
-      const role = registrant.event_roles;
-      const registration = registrant.registration;
-      
+    roleStats.forEach((registrant: {
+      event_roles: { id: string; name: string; description: string }[] | null;
+      registration: { status: string }[] | null;
+    }) => {
+      const role = registrant.event_roles?.[0];
+      const registration = registrant.registration?.[0];
+
       // Use role name or "Chưa phân vai trò" for null roles
       const roleName = role?.name || 'Chưa phân vai trò';
       const roleId = role?.id || 'unassigned';

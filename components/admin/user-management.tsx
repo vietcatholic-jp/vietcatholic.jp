@@ -222,7 +222,7 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  }, [roleFilter, regionFilter]);
+  }, [currentPage, roleFilter, regionFilter]);
 
   const fetchUsers = async () => {
     try {

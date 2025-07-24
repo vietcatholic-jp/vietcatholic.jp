@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { formatAgeGroup, formatGender } from "@/lib/utils";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
 import { RoleHelp } from "@/components/admin/role-help";
+import { EventRole } from "@/lib/role-utils";
 
 interface Registrant {
   id: string;
@@ -32,6 +33,7 @@ interface Registrant {
   diocese?: string;
   email?: string;
   phone?: string;
+  event_roles?: EventRole | null;
   registration: {
     id: string;
     invoice_code: string;
