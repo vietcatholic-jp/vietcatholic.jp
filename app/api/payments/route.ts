@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       receipt,
-      message: "Payment receipt submitted successfully. We will verify it within 24 hours." 
+      message: "Biên lai đóng phí tham dự đã được gửi thành công. Chúng tôi sẽ xác minh trong vòng 24 giờ."
     });
 
   } catch (error) {
@@ -437,7 +437,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Payment ${status === "confirm_paid" ? "confirmed" : "rejected"} successfully` 
+      message: `Đóng phí tham dự ${status === "confirm_paid" ? "đã được xác nhận" : "đã bị từ chối"} thành công`
     });
 
   } catch (error) {

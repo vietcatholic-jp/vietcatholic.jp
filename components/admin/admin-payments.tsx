@@ -236,7 +236,7 @@ export function AdminPayments() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              Thông tin quản lý thanh toán
+              Thông tin quản lý đóng phí tham dự
             </CardTitle>
           </CardHeader>
           <CardContent>

@@ -136,7 +136,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     },
     {
       href: '/admin/payments',
-      label: 'Thanh toán',
+      label: 'Đóng phí tham dự',
       icon: CreditCard,
       roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
     },

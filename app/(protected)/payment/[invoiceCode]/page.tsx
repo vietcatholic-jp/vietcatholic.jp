@@ -70,7 +70,7 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
               </ul>
             </div>
             <p className="text-muted-foreground mt-2 mb-2 text-base">
-              Bạn có thể quay lại trang này để xem hướng dẫn thanh toán và tải lên biên lai sau khi chuyển khoản.
+              Bạn có thể quay lại trang này để xem hướng dẫn đóng phí tham dự và tải lên biên lai sau khi chuyển khoản.
             </p>
             <Link
               className="inline-flex items-center gap-2 mt-2 border border-blue-500 px-4 py-2 rounded-md font-medium transition-colors hover:bg-blue-600 hover:text-white dark:border-blue-700 dark:hover:bg-blue-700"
@@ -95,10 +95,10 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Trạng thái:</span>
                     <Badge variant="secondary">
-                      {registration.status === 'pending' && 'Chờ thanh toán'}
-                      {registration.status === 'report_paid' && 'Đã báo thanh toán'}
-                      {registration.status === 'confirm_paid' && 'Đã xác nhận thanh toán'}
-                      {registration.status === 'payment_rejected' && 'Thanh toán bị từ chối'}
+                      {registration.status === 'pending' && 'Chờ đóng phí tham dự'}
+                      {registration.status === 'report_paid' && 'Đã báo đóng phí tham dự'}
+                      {registration.status === 'confirm_paid' && 'Đã xác nhận đóng phí tham dự'}
+                      {registration.status === 'payment_rejected' && 'Đóng phí tham dự bị từ chối'}
                       
                     </Badge>
                   </div>
@@ -168,7 +168,7 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
               />
             </div>
             <p className="text-muted-foreground mt-2 mb-2 text-base">
-              Bạn có thể quay lại trang này để xem hướng dẫn thanh toán và tải lên biên lai sau khi chuyển khoản.
+              Bạn có thể quay lại trang này để xem hướng dẫn đóng phí tham dự và tải lên biên lai sau khi chuyển khoản.
             </p>
             <Link
               className="inline-flex items-center gap-2 mt-2 border border-blue-500 px-4 py-2 rounded-md font-medium transition-colors hover:bg-blue-600 hover:text-white dark:border-blue-700 dark:hover:bg-blue-700"

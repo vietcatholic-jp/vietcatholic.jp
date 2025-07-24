@@ -39,7 +39,7 @@ export function RegistrationGuide() {
   const tabs = [
     { id: 'overview', label: 'Tổng quan', icon: Info },
     { id: 'register', label: 'Cách đăng ký', icon: UserPlus },
-    { id: 'payment', label: 'Thanh toán', icon: CreditCard },
+    { id: 'payment', label: 'Đóng phí tham dự', icon: CreditCard },
     { id: 'manage', label: 'Quản lý đăng ký', icon: Edit },
     { id: 'cancel', label: 'Hủy đăng ký', icon: XCircle },
     { id: 'faq', label: 'Câu hỏi thường gặp', icon: HelpCircle },
@@ -186,7 +186,7 @@ function OverviewSection() {
               <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-3">
                 <CreditCard className="h-6 w-6 text-white" />
               </div>
-              <h3 className="font-semibold mb-2">2. Thanh toán</h3>
+              <h3 className="font-semibold mb-2">2. Đóng phí tham dự</h3>
               <p className="text-sm text-center text-muted-foreground">
                 Chuyển khoản và thông báo biên lai
               </p>
@@ -198,7 +198,7 @@ function OverviewSection() {
               </div>
               <h3 className="font-semibold mb-2">3. Xác nhận</h3>
               <p className="text-sm text-center text-muted-foreground">
-                Chờ ban tổ chức xác nhận thanh toán
+                Chờ ban tổ chức xác nhận đóng phí tham dự
               </p>
             </div>
 
@@ -377,15 +377,15 @@ function PaymentSection() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-green-500" />
-            Hướng dẫn thanh toán
+            Hướng dẫn đóng phí tham dự
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
             <div className="p-4 bg-green-50 dark:bg-slate-800 rounded-lg border border-green-200">
-              <h3 className="font-semibold mb-3">Phương thức thanh toán duy nhất: Chuyển khoản ngân hàng</h3>
+              <h3 className="font-semibold mb-3">Phương thức đóng phí tham dự duy nhất: Chuyển khoản ngân hàng</h3>
               <p className="text-sm text-green-700">
-                Hiện tại chỉ hỗ trợ thanh toán qua chuyển khoản ngân hàng Yucho.
+                Hiện tại chỉ hỗ trợ đóng phí tham dự qua chuyển khoản ngân hàng Yucho.
               </p>
             </div>
 
@@ -454,7 +454,7 @@ function PaymentSection() {
             <Separator />
 
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Quy trình thanh toán</h3>
+              <h3 className="font-semibold text-lg">Quy trình đóng phí tham dự</h3>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">1</div>
@@ -483,8 +483,8 @@ function PaymentSection() {
                 <div className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">4</div>
                   <div>
-                    <p className="font-medium">Upload biên lai trong trang thanh toán</p>
-                    <p className="text-sm text-muted-foreground">Vào trang thanh toán để upload hình ảnh biên lai</p>
+                    <p className="font-medium">Upload biên lai trong trang đóng phí tham dự</p>
+                    <p className="text-sm text-muted-foreground">Vào trang đóng phí tham dự để upload hình ảnh biên lai</p>
                   </div>
                 </div>
               </div>
@@ -497,7 +497,7 @@ function PaymentSection() {
                   <p className="font-medium text-red-800">Lưu ý quan trọng:</p>
                   <ul className="text-sm text-red-700 mt-1 space-y-1">
                     <li>• Phải ghi đúng mã đăng ký trong nội dung chuyển khoản</li>
-                    <li>• Không ghi mã đăng ký sẽ khiến việc xác nhận thanh toán bị chậm trễ</li>
+                    <li>• Không ghi mã đăng ký sẽ khiến việc xác nhận đóng phí tham dự bị chậm trễ</li>
                     <li>• Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc</li>
                     <li>• Liên hệ qua fanpage nếu có vấn đề</li>
                     <li>• Hạn chuyển khoản 10 ngày sau khi đăng ký và trước ngày 10/09/2025</li>
@@ -544,17 +544,17 @@ function ManageSection() {
                 <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-orange-600" />
-                    <span className="font-medium">Chờ thanh toán</span>
+                    <span className="font-medium">Chờ đóng phí tham dự</span>
                   </div>
                   <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                    Chờ thanh toán
+                    Chờ đóng phí tham dự
                   </Badge>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium">Đã báo thanh toán</span>
+                    <span className="font-medium">Đã báo đóng phí tham dự</span>
                   </div>
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                     Chờ xác nhận
@@ -574,10 +574,10 @@ function ManageSection() {
                 <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-red-600" />
-                    <span className="font-medium">Xác nhận thanh toán bị từ chối</span>
+                    <span className="font-medium">Xác nhận đóng phí tham dự bị từ chối</span>
                   </div>
                   <Badge variant="destructive">
-                    Thanh toán bị từ chối
+                    Đóng phí tham dự bị từ chối
                   </Badge>
                 </div>
 
@@ -614,10 +614,10 @@ function ManageSection() {
                     <h4 className="font-medium">Chỉnh sửa đăng ký</h4>
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Có thể chỉnh sửa thông tin khi trạng thái là &quot;Chờ thanh toán&quot; hoặc &quot;Thanh toán bị từ chối&quot;
+                    Có thể chỉnh sửa thông tin khi trạng thái là &quot;Chờ đóng phí tham dự&quot; hoặc &quot;Đóng phí tham dự bị từ chối&quot;
                   </p>
                   <Badge variant="outline" className="text-xs">
-                    Chỉ khi chưa thanh toán
+                    Chỉ khi chưa đóng phí tham dự
                   </Badge>
                 </div>
                 
@@ -627,23 +627,23 @@ function ManageSection() {
                     <h4 className="font-medium">Xóa đăng ký</h4>
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Có thể xóa đăng ký khi trạng thái là &quot;Chờ thanh toán&quot; hoặc &quot;Thanh toán bị từ chối&quot;
+                    Có thể xóa đăng ký khi trạng thái là &quot;Chờ đóng phí tham dự&quot; hoặc &quot;Đóng phí tham dự bị từ chối&quot;
                   </p>
                   <Badge variant="outline" className="text-xs">
-                    Chỉ khi chưa thanh toán
+                    Chỉ khi chưa đóng phí tham dự
                   </Badge>
                 </div>
                 
                 <div className="p-4 border rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <CreditCard className="h-4 w-4 text-green-500" />
-                    <h4 className="font-medium">Thanh toán</h4>
+                    <h4 className="font-medium">Đóng phí tham dự</h4>
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Có thể vào trang thanh toán để xem thông tin và upload biên lai
+                    Có thể vào trang đóng phí tham dự để xem thông tin và upload biên lai
                   </p>
                   <Badge variant="outline" className="text-xs">
-                    Khi chưa thanh toán
+                    Khi chưa đóng phí tham dự
                   </Badge>
                 </div>
                 
@@ -653,10 +653,10 @@ function ManageSection() {
                     <h4 className="font-medium">Yêu cầu hủy</h4>
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Có thể gửi yêu cầu hủy đăng ký và hoàn tiền khi đã thanh toán
+                    Có thể gửi yêu cầu hủy đăng ký và hoàn tiền khi đã đóng phí tham dự
                   </p>
                   <Badge variant="outline" className="text-xs">
-                    Khi đã thanh toán
+                    Khi đã đóng phí tham dự
                   </Badge>
                 </div>
               </div>
@@ -750,7 +750,7 @@ function CancelSection() {
                     <h4 className="font-medium">Hoàn tiền</h4>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Yêu cầu hoàn lại số tiền đã thanh toán
+                    Yêu cầu hoàn lại số tiền đã đóng phí tham dự
                   </p>
                   <div className="space-y-2">
                     <p className="text-xs font-medium">Cần cung cấp:</p>
@@ -769,7 +769,7 @@ function CancelSection() {
                     <h4 className="font-medium">Quyên góp</h4>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Quyên góp số tiền đã thanh toán cho tổ chức
+                    Quyên góp số tiền đã đóng phí tham dự cho tổ chức
                   </p>
                   <div className="space-y-2">
                     <p className="text-xs font-medium">Ưu điểm:</p>
@@ -789,7 +789,7 @@ function CancelSection() {
                 <div>
                   <p className="font-medium text-red-800">Điều kiện hủy đăng ký:</p>
                   <ul className="text-sm text-red-700 mt-1 space-y-1">
-                    <li>• Chỉ có thể hủy khi đã thanh toán và được xác nhận</li>
+                    <li>• Chỉ có thể hủy khi đã đóng phí tham dự và được xác nhận</li>
                     <li>• Không thể hủy nếu đã quá hạn chót</li>
                     <li>• Không thể hủy nếu đã được cấp vé tham gia</li>
                     <li>• Hoàn tiền sẽ thực hiện sau ngày 15 tháng 9</li>
@@ -813,7 +813,7 @@ function FAQSection() {
     },
     {
       question: "Tôi có thể thay đổi thông tin sau khi đăng ký không?",
-      answer: "Bạn có thể chỉnh sửa thông tin khi trạng thái đăng ký là 'Chờ thanh toán' hoặc 'Thanh toán bị từ chối'. Sau khi thanh toán được xác nhận, bạn không thể tự chỉnh sửa."
+      answer: "Bạn có thể chỉnh sửa thông tin khi trạng thái đăng ký là 'Chờ đóng phí tham dự' hoặc 'Đóng phí tham dự bị từ chối'. Sau khi đóng phí tham dự được xác nhận, bạn không thể tự chỉnh sửa."
     },
     {
       question: "Tôi đã chuyển khoản nhưng chưa thấy trạng thái thay đổi?",

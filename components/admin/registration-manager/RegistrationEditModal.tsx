@@ -39,10 +39,10 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
   });
 
   const statusOptions: { value: RegistrationStatus; label: string; description: string }[] = [
-    { value: 'pending', label: 'Chờ thanh toán', description: 'Đang chờ người dùng thanh toán' },
-    { value: 'report_paid', label: 'Đã báo thanh toán', description: 'Người dùng đã gửi biên lai' },
-    { value: 'confirm_paid', label: 'Đã xác nhận thanh toán', description: 'Admin xác nhận thanh toán đúng' },
-    { value: 'payment_rejected', label: 'Thanh toán bị từ chối', description: 'Admin từ chối thanh toán' },
+    { value: 'pending', label: 'Chờ đóng phí tham dự', description: 'Đang chờ người dùng đóng phí tham dự' },
+    { value: 'report_paid', label: 'Đã báo đóng phí tham dự', description: 'Người dùng đã gửi biên lai' },
+    { value: 'confirm_paid', label: 'Đã xác nhận đóng phí tham dự', description: 'Admin xác nhận đóng phí tham dự đúng' },
+    { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối', description: 'Admin từ chối đóng phí tham dự' },
     { value: 'confirmed', label: 'Đã xác nhận', description: 'Đăng ký hoàn tất, có thể xuất vé' },
     { value: 'cancel_pending', label: 'Chờ hủy', description: 'Đang chờ xử lý yêu cầu hủy' },
     { value: 'cancelled', label: 'Đã hủy', description: 'Đăng ký đã bị hủy' },

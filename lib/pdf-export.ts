@@ -14,10 +14,10 @@ const CONTENT_WIDTH = PAGE_WIDTH - (MARGIN * 2);
 // Helper function to get Vietnamese status label
 function getStatusLabel(status: RegistrationStatus): string {
   const statusMap: Record<RegistrationStatus, string> = {
-    'pending': 'Chờ thanh toán',
-    'report_paid': 'Đã báo thanh toán',
-    'confirm_paid': 'Đã xác nhận thanh toán',
-    'payment_rejected': 'Thanh toán bị từ chối',
+    'pending': 'Chờ đóng phí tham dự',
+    'report_paid': 'Đã báo đóng phí tham dự',
+    'confirm_paid': 'Đã xác nhận đóng phí tham dự',
+    'payment_rejected': 'Đóng phí tham dự bị từ chối',
     'donation': 'Đã chuyển thành quyên góp',
     'cancel_pending': 'Chờ xử lý hủy',
     'cancel_accepted': 'Đã chấp nhận hủy',
@@ -187,12 +187,12 @@ export async function exportRegistrationList(registrations: Registration[]): Pro
 
 export async function exportPaymentReport(registrations: Registration[]): Promise<void> {
   const doc = new jsPDF();
-  
-  let currentY = addHeader(doc, 'BÁO CÁO THANH TOÁN ĐẠI HỘI CÔNG GIÁO VIỆT NAM TẠI NHẬT BẢN 2025');
-  
+
+  let currentY = addHeader(doc, 'BÁO CÁO ĐÓNG PHÍ THAM DỰ ĐẠI HỘI CÔNG GIÁO VIỆT NAM TẠI NHẬT BẢN 2025');
+
   // Payment statistics
   doc.setFontSize(12);
-  doc.text('THỐNG KÊ THANH TOÁN', MARGIN, currentY + 10);
+  doc.text('THỐNG KÊ ĐÓNG PHÍ THAM DỰ', MARGIN, currentY + 10);
   
   currentY += 20;
   doc.setFontSize(10);
@@ -206,10 +206,10 @@ export async function exportPaymentReport(registrations: Registration[]): Promis
   };
   
   const statsText = [
-    `• Chờ thanh toán: ${paymentStats.pending.length} đăng ký - ${formatCurrency(paymentStats.pending.reduce((sum, r) => sum + r.total_amount, 0))}`,
-    `• Đã báo thanh toán: ${paymentStats.reported.length} đăng ký - ${formatCurrency(paymentStats.reported.reduce((sum, r) => sum + r.total_amount, 0))}`,
-    `• Đã xác nhận thanh toán: ${paymentStats.confirmed.length} đăng ký - ${formatCurrency(paymentStats.confirmed.reduce((sum, r) => sum + r.total_amount, 0))}`,
-    `• Thanh toán bị từ chối: ${paymentStats.rejected.length} đăng ký - ${formatCurrency(paymentStats.rejected.reduce((sum, r) => sum + r.total_amount, 0))}`,
+    `• Chờ đóng phí tham dự: ${paymentStats.pending.length} đăng ký - ${formatCurrency(paymentStats.pending.reduce((sum, r) => sum + r.total_amount, 0))}`,
+    `• Đã báo đóng phí tham dự: ${paymentStats.reported.length} đăng ký - ${formatCurrency(paymentStats.reported.reduce((sum, r) => sum + r.total_amount, 0))}`,
+    `• Đã xác nhận đóng phí tham dự: ${paymentStats.confirmed.length} đăng ký - ${formatCurrency(paymentStats.confirmed.reduce((sum, r) => sum + r.total_amount, 0))}`,
+    `• Đóng phí tham dự bị từ chối: ${paymentStats.rejected.length} đăng ký - ${formatCurrency(paymentStats.rejected.reduce((sum, r) => sum + r.total_amount, 0))}`,
     `• Đã hủy: ${paymentStats.cancelled.length} đăng ký - ${formatCurrency(paymentStats.cancelled.reduce((sum, r) => sum + r.total_amount, 0))}`
   ];
   
@@ -222,14 +222,14 @@ export async function exportPaymentReport(registrations: Registration[]): Promis
   
   // Payment status breakdown
   doc.setFontSize(12);
-  doc.text('CHI TIẾT THEO TRẠNG THÁI THANH TOÁN', MARGIN, currentY);
+  doc.text('CHI TIẾT THEO TRẠNG THÁI ĐÓNG PHÍ THAM DỰ', MARGIN, currentY);
   currentY += 15;
-  
+
   const statusGroups = [
-    { title: 'ĐÃ XÁC NHẬN THANH TOÁN', data: paymentStats.confirmed },
-    { title: 'ĐÃ BÁO THANH TOÁN (CHỜ XÁC NHẬN)', data: paymentStats.reported },
-    { title: 'CHỜ THANH TOÁN', data: paymentStats.pending },
-    { title: 'THANH TOÁN BỊ TỪ CHỐI', data: paymentStats.rejected }
+    { title: 'ĐÃ XÁC NHẬN ĐÓNG PHÍ THAM DỰ', data: paymentStats.confirmed },
+    { title: 'ĐÃ BÁO ĐÓNG PHÍ THAM DỰ (CHỜ XÁC NHẬN)', data: paymentStats.reported },
+    { title: 'CHỜ ĐÓNG PHÍ THAM DỰ', data: paymentStats.pending },
+    { title: 'ĐÓNG PHÍ THAM DỰ BỊ TỪ CHỐI', data: paymentStats.rejected }
   ];
   
   for (const group of statusGroups) {

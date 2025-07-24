@@ -147,7 +147,7 @@ export function AdminDashboard() {
             )}
             <TabsTrigger value="payments" className="flex items-center gap-1 text-sm">
               <CreditCard className="h-4 w-4" />
-              Thanh toán
+              Đóng phí tham dự
             </TabsTrigger>
           </TabsList>
 
@@ -172,7 +172,7 @@ export function AdminDashboard() {
                 </TabsTrigger>
                 <TabsTrigger value="payments" className="flex items-center gap-1 text-xs">
                   <CreditCard className="h-3 w-3" />
-                  Thanh toán
+                  Đóng phí tham dự
                 </TabsTrigger>
               </TabsList>
             )}
@@ -273,12 +273,12 @@ export function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
-                  Quản lý thanh toán
+                  Quản lý đóng phí tham dự
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Tính năng quản lý thanh toán sẽ được triển khai trong phiên bản tiếp theo.
+                  Tính năng quản lý đóng phí tham dự sẽ được triển khai trong phiên bản tiếp theo.
                 </p>
               </CardContent>
             </Card>

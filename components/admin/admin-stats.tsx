@@ -37,14 +37,14 @@ export function AdminStats({
       color: "text-green-600"
     },
     {
-      title: "Đã thanh toán",
+      title: "Đã đóng phí tham dự",
       value: paidRegistrations,
       icon: DollarSign,
       description: "Đăng ký đã xác nhận",
       color: "text-emerald-600"
     },
     {
-      title: "Chờ thanh toán",
+      title: "Chờ đóng phí tham dự",
       value: pendingRegistrations,
       icon: Clock,
       description: "Đăng ký chưa hoàn tất",
