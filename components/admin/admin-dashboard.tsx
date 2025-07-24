@@ -12,8 +12,9 @@ import { OrganizerTools } from "@/components/admin/organizer-tools";
 import { DiocesesChart } from "@/components/admin/dioceses-chart";
 import { ProvincesChart } from "@/components/admin/provinces-chart";
 import { RolesChart } from "@/components/admin/roles-chart";
-import { 
-  Users, 
+import { RoleStatistics } from "@/components/admin/role-statistics";
+import {
+  Users,
   CreditCard,
   Loader2,
   Settings,
@@ -210,6 +211,9 @@ export function AdminDashboard() {
             {data.roleStats && (
               <RolesChart roleStats={data.roleStats} />
             )}
+
+            {/* Role Statistics - New enhanced version */}
+            <RoleStatistics />
             {/* Team Stats (for super admin) */}
             {data.teamStats &&  (
               <Card>

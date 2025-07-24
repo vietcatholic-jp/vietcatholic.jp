@@ -20,6 +20,8 @@ import { BulkAssignmentDialog } from "./bulk-assignment-dialog";
 import { useTeamAssignment } from "@/hooks/use-team-assignment";
 import { toast } from "sonner";
 import { formatAgeGroup, formatGender } from "@/lib/utils";
+import { RoleBadgeCompact } from "@/components/ui/role-badge";
+import { RoleHelp } from "@/components/admin/role-help";
 
 interface Registrant {
   id: string;
@@ -133,10 +135,13 @@ export function UnassignedRegistrantsList() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Người chưa được phân đội
-            <Badge variant="secondary">{totalCount} người</Badge>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Người chưa được phân đội
+              <Badge variant="secondary">{totalCount} người</Badge>
+            </div>
+            <RoleHelp />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -234,7 +239,7 @@ export function UnassignedRegistrantsList() {
                     }
                   />
                   
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-2">
                     <div>
                       <div className="font-medium">{registrant.full_name}</div>
                       <div className="text-sm text-muted-foreground">
@@ -252,6 +257,9 @@ export function UnassignedRegistrantsList() {
                       {registrant.diocese && (
                         <div className="text-muted-foreground">{registrant.diocese}</div>
                       )}
+                    </div>
+                    <div className="text-sm">
+                      <RoleBadgeCompact role={registrant.event_roles} />
                     </div>
                   </div>
 

@@ -31,7 +31,14 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         user:users(*),
-        registrants(*),
+        registrants(
+          *,
+          event_roles:event_role_id(
+            id,
+            name,
+            description
+          )
+        ),
         receipts(*)
       `)
       .order('created_at', { ascending: false });

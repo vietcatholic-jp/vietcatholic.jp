@@ -20,6 +20,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import {Registrant,Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES } from "@/lib/types";
 import { format } from "date-fns";
+import { formatRoleForDisplay } from "@/lib/role-utils";
 
 interface ExportFilters {
   status: string;
@@ -486,6 +487,7 @@ export default function ExportPage() {
                     <>
                       <th className="border border-gray-300 p-2 text-left">Người đăng ký</th>
                       <th className="border border-gray-300 p-2 text-left">Email</th>
+                      <th className="border border-gray-300 p-2 text-left">Vai trò</th>
                     </>
                   )}
                   <th className="border border-gray-300 p-2 text-left">Số người</th>
@@ -512,6 +514,12 @@ export default function ExportPage() {
                         </td>
                         <td className="border border-gray-300 p-2 text-sm">
                           {registration.user?.email || 'N/A'}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-sm">
+                          {(() => {
+                            const primaryRegistrant = registration.registrants?.find(r => r.is_primary);
+                            return formatRoleForDisplay(primaryRegistrant?.event_roles || null);
+                          })()}
                         </td>
                       </>
                     )}

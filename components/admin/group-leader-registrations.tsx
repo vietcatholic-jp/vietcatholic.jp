@@ -5,12 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, Eye, MapPin, Phone } from "lucide-react";
-import { Registration, EVENT_PARTICIPATION_ROLES } from "@/lib/types";
+import { Registration } from "@/lib/types";
+import { useRoles } from "@/lib/hooks/use-roles";
+import { formatRoleForDisplay } from "@/lib/role-utils";
 import { toast } from "sonner";
 
 export function GroupLeaderRegistrations() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { roles } = useRoles();
   const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
@@ -34,9 +37,9 @@ export function GroupLeaderRegistrations() {
     }
   };
 
-  const getRoleLabel = (roleValue: string) => {
-    const role = EVENT_PARTICIPATION_ROLES.find(r => r.value === roleValue);
-    return role?.label || roleValue;
+  const getRoleLabel = (roleId: string) => {
+    const role = roles.find(r => r.id === roleId);
+    return formatRoleForDisplay(role);
   };
 
   const getRoleBadgeColor = (roleValue: string) => {

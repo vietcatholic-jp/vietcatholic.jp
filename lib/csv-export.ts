@@ -1,5 +1,6 @@
 import { Registration, Registrant } from '@/lib/types';
 import { format } from 'date-fns';
+import { formatRoleForExport } from '@/lib/role-utils';
 
 // Helper function to escape CSV values
 function escapeCSV(value: unknown): string {
@@ -24,27 +25,35 @@ function arrayToCSV<T extends Record<string, unknown>>(data: T[], headers: (keyo
 // Export registrations to CSV
 export function exportRegistrationsCSV(registrations: Registration[]): void {
   // Flatten registration data for CSV
-  const flattenedData = registrations.map(reg => ({
-    id: reg.id,
-    user_id: reg.user_id,
-    event_config_id: reg.event_config_id || '',
-    invoice_code: reg.invoice_code,
-    status: reg.status,
-    total_amount: reg.total_amount,
-    participant_count: reg.participant_count,
-    notes: reg.notes || '',
-    created_at: reg.created_at,
-    updated_at: reg.updated_at,
-    // Add user info for reference
-    user_email: reg.user?.email || '',
-    user_full_name: reg.user?.full_name || '',
-    user_region: reg.user?.region || '',
-    user_role: reg.user?.role || ''
-  }));
+  const flattenedData = registrations.map(reg => {
+    // Get primary registrant role
+    const primaryRegistrant = reg.registrants?.find(r => r.is_primary);
+    const primaryRole = primaryRegistrant?.event_roles || null;
+
+    return {
+      id: reg.id,
+      user_id: reg.user_id,
+      event_config_id: reg.event_config_id || '',
+      invoice_code: reg.invoice_code,
+      status: reg.status,
+      total_amount: reg.total_amount,
+      participant_count: reg.participant_count,
+      notes: reg.notes || '',
+      created_at: reg.created_at,
+      updated_at: reg.updated_at,
+      // Add user info for reference
+      user_email: reg.user?.email || '',
+      user_full_name: reg.user?.full_name || '',
+      user_region: reg.user?.region || '',
+      user_role: reg.user?.role || '',
+      // Add primary registrant role
+      primary_registrant_role: formatRoleForExport(primaryRole)
+    };
+  });
 
   const csvHeaders = [
     'id',
-    'user_id', 
+    'user_id',
     'event_config_id',
     'invoice_code',
     'status',
@@ -54,9 +63,10 @@ export function exportRegistrationsCSV(registrations: Registration[]): void {
     'created_at',
     'updated_at',
     'user_email',
-    'user_full_name', 
+    'user_full_name',
     'user_region',
-    'user_role'
+    'user_role',
+    'primary_registrant_role'
   ];
 
   const csvContent = arrayToCSV(flattenedData, csvHeaders as (keyof typeof flattenedData[0])[]);
@@ -96,7 +106,7 @@ export function exportRegistrantsCSV(registrations: Registration[]): void {
     'shirt_size',
     'event_team_id',
     'event_role_id',
-    'event_role',
+    'event_role_name',
     'is_primary',
     'go_with',
     'notes',
@@ -124,7 +134,7 @@ export function exportRegistrantsCSV(registrations: Registration[]): void {
     shirt_size: registrant.shirt_size,
     event_team_id: registrant.event_team_id || '',
     event_role_id: registrant.event_role_id || '',
-    event_role: registrant.event_role || '',
+    event_role_name: formatRoleForExport(registrant.event_roles),
     is_primary: registrant.is_primary ? 'true' : 'false',
     go_with: registrant.go_with ? 'true' : 'false',
     notes: registrant.notes || '',

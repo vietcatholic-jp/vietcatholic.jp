@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RegistrationActions } from "@/components/dashboard/registration-actions";
 import { 
@@ -17,7 +16,8 @@ import {
   XCircle
 } from "lucide-react";
 import Link from "next/link";
-import { EVENT_PARTICIPATION_ROLES, Registrant, SHIRT_SIZES } from "@/lib/types";
+import { Registrant, SHIRT_SIZES } from "@/lib/types";
+import { RoleBadgeCompact } from "@/components/ui/role-badge";
 
 interface RegistrationCardProps {
   registration: {
@@ -285,7 +285,6 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                 </div>
                 <div className="grid gap-2">
                   {registration.registrants.map((registrant, idx) => {
-                    const roleInfo = EVENT_PARTICIPATION_ROLES.find(r => r.value === registrant.event_role);
                     const isPrimary = registrant.is_primary;
                     
                     return (
@@ -330,19 +329,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                               
                               {/* Role badge */}
                               <div className="flex-shrink-0">
-                                {roleInfo && (
-                                  <Badge 
-                                    variant={
-                                      registrant.event_role?.startsWith('volunteer_') ? 'secondary' :
-                                      registrant.event_role?.startsWith('organizer_') ? 'default' :
-                                      registrant.event_role === 'speaker' || registrant.event_role === 'performer' ? 'destructive' :
-                                      'outline'
-                                    }
-                                    className="text-xs"
-                                  >
-                                    {roleInfo.label}
-                                  </Badge>
-                                )}
+                                <RoleBadgeCompact role={registrant.event_roles} />
                               </div>
                             </div>
                             

@@ -12,7 +12,8 @@ import {
   Trash2, 
   CheckCircle
 } from "lucide-react";
-import { Registration, UserRole, EVENT_PARTICIPATION_ROLES } from "@/lib/types";
+import { Registration, UserRole } from "@/lib/types";
+import { useRoles } from "@/lib/hooks/use-roles";
 import { EditRegistrationForm } from "@/components/registration/edit-registration-form";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { roles } = useRoles();
 
   // Filter registrations based on search, status, and role
   const filteredRegistrations = registrations.filter(registration => {
@@ -174,9 +176,9 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
               className="px-3 py-2 border border-input bg-background rounded-md text-sm"
             >
               <option value="all">Tất cả vai trò</option>
-              {EVENT_PARTICIPATION_ROLES.map((role) => (
-                <option key={role.value} value={role.value}>
-                  {role.label}
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
                 </option>
               ))}
             </select>
