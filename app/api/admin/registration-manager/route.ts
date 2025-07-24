@@ -42,7 +42,15 @@ export async function GET(request: Request) {
       .select(`
         *,
         user:users(*),
-        registrants(*),
+        registrants(
+          *,
+          event_role:event_roles(
+            id,
+            name,
+            team_name,
+            description
+          )
+        ),
         receipts(*)
       `, { count: 'exact' });
 

@@ -4,6 +4,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Registration, Registrant } from "@/lib/types";
+
+interface RegistrantWithRole extends Omit<Registrant, 'event_role'> {
+  event_role?: {
+    id: string;
+    name: string;
+    team_name: string;
+    description?: string;
+  };
+}
 import { 
   User, 
   Users, 
@@ -41,62 +50,6 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
     }
   };
 
-  const getRoleBadge = (role: string) => {
-    const roleLabels: { [key: string]: string } = {
-      'participant': 'Tham dự viên',
-      // Media team roles
-      'volunteer_media_leader': 'Trưởng ban Truyền thông',
-      'volunteer_media_sub_leader': 'Phó ban Truyền thông',
-      'volunteer_media_member': 'Thành viên ban Truyền thông',
-      // Activity team roles
-      'volunteer_activity_leader': 'Trưởng ban Sinh hoạt',
-      'volunteer_activity_sub_leader': 'Phó ban Sinh hoạt',
-      'volunteer_activity_member': 'Thành viên ban Sinh hoạt',
-      // Discipline team roles
-      'volunteer_discipline_leader': 'Trưởng ban Kỷ luật',
-      'volunteer_discipline_sub_leader': 'Phó ban Kỷ luật',
-      'volunteer_discipline_member': 'Thành viên ban Kỷ luật',
-      // Logistics team roles
-      'volunteer_logistics_leader': 'Trưởng ban Hậu cần',
-      'volunteer_logistics_sub_leader': 'Phó ban Hậu cần',
-      'volunteer_logistics_member': 'Thành viên ban Hậu cần',
-      // Liturgy team roles
-      'volunteer_liturgy_leader': 'Trưởng ban Phụng vụ',
-      'volunteer_liturgy_sub_leader': 'Phó ban Phụng vụ',
-      'volunteer_liturgy_member': 'Thành viên ban Phụng vụ',
-      // Security team roles
-      'volunteer_security_leader': 'Trưởng ban An ninh',
-      'volunteer_security_sub_leader': 'Phó ban An ninh',
-      'volunteer_security_member': 'Thành viên ban An ninh',
-      // Registration team roles
-      'volunteer_registration_leader': 'Trưởng ban Thư ký',
-      'volunteer_registration_sub_leader': 'Phó ban Thư ký',
-      'volunteer_registration_member': 'Thành viên ban Thư ký',
-      // Catering team roles
-      'volunteer_catering_leader': 'Trưởng ban Ẩm thực',
-      'volunteer_catering_sub_leader': 'Phó ban Ẩm thực',
-      'volunteer_catering_member': 'Thành viên ban Ẩm thực',
-      // Health team roles
-      'volunteer_health_leader': 'Trưởng ban Y tế',
-      'volunteer_health_sub_leader': 'Phó ban Y tế',
-      'volunteer_health_member': 'Thành viên ban Y tế',
-      // Audio Light team roles
-      'volunteer_audio_light_leader': 'Trưởng ban Âm thanh Ánh sáng',
-      'volunteer_audio_light_sub_leader': 'Phó ban Âm thanh Ánh sáng',
-      'volunteer_audio_light_member': 'Thành viên ban Âm thanh Ánh sáng',
-      // Group leadership roles
-      'volunteer_group_leader': 'Trưởng nhóm các đội',
-      'volunteer_group_sub_leader': 'Phó trưởng nhóm các đội',
-      // Organizer roles
-      'organizer_core': 'Ban Tổ chức chính',
-      'organizer_regional': 'Ban Tổ chức khu vực',
-      // Special roles
-      'speaker': 'Diễn giả',
-      'performer': 'Ban sinh hoạt',
-    };
-    
-    return roleLabels[role] || role;
-  };
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -200,7 +153,7 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {registration.registrants?.map((registrant: Registrant, index: number) => (
+                {(registration.registrants as RegistrantWithRole[])?.map((registrant, index) => (
                   <div key={registrant.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -215,9 +168,14 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
                           <Badge variant="default" className="text-xs">Người chính</Badge>
                         )}
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {getRoleBadge(registrant.event_role || 'participant')}
-                      </Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className="text-xs">
+                          {registrant.event_role?.name || (registrant.event_role_id ? 'Không xác định' : 'Tham dự viên')}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {registrant.event_role?.team_name || 'Chưa có nhóm'}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                       <div>
