@@ -30,7 +30,7 @@ export function RoleBadge({
   variant = "outline",
   size = "default",
   showTooltip = true,
-  showTeamInfo = true
+  showTeamInfo = false
 }: RoleBadgeProps) {
   if (!role) {
     const badge = (
@@ -42,20 +42,7 @@ export function RoleBadge({
       </Badge>
     );
 
-    if (!showTooltip) return badge;
-
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {badge}
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Người tham gia chưa được phân vai trò cụ thể</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
+    return badge;
   }
 
   const category = getEventRoleCategory(role);
