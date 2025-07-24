@@ -17,7 +17,6 @@ import { Info } from "lucide-react";
 
 interface RoleBadgeProps {
   role: EventRole | null | undefined;
-  teamName?: string | null;
   className?: string;
   variant?: "default" | "secondary" | "destructive" | "outline";
   size?: "sm" | "default" | "lg";
@@ -27,12 +26,11 @@ interface RoleBadgeProps {
 
 export function RoleBadge({
   role,
-  teamName,
   className,
   variant = "outline",
   size = "default",
   showTooltip = true,
-  showTeamInfo = false
+  showTeamInfo = true
 }: RoleBadgeProps) {
   if (!role) {
     const badge = (
@@ -40,7 +38,7 @@ export function RoleBadge({
         variant="outline"
         className={cn("text-gray-600", className)}
       >
-        Chưa phân vai trò
+        Tham dự viên
       </Badge>
     );
 
@@ -83,8 +81,8 @@ export function RoleBadge({
       )}
     >
       {roleLabel}
-      {showTeamInfo && teamName && (
-        <span className="ml-1 opacity-75">({teamName})</span>
+      {showTeamInfo && role.team_name && (
+        <span className="ml-1 opacity-75">({role.team_name})</span>
       )}
     </Badge>
   );
@@ -105,7 +103,7 @@ export function RoleBadge({
             )}
             <div className="text-xs space-y-1">
               <div><strong>Loại:</strong> {category}</div>
-              {teamName && <div><strong>Nhóm:</strong> {teamName}</div>}
+              {role.team_name && <div><strong>Nhóm:</strong> {role.team_name}</div>}
               {isLeader && (
                 <div className="text-amber-600 font-medium">
                   <Info className="h-3 w-3 inline mr-1" />

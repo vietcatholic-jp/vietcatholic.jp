@@ -863,9 +863,8 @@ export default function ExportPage() {
                       <td className="border border-gray-300 p-2">
                         {(() => {
                           const roleName = registrant.event_role?.name;
-                          // Nếu là participant hoặc không có role thì để trống
                           if (!roleName || roleName.toLowerCase().includes('participant') || roleName.toLowerCase().includes('tham dự')) {
-                            return '';
+                            return 'Tham dự viên';
                           }
                           return roleName;
                         })()}

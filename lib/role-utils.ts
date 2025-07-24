@@ -5,13 +5,13 @@
 
 export type EventRole = {
   id: string;
-  event_config_id: string;
+  event_config_id?: string;
   name: string;
   description: string | null;
-  permissions: Record<string, unknown> | null;
+  permissions?: Record<string, unknown> | null;
   team_name?: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type RoleCategory = 'Tham gia' | 'Tình nguyện' | 'Tổ chức' | 'Đặc biệt';

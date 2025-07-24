@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     const supabase = await createClient();
 
-	const { data: profile } = await supabase
+	  const { data: profile } = await supabase
       .from("users")
       .select("role, region")
       .eq("id", user.id)
@@ -44,10 +44,9 @@ export async function GET(request: Request) {
         user:users(*),
         registrants(
           *,
-          event_role:event_roles(
+          event_roles:event_role_id(
             id,
             name,
-            team_name,
             description
           )
         ),
@@ -89,7 +88,7 @@ export async function GET(request: Request) {
     if (cancelRequestsError) {
       throw cancelRequestsError;
     }
-
+    console.log("Fetched registrations:", registrations[1].registrants);
     return NextResponse.json({
       stats,
       registrations,
