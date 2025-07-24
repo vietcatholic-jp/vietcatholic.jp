@@ -45,7 +45,12 @@ export async function GET(request: NextRequest) {
         diocese,
         email,
         phone,
-        registration:registrations!registrants_registration_id_fkey(
+        event_roles:event_role_id(
+          id,
+          name,
+          description
+        ),
+        registration:registrations!inner(
           id,
           invoice_code,
           status,
@@ -57,6 +62,7 @@ export async function GET(request: NextRequest) {
         )
       `)
       .is("event_team_id", null)
+      .eq("registration.status", "confirmed")
       .order("created_at", { ascending: false });
 
     // Apply filters
@@ -81,8 +87,9 @@ export async function GET(request: NextRequest) {
     // Get total count for pagination
     const { count } = await supabase
       .from("registrants")
-      .select("*", { count: "exact", head: true })
-      .is("event_team_id", null);
+      .select("id, registrations!inner(status)", { count: "exact", head: true })
+      .is("event_team_id", null)
+      .eq("registrations.status", "confirmed");
 
     // Get paginated results
     const { data: registrants, error } = await query

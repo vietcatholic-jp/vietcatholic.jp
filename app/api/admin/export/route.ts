@@ -48,10 +48,9 @@ export async function GET(request: NextRequest) {
               province
             )
           ),
-          event_role:event_roles(
+          event_roles:event_role_id(
             id,
             name,
-            team_name,
             description
           )
         `)
