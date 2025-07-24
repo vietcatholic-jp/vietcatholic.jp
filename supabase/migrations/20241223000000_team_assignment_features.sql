@@ -73,9 +73,9 @@ CREATE POLICY "Admins can manage team assignments" ON registrants
         EXISTS (
             SELECT 1 FROM user_profiles up
             WHERE up.user_id = auth.uid()
-            AND up.role IN ('super_admin', 'event_organizer', 'regional_admin')
+            AND up.role IN ('super_admin','registration_manager', 'event_organizer', 'regional_admin')
         )
-    );
+);
 
 -- Policy for users to view their own registrants
 CREATE POLICY "Users can view own registrants" ON registrants

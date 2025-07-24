@@ -45,7 +45,7 @@ interface Registrant {
     event_config_id: string;
     name: string;
     description?: string | null;
-    permissions?: any | null;
+    permissions?: Record<string, unknown> | null;
     team_name?: string | null;
     created_at: string;
     updated_at: string;
@@ -149,7 +149,11 @@ export function AssignTeamDialog({
                 </div>
                 <div>
                   <span className="text-muted-foreground">Vai trò:</span>
-                  <RoleBadgeCompact role={registrant.event_roles} />
+                  <RoleBadgeCompact role={registrant.event_roles ? { 
+                    ...registrant.event_roles, 
+                    description: registrant.event_roles.description || null,
+                    permissions: registrant.event_roles.permissions || null
+                  } : null} />
                 </div>
                 <div>
                   <span className="text-muted-foreground">Tỉnh/Thành phố:</span>

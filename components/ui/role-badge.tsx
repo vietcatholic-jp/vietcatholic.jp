@@ -10,7 +10,6 @@ import {
   getEventRoleCategory,
   getRoleCategoryColor,
   formatRoleForDisplay,
-  getTeamNameFromRole,
   isLeadershipRole,
   type EventRole
 } from "@/lib/role-utils";
@@ -18,6 +17,7 @@ import { Info } from "lucide-react";
 
 interface RoleBadgeProps {
   role: EventRole | null | undefined;
+  teamName?: string | null;
   className?: string;
   variant?: "default" | "secondary" | "destructive" | "outline";
   size?: "sm" | "default" | "lg";
@@ -27,6 +27,7 @@ interface RoleBadgeProps {
 
 export function RoleBadge({
   role,
+  teamName,
   className,
   variant = "outline",
   size = "default",
@@ -62,7 +63,6 @@ export function RoleBadge({
   const category = getEventRoleCategory(role);
   const colorClass = getRoleCategoryColor(category);
   const roleLabel = formatRoleForDisplay(role);
-  const teamName = getTeamNameFromRole(role);
   const isLeader = isLeadershipRole(role);
 
   // Size classes
@@ -131,7 +131,6 @@ export function RoleBadgeWithCategory({ role, className }: { role: EventRole | n
   }
 
   const category = getEventRoleCategory(role);
-  const roleLabel = formatRoleForDisplay(role);
 
   return (
     <div className={cn("flex items-center gap-2", className)}>

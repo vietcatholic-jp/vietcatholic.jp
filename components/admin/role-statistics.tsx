@@ -4,19 +4,20 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LabelList
-} from "recharts";
+// Chart components temporarily disabled - recharts dependency needed
+// import { 
+//   BarChart, 
+//   Bar, 
+//   XAxis, 
+//   YAxis, 
+//   CartesianGrid, 
+//   Tooltip, 
+//   ResponsiveContainer,
+//   PieChart,
+//   Pie,
+//   Cell,
+//   LabelList
+// } from "recharts";
 import { 
   Users, 
   UserCheck, 
@@ -27,7 +28,6 @@ import {
 import { 
   getEventRoleCategory, 
   getRoleCategoryColor,
-  getAllRoleCategories,
   type RoleCategory 
 } from "@/lib/role-utils";
 
@@ -72,7 +72,7 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
 
   // Group statistics by category
   const categoryStats = statistics.reduce((acc, stat) => {
-    const category = getEventRoleCategory({ name: stat.role_name } as any);
+    const category = getEventRoleCategory(stat.role_name);
     if (!acc[category]) {
       acc[category] = {
         category,
@@ -98,28 +98,28 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
     roles: RoleStatistic[];
   }>);
 
-  // Prepare data for charts
-  const categoryChartData = Object.values(categoryStats).map(cat => ({
-    name: cat.category,
-    value: cat.total_count,
-    confirmed: cat.confirmed_count,
-    paid: cat.paid_count,
-    pending: cat.pending_count
-  }));
+  // Chart data temporarily disabled - recharts dependency needed
+  // const categoryChartData = Object.values(categoryStats).map(cat => ({
+  //   name: cat.category,
+  //   value: cat.total_count,
+  //   confirmed: cat.confirmed_count,
+  //   paid: cat.paid_count,
+  //   pending: cat.pending_count
+  // }));
 
-  const topRolesData = statistics
-    .sort((a, b) => b.total_count - a.total_count)
-    .slice(0, 10)
-    .map(stat => ({
-      name: stat.role_label || stat.role_name,
-      total: stat.total_count,
-      confirmed: stat.confirmed_count,
-      paid: stat.paid_count,
-      pending: stat.pending_count
-    }));
+  // const topRolesData = statistics
+  //   .sort((a, b) => b.total_count - a.total_count)
+  //   .slice(0, 10)
+  //   .map(stat => ({
+  //     name: stat.role_label || stat.role_name,
+  //     total: stat.total_count,
+  //     confirmed: stat.confirmed_count,
+  //     paid: stat.paid_count,
+  //     pending: stat.pending_count
+  //   }));
 
   // Colors for pie chart
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  // const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   if (isLoading) {
     return (
@@ -175,7 +175,7 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
           <div className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.values(categoryStats).map((cat, index) => (
+              {Object.values(categoryStats).map((cat) => (
                 <div key={cat.category} className="text-center">
                   <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 ${getRoleCategoryColor(cat.category)}`}>
                     {cat.category === 'Tổ chức' && <Crown className="h-6 w-6" />}
@@ -200,53 +200,17 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
                   <TrendingUp className="h-4 w-4" />
                   Phân bố theo loại vai trò
                 </h4>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={categoryChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {categoryChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                      <LabelList dataKey="name" position="outside" />
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => [value, 'Số người']}
-                      labelFormatter={(label) => `${label}`}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                  Biểu đồ phân bố vai trò (Cần cài đặt recharts)
+                </div>
               </div>
 
               {/* Top Roles Bar Chart */}
               <div>
                 <h4 className="text-sm font-medium mb-4">Top 10 vai trò nhiều người nhất</h4>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart
-                    data={topRolesData}
-                    layout="horizontal"
-                    margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category" 
-                      width={100}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <Tooltip />
-                    <Bar dataKey="total" fill="#8884d8">
-                      <LabelList dataKey="total" position="right" />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                  Biểu đồ top vai trò (Cần cài đặt recharts)
+                </div>
               </div>
             </div>
 

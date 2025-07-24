@@ -32,6 +32,16 @@ interface Registrant {
   diocese?: string;
   email?: string;
   phone?: string;
+  event_roles?: {
+    id: string;
+    name: string;
+    description?: string | null;
+    permissions?: Record<string, unknown> | null;
+    event_config_id: string;
+    team_name?: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
   registration: {
     id: string;
     invoice_code: string;
@@ -259,7 +269,11 @@ export function UnassignedRegistrantsList() {
                       )}
                     </div>
                     <div className="text-sm">
-                      <RoleBadgeCompact role={registrant.event_roles} />
+                      <RoleBadgeCompact role={registrant.event_roles ? {
+                        ...registrant.event_roles,
+                        description: registrant.event_roles.description ?? null,
+                        permissions: registrant.event_roles.permissions ?? null
+                      } : null} />
                     </div>
                   </div>
 
