@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type'); // 'registrations' or 'payments'
+    const type = searchParams.get('type'); // 'registrations', 'registrants' or 'payments'
+    const team_name = searchParams.get('team_name'); // Filter by team name
 
     const user = await getServerUser();
     
@@ -25,25 +26,74 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get all registrations with related data for export
-    const { data: registrations, error: registrationsError } = await supabase
-      .from('registrations')
-      .select(`
-        *,
-        user:users(*),
-        registrants(*),
-        receipts(*)
-      `)
-      .order('created_at', { ascending: false });
+    if (type === 'registrants') {
+      // Get registrants-level export with event_roles and team_name joins
+      let query = supabase
+        .from('registrants')
+        .select(`
+          *,
+          registration:registrations(
+            id,
+            invoice_code,
+            status,
+            total_amount,
+            participant_count,
+            created_at,
+            user:users(
+              id,
+              email,
+              full_name,
+              role,
+              region,
+              province
+            )
+          ),
+          event_role:event_roles(
+            id,
+            name,
+            team_name,
+            description
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-    if (registrationsError) {
-      throw registrationsError;
+      // Apply team filter if specified
+      if (team_name) {
+        query = query.eq('event_roles.team_name', team_name);
+      }
+
+      const { data: registrants, error: registrantsError } = await query;
+
+      if (registrantsError) {
+        console.error('Error fetching registrants:', registrantsError);
+        throw registrantsError;
+      }
+
+      return NextResponse.json({
+        registrants: registrants || [],
+        type: 'registrants'
+      });
+    } else {
+      // Original registrations export
+      const { data: registrations, error: registrationsError } = await supabase
+        .from('registrations')
+        .select(`
+          *,
+          user:users(*),
+          registrants(*),
+          receipts(*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (registrationsError) {
+        throw registrationsError;
+      }
+
+      return NextResponse.json({
+        registrations: registrations || [],
+        type: type || 'registrations'
+      });
     }
-
-    return NextResponse.json({
-      registrations: registrations || [],
-      type
-    });
 
   } catch (error) {
     console.error('Error fetching export data:', error);

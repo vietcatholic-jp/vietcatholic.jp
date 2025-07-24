@@ -1,6 +1,32 @@
 import { Registration, Registrant } from '@/lib/types';
 import { format } from 'date-fns';
 
+// Extended registrant type for export with event role and registration info
+export interface RegistrantWithRoleAndRegistration extends Omit<Registrant, 'event_role'> {
+  registration?: {
+    id: string;
+    invoice_code: string;
+    status: string;
+    total_amount: number;
+    participant_count: number;
+    created_at: string;
+    user?: {
+      id: string;
+      email: string;
+      full_name?: string;
+      role: string;
+      region?: string;
+      province?: string;
+    };
+  };
+  event_role?: {
+    id: string;
+    name: string;
+    team_name: string;
+    description?: string;
+  };
+}
+
 // Helper function to escape CSV values
 function escapeCSV(value: unknown): string {
   if (value === null || value === undefined) return '';
@@ -153,6 +179,81 @@ function downloadCSV(csvContent: string, filename: string): void {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
+}
+
+// Export registrants with roles and registration info to CSV
+export function exportRegistrantsWithRolesCSV(registrantsData: RegistrantWithRoleAndRegistration[]): void {
+  const headers = [
+    'registrant_id',
+    'registration_id',
+    'invoice_code',
+    'registration_status',
+    'registration_amount',
+    'registration_created_at',
+    'registrant_email',
+    'saint_name',
+    'full_name',
+    'gender',
+    'age_group',
+    'province',
+    'diocese', 
+    'address',
+    'facebook_link',
+    'phone',
+    'shirt_size',
+    'event_team_id',
+    'event_role_name',
+    'team_name',
+    'role_description',
+    'is_primary',
+    'go_with',
+    'notes',
+    'portrait_url',
+    'group_id',
+    'registrant_created_at',
+    'registration_user_name',
+    'registration_user_email',
+    'registration_user_role',
+    'registration_user_region'
+  ];
+
+  // Flatten registrants data for CSV with role and registration info
+  const flattenedData = registrantsData.map(registrant => ({
+    registrant_id: registrant.id,
+    registration_id: registrant.registration?.id || '',
+    invoice_code: registrant.registration?.invoice_code || '',
+    registration_status: registrant.registration?.status || '',
+    registration_amount: registrant.registration?.total_amount || 0,
+    registration_created_at: registrant.registration?.created_at ? format(new Date(registrant.registration.created_at), 'yyyy-MM-dd HH:mm:ss') : '',
+    registrant_email: registrant.email || '',
+    saint_name: registrant.saint_name || '',
+    full_name: registrant.full_name,
+    gender: registrant.gender,
+    age_group: registrant.age_group,
+    province: registrant.province || '',
+    diocese: registrant.diocese || '',
+    address: registrant.address || '',
+    facebook_link: registrant.facebook_link || '',
+    phone: registrant.phone || '',
+    shirt_size: registrant.shirt_size,
+    event_team_id: registrant.event_team_id || '',
+    event_role_name: registrant.event_role?.name || (registrant.event_role_id ? 'Unknown Role' : 'participant'),
+    team_name: registrant.event_role?.team_name || '',
+    role_description: registrant.event_role?.description || '',
+    is_primary: registrant.is_primary ? 'true' : 'false',
+    go_with: registrant.go_with ? 'true' : 'false',
+    notes: registrant.notes || '',
+    portrait_url: registrant.portrait_url || '',
+    group_id: registrant.group_id || '',
+    registrant_created_at: format(new Date(registrant.created_at), 'yyyy-MM-dd HH:mm:ss'),
+    registration_user_name: registrant.registration?.user?.full_name || '',
+    registration_user_email: registrant.registration?.user?.email || '',
+    registration_user_role: registrant.registration?.user?.role || '',
+    registration_user_region: registrant.registration?.user?.region || ''
+  }));
+
+  const csvContent = arrayToCSV(flattenedData, headers as (keyof typeof flattenedData[0])[]);
+  downloadCSV(csvContent, `registrants-with-roles-${format(new Date(), 'yyyy-MM-dd')}.csv`);
 }
 
 // Export both registrations and registrants as ZIP
