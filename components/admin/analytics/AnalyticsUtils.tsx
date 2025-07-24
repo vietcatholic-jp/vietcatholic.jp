@@ -72,9 +72,15 @@ export function calculateSummaryStats(registrations: Registration[]) {
   const totalAmount = registrations.filter(r => 
     ['confirm_paid', 'confirmed', 'checked_in', 'checked_out','donation'].includes(r.status)
   ).reduce((sum, reg) => sum + reg.total_amount, 0);
+  const totalDonation = registrations.filter(r => 
+    ['donation'].includes(r.status)
+  ).reduce((sum, reg) => sum + reg.total_amount, 0);
   const confirmedRegistrations = registrations.filter(r => 
     ['confirm_paid', 'confirmed', 'checked_in', 'checked_out'].includes(r.status)
   ).length;
+  const confirmedRegistrants = registrations.filter(r => 
+    ['confirm_paid', 'confirmed', 'checked_in', 'checked_out'].includes(r.status)
+  ).reduce((sum, reg) => sum + reg.participant_count, 0);
   const pendingPayments = registrations.filter(r => r.status === 'pending').length;
   const reportedPayments = registrations.filter(r => r.status === 'report_paid').length;
   const rejectedPayments = registrations.filter(r => r.status === 'payment_rejected').length;
@@ -90,7 +96,9 @@ export function calculateSummaryStats(registrations: Registration[]) {
     totalRegistrations,
     totalParticipants,
     totalAmount,
+    totalDonation,
     confirmedRegistrations,
+    confirmedRegistrants,
     pendingPayments,
     reportedPayments,
     rejectedPayments,

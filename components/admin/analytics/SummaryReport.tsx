@@ -35,16 +35,23 @@ export function SummaryReport() {
       bgColor: "bg-blue-50"
     },
     {
-      title: "Tổng người tham gia",
+      title: "Tổng người tham gia dự kiến",
       value: stats.totalParticipants,
       icon: UserCheck,
       color: "text-green-600",
       bgColor: "bg-green-50"
     },
     {
-      title: "Đã xác nhận",
+      title: "Đăng ký đã xác nhận",
       value: stats.confirmedRegistrations,
       icon: CheckCircle,
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50"
+    },
+    {
+      title: "Số người đã xác nhận",
+      value: stats.confirmedRegistrants,
+      icon: UserCheck,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50"
     },
@@ -70,7 +77,7 @@ export function SummaryReport() {
       bgColor: "bg-red-50"
     },
     {
-      title: "Tổng số tiền",
+      title: "Tổng số tiền đã nhận",
       value: formatCurrency(stats.totalAmount),
       icon: CreditCard,
       color: "text-indigo-600",
