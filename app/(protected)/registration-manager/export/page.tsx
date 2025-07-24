@@ -843,10 +843,10 @@ export default function ExportPage() {
                         {SHIRT_SIZES.find(s => s.value === registrant.shirt_size)?.label || registrant.shirt_size}
                       </td>
                       <td className="border border-gray-300 p-2">
-                        {registrant.event_role?.name || (registrant.event_role_id ? 'Unknown Role' : 'participant')}
+                        {registrant.event_role?.name || (registrant.event_role_id ? 'Unknown Role' : 'Tham dự viên')}
                       </td>
                       <td className="border border-gray-300 p-2">
-                        {registrant.event_role?.team_name || 'Tham dự viên'}
+                        {registrant.event_role?.team_name || 'Chưa phân nhóm'}
                       </td>
                       <td className="border border-gray-300 p-2">
                         <Badge variant={getStatusBadgeVariant(registrant.registration?.status as RegistrationStatus)}>
