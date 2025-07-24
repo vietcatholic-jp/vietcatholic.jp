@@ -21,7 +21,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import {Registrant,Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES } from "@/lib/types";
 import { format } from "date-fns";
-import { formatRoleForDisplay } from "@/lib/role-utils";
+
 import { exportRegistrantsWithRolesCSV, RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
 
 
@@ -652,7 +652,12 @@ export default function ExportPage() {
                         <td className="border border-gray-300 p-2 text-sm">
                           {(() => {
                             const primaryRegistrant = registration.registrants?.find(r => r.is_primary);
-                            return formatRoleForDisplay(primaryRegistrant?.event_roles || null);
+                            const roleName = primaryRegistrant?.event_roles?.name;
+                            // Nếu là participant hoặc không có role thì để trống
+                            if (!roleName || roleName.toLowerCase().includes('participant') || roleName.toLowerCase().includes('tham dự')) {
+                              return '';
+                            }
+                            return roleName;
                           })()}
                         </td>
                       </>
@@ -856,7 +861,14 @@ export default function ExportPage() {
                         {SHIRT_SIZES.find(s => s.value === registrant.shirt_size)?.label || registrant.shirt_size}
                       </td>
                       <td className="border border-gray-300 p-2">
-                        {registrant.event_role?.name || (registrant.event_role_id ? 'Unknown Role' : 'Tham dự viên')}
+                        {(() => {
+                          const roleName = registrant.event_role?.name;
+                          // Nếu là participant hoặc không có role thì để trống
+                          if (!roleName || roleName.toLowerCase().includes('participant') || roleName.toLowerCase().includes('tham dự')) {
+                            return '';
+                          }
+                          return roleName;
+                        })()}
                       </td>
                       <td className="border border-gray-300 p-2">
                         <Badge variant={getStatusBadgeVariant(registrant.registration?.status as RegistrationStatus)}>
