@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -16,9 +16,9 @@ export async function DELETE(
 
     // Check admin role
     const { data: profile } = await supabase
-      .from("user_profiles")
+      .from("users")
       .select("role, region")
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .single();
 
     if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {

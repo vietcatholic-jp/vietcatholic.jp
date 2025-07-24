@@ -1,6 +1,39 @@
 import { Registration, Registrant } from '@/lib/types';
 import { format } from 'date-fns';
 
+// Helper function to format role name for export
+function formatRoleNameForExport(roleName?: string | null): string {
+  if (!roleName) return '';
+
+  // Nếu là participant hoặc tham dự viên thì để trống
+  if (roleName.toLowerCase().includes('participant') ||
+      roleName.toLowerCase().includes('tham dự')) {
+    return '';
+  }
+
+  return roleName;
+}
+
+// Helper function to format status for export
+function formatStatusForExport(status?: string): string {
+  if (!status) return '';
+
+  const statusMap: Record<string, string> = {
+    'pending': 'Chờ thanh toán',
+    'report_paid': 'Đã báo thanh toán',
+    'confirm_paid': 'Đã xác nhận thanh toán',
+    'confirmed': 'Đã xác nhận',
+    'payment_rejected': 'Thanh toán bị từ chối',
+    'cancelled': 'Đã hủy',
+    'refunded': 'Đã hoàn tiền',
+    'converted_to_donation': 'Đã chuyển thành quyên góp',
+    'checked_in': 'Đã check-in',
+    'checked_out': 'Đã check-out'
+  };
+
+  return statusMap[status] || status;
+}
+
 // Extended registrant type for export with event role and registration info
 export interface RegistrantWithRoleAndRegistration extends Omit<Registrant, 'event_role'> {
   registration?: {
@@ -50,27 +83,35 @@ function arrayToCSV<T extends Record<string, unknown>>(data: T[], headers: (keyo
 // Export registrations to CSV
 export function exportRegistrationsCSV(registrations: Registration[]): void {
   // Flatten registration data for CSV
-  const flattenedData = registrations.map(reg => ({
-    id: reg.id,
-    user_id: reg.user_id,
-    event_config_id: reg.event_config_id || '',
-    invoice_code: reg.invoice_code,
-    status: reg.status,
-    total_amount: reg.total_amount,
-    participant_count: reg.participant_count,
-    notes: reg.notes || '',
-    created_at: reg.created_at,
-    updated_at: reg.updated_at,
-    // Add user info for reference
-    user_email: reg.user?.email || '',
-    user_full_name: reg.user?.full_name || '',
-    user_region: reg.user?.region || '',
-    user_role: reg.user?.role || ''
-  }));
+  const flattenedData = registrations.map(reg => {
+    // Get primary registrant role
+    const primaryRegistrant = reg.registrants?.find(r => r.is_primary);
+    const primaryRole = primaryRegistrant?.event_roles || null;
+
+    return {
+      id: reg.id,
+      user_id: reg.user_id,
+      event_config_id: reg.event_config_id || '',
+      invoice_code: reg.invoice_code,
+      status: formatStatusForExport(reg.status),
+      total_amount: reg.total_amount,
+      participant_count: reg.participant_count,
+      notes: reg.notes || '',
+      created_at: reg.created_at,
+      updated_at: reg.updated_at,
+      // Add user info for reference
+      user_email: reg.user?.email || '',
+      user_full_name: reg.user?.full_name || '',
+      user_region: reg.user?.region || '',
+      user_role: reg.user?.role || '',
+      // Add primary registrant role
+      primary_registrant_role: formatRoleNameForExport(primaryRole?.name)
+    };
+  });
 
   const csvHeaders = [
     'id',
-    'user_id', 
+    'user_id',
     'event_config_id',
     'invoice_code',
     'status',
@@ -80,9 +121,10 @@ export function exportRegistrationsCSV(registrations: Registration[]): void {
     'created_at',
     'updated_at',
     'user_email',
-    'user_full_name', 
+    'user_full_name',
     'user_region',
-    'user_role'
+    'user_role',
+    'primary_registrant_role'
   ];
 
   const csvContent = arrayToCSV(flattenedData, csvHeaders as (keyof typeof flattenedData[0])[]);
@@ -122,7 +164,7 @@ export function exportRegistrantsCSV(registrations: Registration[]): void {
     'shirt_size',
     'event_team_id',
     'event_role_id',
-    'event_role',
+    'event_role_name',
     'is_primary',
     'go_with',
     'notes',
@@ -150,7 +192,7 @@ export function exportRegistrantsCSV(registrations: Registration[]): void {
     shirt_size: registrant.shirt_size,
     event_team_id: registrant.event_team_id || '',
     event_role_id: registrant.event_role_id || '',
-    event_role: registrant.event_role || '',
+    event_role_name: formatRoleNameForExport(registrant.event_roles?.name),
     is_primary: registrant.is_primary ? 'true' : 'false',
     go_with: registrant.go_with ? 'true' : 'false',
     notes: registrant.notes || '',
@@ -222,7 +264,7 @@ export function exportRegistrantsWithRolesCSV(registrantsData: RegistrantWithRol
     registrant_id: registrant.id,
     registration_id: registrant.registration?.id || '',
     invoice_code: registrant.registration?.invoice_code || '',
-    registration_status: registrant.registration?.status || '',
+    registration_status: formatStatusForExport(registrant.registration?.status),
     registration_amount: registrant.registration?.total_amount || 0,
     registration_created_at: registrant.registration?.created_at ? format(new Date(registrant.registration.created_at), 'yyyy-MM-dd HH:mm:ss') : '',
     registrant_email: registrant.email || '',
@@ -237,7 +279,7 @@ export function exportRegistrantsWithRolesCSV(registrantsData: RegistrantWithRol
     phone: registrant.phone || '',
     shirt_size: registrant.shirt_size,
     event_team_id: registrant.event_team_id || '',
-    event_role_name: registrant.event_role?.name || (registrant.event_role_id ? 'Unknown Role' : 'participant'),
+    event_role_name: formatRoleNameForExport(registrant.event_role?.name),
     team_name: registrant.event_role?.team_name || '',
     role_description: registrant.event_role?.description || '',
     is_primary: registrant.is_primary ? 'true' : 'false',

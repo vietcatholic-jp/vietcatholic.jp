@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     if (!profile || !["registration_manager", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
+    
     if (type === 'registrants') {
       // Get registrants-level export with event_roles and team_name joins
       let query = supabase
@@ -77,13 +77,20 @@ export async function GET(request: NextRequest) {
       // Original registrations export
       const { data: registrations, error: registrationsError } = await supabase
         .from('registrations')
-        .select(`
+      .select(`
+        *,
+        user:users(*),
+        registrants(
           *,
-          user:users(*),
-          registrants(*),
-          receipts(*)
-        `)
-        .order('created_at', { ascending: false });
+          event_roles:event_role_id(
+            id,
+            name,
+            description
+          )
+        ),
+        receipts(*)
+      `)
+      .order('created_at', { ascending: false });
 
       if (registrationsError) {
         throw registrationsError;

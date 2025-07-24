@@ -16,6 +16,7 @@
 
 ## Features
 
+### Core Technology Stack
 - Works across the entire [Next.js](https://nextjs.org) stack
   - App Router
   - Pages Router
@@ -29,6 +30,17 @@
 - Components with [shadcn/ui](https://ui.shadcn.com/)
 - Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
   - Environment variables automatically assigned to Vercel project
+
+### Event Management Features
+- **Registration System**: Complete registration flow with payment tracking
+- **Role Management**: Advanced role-based participant categorization
+  - 4 role categories: Tham gia, Tình nguyện, Tổ chức, Đặc biệt
+  - Role-based filtering and statistics
+  - Vietnamese role labels in all exports
+- **Team Assignment**: Intelligent team assignment with role consideration
+- **Export & Reporting**: CSV exports with comprehensive role information
+- **Admin Dashboard**: Real-time statistics and role distribution analytics
+- **Multi-language Support**: Vietnamese and Japanese interface
 
 ## Clone and run locally
 
