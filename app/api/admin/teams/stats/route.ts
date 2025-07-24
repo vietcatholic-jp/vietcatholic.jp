@@ -46,8 +46,9 @@ export async function GET() {
     // Get unassigned registrants count
     const { count: totalUnassigned, error: unassignedError } = await supabase
       .from("registrants")
-      .select("*", { count: "exact", head: true })
-      .is("event_team_id", null);
+      .select("id, registrations!inner(status)", { count: "exact", head: true })
+      .is("event_team_id", null)
+      .eq("registrations.status", "confirmed");
 
     if (unassignedError) {
       console.error("Unassigned count error:", unassignedError);
