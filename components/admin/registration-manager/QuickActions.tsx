@@ -42,7 +42,7 @@ export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
   const quickActionItems = [
     {
       title: "Xem đăng ký chờ xác nhận",
-      description: "Xử lý các đăng ký đã báo thanh toán",
+      description: "Xử lý các đăng ký đã báo đóng phí tham dự",
       count: stats.pending_payments,
       icon: CheckCircle,
       color: "bg-blue-50 text-blue-700 border-blue-200",

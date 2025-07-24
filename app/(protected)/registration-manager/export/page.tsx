@@ -47,10 +47,10 @@ interface ExportPageState {
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tất cả trạng thái' },
-  { value: 'pending', label: 'Chờ thanh toán' },
-  { value: 'report_paid', label: 'Đã báo thanh toán' },
-  { value: 'confirm_paid', label: 'Đã xác nhận thanh toán' },
-  { value: 'payment_rejected', label: 'Thanh toán bị từ chối' },
+  { value: 'pending', label: 'Chờ đóng phí tham dự' },
+  { value: 'report_paid', label: 'Đã báo đóng phí tham dự' },
+  { value: 'confirm_paid', label: 'Đã xác nhận đóng phí tham dự' },
+  { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối' },
   { value: 'confirmed', label: 'Đã xác nhận' },
   { value: 'checked_in', label: 'Đã check-in' },
   { value: 'cancelled', label: 'Đã hủy' }
@@ -66,10 +66,10 @@ const REPORT_TYPES = [
 
 function getStatusLabel(status: RegistrationStatus): string {
   const statusMap: Record<RegistrationStatus, string> = {
-    'pending': 'Chờ thanh toán',
-    'report_paid': 'Đã báo thanh toán',
-    'confirm_paid': 'Đã xác nhận thanh toán',
-    'payment_rejected': 'Thanh toán bị từ chối',
+    'pending': 'Chờ đóng phí tham dự',
+    'report_paid': 'Đã báo đóng phí tham dự',
+    'confirm_paid': 'Đã xác nhận đóng phí tham dự',
+    'payment_rejected': 'Đóng phí tham dự bị từ chối',
     'donation': 'Đã chuyển thành quyên góp',
     'cancel_pending': 'Chờ xử lý hủy',
     'cancel_accepted': 'Đã chấp nhận hủy',
@@ -531,7 +531,7 @@ export default function ExportPage() {
                   checked={state.filters.includePaymentInfo}
                   onCheckedChange={(checked) => updateFilter('includePaymentInfo', checked as boolean)}
                 />
-                <Label htmlFor="includePaymentInfo">Thông tin thanh toán</Label>
+                <Label htmlFor="includePaymentInfo">Thông tin đóng phí tham dự</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox

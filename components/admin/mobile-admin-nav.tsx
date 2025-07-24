@@ -26,7 +26,7 @@ const tabConfig = {
   tools: { icon: Wrench, label: "Công cụ", color: "bg-purple-50 text-purple-700" },
   users: { icon: UserCheck, label: "Người dùng", color: "bg-orange-50 text-orange-700" },
   events: { icon: Settings, label: "Sự kiện", color: "bg-red-50 text-red-700" },
-  payments: { icon: CreditCard, label: "Thanh toán", color: "bg-yellow-50 text-yellow-700" },
+  payments: { icon: CreditCard, label: "Đóng phí tham dự", color: "bg-yellow-50 text-yellow-700" },
 };
 
 export function MobileAdminNav({ activeTab, onTabChange, userRole }: MobileAdminNavProps) {
