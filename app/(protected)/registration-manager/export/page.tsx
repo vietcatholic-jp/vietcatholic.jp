@@ -58,7 +58,7 @@ const STATUS_OPTIONS = [
 
 const REPORT_TYPES = [
   { value: 'detailed', label: 'Báo cáo chi tiết', icon: Users },
-  { value: 'registrants', label: 'Danh sách người tham gia (có roles)', icon: Users },
+  { value: 'registrants', label: 'Danh sách người tham gia theo ban', icon: Users },
   { value: 'shirt-size', label: 'Thống kê size áo', icon: BarChart3 },
   { value: 'province', label: 'Thống kê tỉnh thành', icon: MapPin },
   { value: 'diocese', label: 'Thống kê giáo phận', icon: Church }
@@ -553,7 +553,7 @@ export default function ExportPage() {
       </Card>
 
       {/* Summary Stats */}
-      <Card className="print-include print-header">
+      <Card className={`print-include print-header`}>
         <CardHeader>
           <CardTitle className="text-center text-3xl font-bold">
             BÁO CÁO ĐĂNG KÝ THAM GIA ĐẠI HỘI NĂM THÁNH 2025 TẠI NHẬT BẢN
@@ -563,6 +563,20 @@ export default function ExportPage() {
           </p>
         </CardHeader>
         <CardContent>
+          {state.filters.reportType === 'registrants' ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-green-600">{state.filteredRegistrants.length}</div>
+              <div className="text-sm text-muted-foreground">Tổng người tham gia</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-orange-600">
+                {state.filteredRegistrants.filter(r => ['confirm_paid', 'confirmed', 'checked_in'].includes(r.registration?.status ?? "")).length}
+              </div>
+              <div className="text-sm text-muted-foreground">Đã xác nhận</div>
+            </div>
+          </div>
+          ):(
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-blue-600">{state.filteredRegistrations.length}</div>
@@ -572,10 +586,11 @@ export default function ExportPage() {
               <div className="text-2xl font-bold text-green-600">{totalParticipants}</div>
               <div className="text-sm text-muted-foreground">Tổng người tham gia</div>
             </div>
+            {state.filters.reportType === 'detailed' && (
             <div>
               <div className="text-2xl font-bold text-purple-600">{formatCurrency(totalAmount)}</div>
               <div className="text-sm text-muted-foreground">Tổng số tiền</div>
-            </div>
+            </div>)}
             <div>
               <div className="text-2xl font-bold text-orange-600">
                 {state.filteredRegistrations.filter(r => ['confirm_paid', 'confirmed', 'checked_in'].includes(r.status)).length}
@@ -583,6 +598,8 @@ export default function ExportPage() {
               <div className="text-sm text-muted-foreground">Đã xác nhận</div>
             </div>
           </div>
+          )}
+          
         </CardContent>
       </Card>
 
@@ -801,25 +818,18 @@ export default function ExportPage() {
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="border border-gray-300 p-2 text-left">Mã đăng ký</th>
                     <th className="border border-gray-300 p-2 text-left">Họ tên</th>
                     <th className="border border-gray-300 p-2 text-left">Fb/Email</th>
                     <th className="border border-gray-300 p-2 text-left">Giới tính</th>
-                    <th className="border border-gray-300 p-2 text-left">Nhóm tuổi</th>
-                    <th className="border border-gray-300 p-2 text-left">Tỉnh thành</th>
                     <th className="border border-gray-300 p-2 text-left">Giáo phận</th>
                     <th className="border border-gray-300 p-2 text-left">Size áo</th>
                     <th className="border border-gray-300 p-2 text-left">Vai trò</th>
-                    <th className="border border-gray-300 p-2 text-left">Nhóm</th>
                     <th className="border border-gray-300 p-2 text-left">Trạng thái đăng ký</th>
                   </tr>
                 </thead>
                 <tbody>
                   {state.filteredRegistrants.map((registrant) => (
                     <tr key={registrant.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 p-2 font-mono text-sm">
-                        {registrant.registration?.invoice_code || 'N/A'}
-                      </td>
                       <td className="border border-gray-300 p-2">
                         {registrant.full_name}
                         {registrant.is_primary && <span className="ml-1 text-blue-600 text-xs">(Chính)</span>}
@@ -831,12 +841,6 @@ export default function ExportPage() {
                         {registrant.gender === 'male' ? 'Nam' : registrant.gender === 'female' ? 'Nữ' : 'Khác'}
                       </td>
                       <td className="border border-gray-300 p-2">
-                        {registrant.age_group}
-                      </td>
-                      <td className="border border-gray-300 p-2">
-                        {registrant.province || 'N/A'}
-                      </td>
-                      <td className="border border-gray-300 p-2">
                         {registrant.diocese || 'N/A'}
                       </td>
                       <td className="border border-gray-300 p-2">
@@ -844,9 +848,6 @@ export default function ExportPage() {
                       </td>
                       <td className="border border-gray-300 p-2">
                         {registrant.event_role?.name || (registrant.event_role_id ? 'Unknown Role' : 'Tham dự viên')}
-                      </td>
-                      <td className="border border-gray-300 p-2">
-                        {registrant.event_role?.team_name || 'Chưa phân nhóm'}
                       </td>
                       <td className="border border-gray-300 p-2">
                         <Badge variant={getStatusBadgeVariant(registrant.registration?.status as RegistrationStatus)}>
