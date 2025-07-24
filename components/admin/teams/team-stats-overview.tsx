@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Users, UserPlus, UserCheck, TrendingUp } from "lucide-react";
+import { BarChart3, UserPlus, UserCheck, TrendingUp } from "lucide-react";
 import { formatAgeGroup } from "@/lib/utils";
 
 interface TeamStats {

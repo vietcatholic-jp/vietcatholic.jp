@@ -96,19 +96,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin',
       label: 'Tổng quan',
       icon: BarChart3,
-      roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
+      roles: ['event_organizer','registration_manager', 'group_leader', 'regional_admin', 'super_admin']
     },
     {
       href: '/admin/registrations',
       label: 'Đăng ký',
       icon: Users,
-      roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
+      roles: ['event_organizer','registration_manager', 'group_leader', 'regional_admin', 'super_admin']
     },
     {
       href: '/admin/teams-assignment',
       label: 'Phân đội',
       icon: UserCheck,
-      roles: ['event_organizer', 'super_admin']
+      roles: ['event_organizer','registration_manager', 'super_admin']
     },
     {
       href: '/admin/tools',

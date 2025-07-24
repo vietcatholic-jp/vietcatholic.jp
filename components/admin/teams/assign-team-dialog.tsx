@@ -60,7 +60,6 @@ export function AssignTeamDialog({
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [notes, setNotes] = useState("");
-  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
 
   const { assignToTeam, isLoading } = useTeamAssignment();
 
@@ -73,7 +72,7 @@ export function AssignTeamDialog({
   }, [open]);
 
   const fetchTeams = async () => {
-    setIsLoadingTeams(true);
+    // ...existing code...
     try {
       const response = await fetch("/api/admin/teams");
       if (response.ok) {
@@ -83,7 +82,7 @@ export function AssignTeamDialog({
     } catch (error) {
       console.error("Error fetching teams:", error);
     } finally {
-      setIsLoadingTeams(false);
+      // ...existing code...
     }
   };
 

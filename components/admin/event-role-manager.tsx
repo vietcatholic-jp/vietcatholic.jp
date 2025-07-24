@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,16 +25,8 @@ export function EventRoleManager({ eventConfig }: EventRoleManagerProps) {
     description: "",
   });
   const supabase = createClient();
-
-  useEffect(() => {
-    if (eventConfig) {
-      fetchRoles();
-    }
-  }, [eventConfig]);
-
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     if (!eventConfig) return;
-    
     try {
       const { data, error } = await supabase
         .from('event_roles')
@@ -50,7 +42,14 @@ export function EventRoleManager({ eventConfig }: EventRoleManagerProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [eventConfig, supabase]);
+
+  useEffect(() => {
+    if (eventConfig) {
+      fetchRoles();
+    }
+  }, [eventConfig, fetchRoles]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
