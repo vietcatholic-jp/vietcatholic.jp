@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-07-24T14:06:28.851Z",
+  "testSuite": "Teams Assignment E2E Tests",
+  "environment": "test",
+  "baseUrl": "http://localhost:3000",
+  "testCategories": [
+    "Authentication & Authorization",
+    "UI/UX & Responsive Design",
+    "Tab Functionality (Overview, Unassigned, Team Management)",
+    "Modal Operations (Assign Team)",
+    "API Integration",
+    "Edge Cases & Error Handling"
+  ],
+  "reportLocations": {
+    "html": "tests/reports/html/index.html",
+    "json": "tests/reports/results.json",
+    "junit": "tests/reports/results.xml",
+    "screenshots": "tests/reports/screenshots/",
+    "videos": "tests/reports/videos/",
+    "traces": "tests/reports/traces/"
+  }
+}

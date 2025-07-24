@@ -17,13 +17,17 @@ async function globalSetup(config: FullConfig) {
     // Verify application is running
     console.log('📡 Checking if application is running...');
     await page.goto('http://localhost:3000', { timeout: 30000 });
-    
+
     // Verify login functionality
     console.log('🔐 Verifying login functionality...');
     const loginPage = new LoginPage(page);
-    
-    // Test super admin login
-    await loginPage.loginAsSuperAdmin();
+
+    // Test super admin login with full URL
+    await page.goto('http://localhost:3000/auth/sign-in');
+    await page.fill('input[type="email"]', 'dev.thubv@gmail.com');
+    await page.fill('input[type="password"]', '123456');
+    await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
     console.log('✅ Super admin login verified');
     
     // Verify admin access
@@ -36,8 +40,8 @@ async function globalSetup(config: FullConfig) {
     }
     console.log('✅ Admin access verified');
     
-    // Logout
-    await loginPage.logout();
+    // Simple logout by going to sign-in page
+    await page.goto('http://localhost:3000/auth/sign-in');
     console.log('✅ Logout verified');
     
     // Create test data directories
@@ -61,9 +65,13 @@ async function globalSetup(config: FullConfig) {
     
     // Verify API endpoints are accessible
     console.log('🔌 Verifying API endpoints...');
-    
+
     // Login again for API tests
-    await loginPage.loginAsSuperAdmin();
+    await page.goto('http://localhost:3000/auth/sign-in');
+    await page.fill('input[type="email"]', 'dev.thubv@gmail.com');
+    await page.fill('input[type="password"]', '123456');
+    await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
     
     const apiEndpoints = [
       '/api/admin/teams/stats',

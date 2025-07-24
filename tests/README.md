@@ -1,14 +1,14 @@
-# Teams Assignment Test Suite
+# Test Suite - Đại Hội Công Giáo Việt Nam 2025
 
-Bộ test toàn diện cho trang quản lý chia đội (/admin/teams-assignment) của hệ thống Đại Hội Công Giáo Việt Nam 2025.
+Bộ test toàn diện cho hệ thống quản lý sự kiện, bao gồm teams assignment và các chức năng khác.
 
 ## 📋 Tổng quan
 
-Test suite này được thiết kế để kiểm tra toàn diện chức năng quản lý chia đội, bao gồm:
+Test suite này được thiết kế để kiểm tra toàn diện các chức năng của hệ thống, bao gồm:
 
-- **Authentication & Authorization**: Kiểm tra quyền truy cập admin/event_organizer
+- **Authentication & Authorization**: Kiểm tra quyền truy cập và phân quyền
+- **Teams Assignment**: Quản lý chia đội và phân công
 - **UI/UX Testing**: Responsive design, navigation, loading states
-- **Functional Testing**: Tất cả các tab và chức năng chính
 - **API Integration**: Kiểm tra các endpoints và error handling
 - **Edge Cases**: Xử lý lỗi, empty states, concurrent operations
 
