@@ -22,9 +22,9 @@ export async function POST(
 
     // Check admin role
     const { data: profile } = await supabase
-      .from("user_profiles")
+      .from("users")
       .select("role, region")
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .single();
 
     if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
