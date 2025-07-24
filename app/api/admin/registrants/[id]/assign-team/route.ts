@@ -9,7 +9,7 @@ const AssignTeamSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -27,14 +27,14 @@ export async function POST(
       .eq("user_id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Parse and validate request body
     const body = await request.json();
     const { team_id, notes } = AssignTeamSchema.parse(body);
-    const registrantId = params.id;
+    const { id: registrantId } = await params;
 
     // Get registrant details with registration info
     const { data: registrant, error: registrantError } = await supabase
@@ -59,7 +59,7 @@ export async function POST(
 
     // Regional admin permission check
     if (profile.role === "regional_admin" && profile.region) {
-      if (registrant.registration.user.region !== profile.region) {
+      if (registrant.registration[0].user[0].region !== profile.region) {
         return NextResponse.json({ 
           error: "Cannot assign registrants from other regions" 
         }, { status: 403 });

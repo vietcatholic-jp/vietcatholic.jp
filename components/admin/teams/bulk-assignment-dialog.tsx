@@ -55,6 +55,36 @@ interface BulkAssignmentDialogProps {
   onSuccess: () => void;
 }
 
+
+interface BulkAssignResult {
+  success: string[];
+  failed: Array<{
+    registrant_id: string;
+    registrant_name: string;
+    reason: string;
+  }>;
+  summary: {
+    total: number;
+    successful: number;
+    failed: number;
+    team_name: string;
+  };
+}
+interface BulkAssignResult {
+  success: string[];
+  failed: Array<{
+    registrant_id: string;
+    registrant_name: string;
+    reason: string;
+  }>;
+  summary: {
+    total: number;
+    successful: number;
+    failed: number;
+    team_name: string;
+  };
+}
+
 export function BulkAssignmentDialog({
   open,
   onOpenChange,
@@ -64,10 +94,9 @@ export function BulkAssignmentDialog({
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [notes, setNotes] = useState("");
-  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<BulkAssignResult | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -80,7 +109,7 @@ export function BulkAssignmentDialog({
   }, [open]);
 
   const fetchTeams = async () => {
-    setIsLoadingTeams(true);
+    // ...existing code...
     try {
       const response = await fetch("/api/admin/teams");
       if (response.ok) {
@@ -90,7 +119,7 @@ export function BulkAssignmentDialog({
     } catch (error) {
       console.error("Error fetching teams:", error);
     } finally {
-      setIsLoadingTeams(false);
+      // ...existing code...
     }
   };
 
@@ -106,7 +135,7 @@ export function BulkAssignmentDialog({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          registrant_ids: selectedRegistrants.map(r => r.id),
+          registrant_ids: selectedRegistrants.map((r: Registrant) => r.id),
           team_id: selectedTeamId,
           notes,
         }),
@@ -136,7 +165,7 @@ export function BulkAssignmentDialog({
   };
 
   const handleClose = () => {
-    if (showResult && result?.success?.length > 0) {
+    if (showResult && result && result.success && result.success.length > 0) {
       onSuccess();
     }
     onOpenChange(false);
@@ -164,7 +193,7 @@ export function BulkAssignmentDialog({
               <Label>Danh sách người được chọn ({selectedRegistrants.length})</Label>
               <div className="max-h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50">
                 <div className="space-y-2">
-                  {selectedRegistrants.map((registrant) => (
+                  {selectedRegistrants.map((registrant: Registrant) => (
                     <div key={registrant.id} className="flex items-center gap-2 text-sm">
                       <User className="h-3 w-3" />
                       <span className="font-medium">{registrant.full_name}</span>
@@ -265,39 +294,41 @@ export function BulkAssignmentDialog({
             <div className="text-center">
               <div className="text-lg font-semibold">Kết quả phân đội</div>
               <div className="text-sm text-muted-foreground">
-                {result.summary.successful}/{result.summary.total} người được phân đội thành công
+                {result && result.summary ? `${result.summary.successful}/${result.summary.total}` : ''} người được phân đội thành công
               </div>
             </div>
 
             <Progress 
-              value={(result.summary.successful / result.summary.total) * 100} 
+              value={result && result.summary ? (result.summary.successful / result.summary.total) * 100 : 0} 
               className="w-full"
             />
 
-            {result.success.length > 0 && (
+            {result && result.success && result.success.length > 0 && (
               <div className="p-3 bg-green-50 rounded-lg">
                 <div className="flex items-center gap-2 text-green-800 font-medium">
                   <CheckCircle className="h-4 w-4" />
-                  Thành công ({result.success.length})
+                  Thành công ({result && result.success ? result.success.length : 0})
                 </div>
                 <div className="text-green-700 text-sm mt-1">
-                  Đã phân đội thành công vào {result.summary.team_name}
+                  Đã phân đội thành công vào {result && result.summary ? result.summary.team_name : ''}
                 </div>
               </div>
             )}
 
-            {result.failed.length > 0 && (
+            {result && result.failed && result.failed.length > 0 && (
               <div className="p-3 bg-red-50 rounded-lg">
                 <div className="flex items-center gap-2 text-red-800 font-medium">
                   <XCircle className="h-4 w-4" />
                   Thất bại ({result.failed.length})
                 </div>
                 <div className="space-y-1 mt-2">
-                  {result.failed.map((failure: any, index: number) => (
-                    <div key={index} className="text-red-700 text-sm">
-                      • {failure.registrant_name}: {failure.reason}
-                    </div>
-                  ))}
+                  {result && result.failed && result.failed.map((failure: BulkAssignResult['failed'][number], index: number) => {
+                    return (
+                      <div key={index} className="text-red-700 text-sm">
+                        • {failure.registrant_name}: {failure.reason}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

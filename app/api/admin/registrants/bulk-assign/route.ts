@@ -34,13 +34,13 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Parse and validate request body
     const body = await request.json();
-    const { registrant_ids, team_id, notes } = BulkAssignSchema.parse(body);
+    const { registrant_ids, team_id } = BulkAssignSchema.parse(body);
 
     // Validate team exists and get capacity info
     const { data: team, error: teamError } = await supabase
@@ -98,7 +98,11 @@ export async function POST(request: NextRequest) {
       try {
         // Regional admin permission check
         if (profile.role === "regional_admin" && profile.region) {
-          if (registrant.registration.user.region !== profile.region) {
+          // registration is an array, user is an array inside registration
+          const registrationArr = registrant.registration;
+          const userArr = registrationArr && registrationArr[0]?.user;
+          const userRegion = userArr && userArr[0]?.region;
+          if (userRegion !== profile.region) {
             result.failed.push({
               registrant_id: registrant.id,
               registrant_name: registrant.full_name,
@@ -137,7 +141,7 @@ export async function POST(request: NextRequest) {
           result.success.push(registrant.id);
         }
 
-      } catch (error) {
+      } catch {
         result.failed.push({
           registrant_id: registrant.id,
           registrant_name: registrant.full_name,

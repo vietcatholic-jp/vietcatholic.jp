@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -21,11 +21,11 @@ export async function GET(
       .eq("user_id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const teamId = params.id;
+    const { id: teamId } = await params;
 
     // Get team info with members
     const { data: team, error: teamError } = await supabase
@@ -95,7 +95,7 @@ export async function GET(
 
     // Calculate registration status distribution
     const statusCounts = members.reduce((acc: Record<string, number>, member) => {
-      const status = member.registration?.status || "unknown";
+      const status = member.registration?.[0]?.status || "unknown";
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
@@ -151,9 +151,9 @@ export async function GET(
         diocese: member.diocese,
         email: member.email,
         phone: member.phone,
-        invoice_code: member.registration?.invoice_code,
-        registration_status: member.registration?.status,
-        joined_date: member.registration?.created_at
+        invoice_code: member.registration?.[0]?.invoice_code,
+        registration_status: member.registration?.[0]?.status,
+        joined_date: member.registration?.[0]?.created_at
       }))
     });
 
