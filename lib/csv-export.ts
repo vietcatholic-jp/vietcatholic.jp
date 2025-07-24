@@ -1,4 +1,4 @@
-import { Registration, Registrant, RegistrationStatus } from '@/lib/types';
+import { Registration, Registrant } from '@/lib/types';
 import { format } from 'date-fns';
 
 // Helper function to format role name for export
