@@ -26,13 +26,15 @@ comment on column public.event_teams.leader_id is 'User ID of the team leader';
 comment on column public.event_teams.sub_leader_id is 'User ID of the team sub-leader';
 
 -- Create a new table for event-specific roles
+-- This is a **dynamic table** used to assign descriptive titles to **registrants** for a specific event (e.g., "Volunteer," "Speaker," "Media Team"). 
+-- This system is for labeling and does not grant application permissions.
 create table public.event_roles (
   id uuid default uuid_generate_v4() primary key,
   event_config_id uuid references public.event_configs(id) on delete cascade not null,
   name text not null,
   description text,
   team_name text, -- Optional team name this role belongs to
-  permissions jsonb, -- For future use, e.g. { "can_check_in": true }
+  permissions jsonb, -- 
   created_at timestamptz default timezone('utc'::text, now()) not null,
   updated_at timestamptz default timezone('utc'::text, now()) not null,
   unique(event_config_id, name)

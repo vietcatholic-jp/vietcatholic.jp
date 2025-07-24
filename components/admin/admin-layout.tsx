@@ -14,10 +14,12 @@ import {
   BarChart3,
   Wrench,
   Truck,
-  Database
+  Database,
+  Shield
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useHasPermission } from "@/lib/hooks/use-permissions";
 
 import { Registration, UserRole, RegionType } from "@/lib/types";
 
@@ -90,67 +92,141 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const userRole = data.userProfile?.role || 'participant';
 
-  // Navigation items based on role
-  const navItems = [
+  // Navigation items based on permissions instead of roles
+  const allNavItems = [
     {
       href: '/admin',
       label: 'Tổng quan',
       icon: BarChart3,
-      roles: ['event_organizer','registration_manager', 'group_leader', 'regional_admin', 'super_admin']
+      permissions: ['analytics.view']
     },
     {
       href: '/admin/registrations',
       label: 'Đăng ký',
       icon: Users,
-      roles: ['event_organizer','registration_manager', 'group_leader', 'regional_admin', 'super_admin']
+      permissions: ['registrations.view_all']
     },
     {
       href: '/admin/teams-assignment',
       label: 'Phân đội',
       icon: UserCheck,
-      roles: ['event_organizer','registration_manager', 'super_admin']
+      permissions: ['teams.assign_members']
     },
     {
       href: '/admin/tools',
       label: 'Công cụ',
       icon: Wrench,
-      roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
+      permissions: ['registrations.view_all'] // Basic tools access
     },
     {
       href: '/admin/transportation',
       label: 'Phương tiện',
       icon: Truck,
-      roles: ['regional_admin', 'super_admin']
+      permissions: ['teams.manage'] // Transportation management
     },
     {
       href: '/admin/users',
       label: 'Người dùng',
       icon: UserCheck,
-      roles: ['regional_admin', 'super_admin']
+      permissions: ['users.assign_roles']
     },
     {
       href: '/admin/events',
       label: 'Sự kiện',
       icon: Settings,
-      roles: ['super_admin']
+      permissions: ['events.*']
     },
     {
       href: '/admin/payments',
       label: 'Đóng phí tham dự',
       icon: CreditCard,
-      roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
+      permissions: ['payments.confirm', 'payments.view']
     },
     {
       href: '/admin/backup',
       label: 'Backup',
       icon: Database,
-      roles: ['super_admin']
+      permissions: ['*'] // Only super admin
     },
+    {
+      href: '/admin/roles',
+      label: 'Vai trò & Quyền',
+      icon: Shield,
+      permissions: ['roles.*']
+    }
   ];
 
-  const visibleNavItems = navItems.filter(item => 
-    item.roles.includes(userRole)
-  );
+  // Hook to get all permissions upfront
+  const { permissions } = usePermissions();
+
+  // Function to check if user has access to a nav item
+  const hasAccessToItem = (item: typeof allNavItems[0]) => {
+    return item.permissions.some(permission => {
+      // Check for wildcard permission
+      if (permissions['*']) return true;
+
+      // Check for exact permission match
+      if (permissions[permission]) return true;
+
+      // Check for wildcard pattern match
+      for (const [key, value] of Object.entries(permissions)) {
+        if (value && key.endsWith('.*')) {
+          const pattern = key.replace('.*', '');
+          if (permission.startsWith(pattern + '.')) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    });
+  };
+
+  // Filter nav items based on permissions
+  const accessibleNavItems = allNavItems.filter(hasAccessToItem);
+
+  // Component to render nav items
+  function NavigationItem({ item }: { item: typeof allNavItems[0] }) {
+    const Icon = item.icon;
+    const isActive = pathname === item.href || 
+      (item.href !== '/admin' && pathname.startsWith(item.href));
+    
+    return (
+      <Link
+        href={item.href}
+        className={cn(
+          "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+          isActive
+            ? "bg-background text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+        )}
+      >
+        <Icon className="h-4 w-4" />
+        {item.label}
+      </Link>
+    );
+  }
+
+  function MobileNavigationItem({ item }: { item: typeof allNavItems[0] }) {
+    const Icon = item.icon;
+    const isActive = pathname === item.href || 
+      (item.href !== '/admin' && pathname.startsWith(item.href));
+    
+    return (
+      <Link
+        href={item.href}
+        className={cn(
+          "flex items-center gap-1 px-2 py-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap",
+          isActive
+            ? "bg-background text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+        )}
+      >
+        <Icon className="h-3 w-3" />
+        {item.label}
+      </Link>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -172,53 +248,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="mb-6">
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-1 bg-muted p-1 rounded-lg">
-            {visibleNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href || 
-                (item.href !== '/admin' && pathname.startsWith(item.href));
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                    isActive
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
+            {accessibleNavItems.map((item) => (
+              <NavigationItem key={item.href} item={item} />
+            ))}
           </div>
 
           {/* Mobile Navigation */}
           <div className="md:hidden">
             <div className="flex overflow-x-auto space-x-1 bg-muted p-1 rounded-lg">
-              {visibleNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href || 
-                  (item.href !== '/admin' && pathname.startsWith(item.href));
-                
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-1 px-2 py-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap",
-                      isActive
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                    )}
-                  >
-                    <Icon className="h-3 w-3" />
-                    {item.label}
-                  </Link>
-                );
-              })}
+              {accessibleNavItems.map((item) => (
+                <MobileNavigationItem key={item.href} item={item} />
+              ))}
             </div>
           </div>
         </div>

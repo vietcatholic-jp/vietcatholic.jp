@@ -300,3 +300,119 @@ export async function getAdminRegistrations(region?: RegionType) {
 
   return data;
 }
+
+// New permission-based auth functions
+export async function requirePermission(permissionKey: string) {
+  const user = await getServerUser();
+  
+  if (!user) {
+    throw new AuthError('Authentication required');
+  }
+
+  const supabase = await createServerClient();
+  
+  // Use the database function to check permission
+  const { data, error } = await supabase
+    .rpc('user_has_permission', {
+      user_uuid: user.id,
+      permission_key: permissionKey
+    });
+
+  if (error) {
+    console.error('Error checking permission:', error);
+    throw new AuthError('Permission check failed');
+  }
+
+  if (!data) {
+    throw new AuthError(`Insufficient permissions: ${permissionKey}`);
+  }
+
+  return user;
+}
+
+export async function hasPermission(permissionKey: string, userId?: string): Promise<boolean> {
+  try {
+    const user = userId ? { id: userId } : await getServerUser();
+    
+    if (!user) {
+      return false;
+    }
+
+    const supabase = await createServerClient();
+    
+    const { data, error } = await supabase
+      .rpc('user_has_permission', {
+        user_uuid: user.id,
+        permission_key: permissionKey
+      });
+
+    if (error) {
+      console.error('Error checking permission:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('Error in hasPermission:', error);
+    return false;
+  }
+}
+
+export async function getUserPermissions(userId?: string) {
+  try {
+    const user = userId ? { id: userId } : await getServerUser();
+    
+    if (!user) {
+      return {};
+    }
+
+    const supabase = await createServerClient();
+    
+    const { data, error } = await supabase
+      .rpc('get_user_permissions', {
+        user_uuid: user.id
+      });
+
+    if (error) {
+      console.error('Error getting user permissions:', error);
+      return {};
+    }
+
+    return data || {};
+  } catch (error) {
+    console.error('Error in getUserPermissions:', error);
+    return {};
+  }
+}
+
+export async function requireAnyPermission(permissionKeys: string[]) {
+  const user = await getServerUser();
+  
+  if (!user) {
+    throw new AuthError('Authentication required');
+  }
+
+  for (const permission of permissionKeys) {
+    if (await hasPermission(permission, user.id)) {
+      return user;
+    }
+  }
+
+  throw new AuthError(`Insufficient permissions: requires one of [${permissionKeys.join(', ')}]`);
+}
+
+export async function requireAllPermissions(permissionKeys: string[]) {
+  const user = await getServerUser();
+  
+  if (!user) {
+    throw new AuthError('Authentication required');
+  }
+
+  for (const permission of permissionKeys) {
+    if (!(await hasPermission(permission, user.id))) {
+      throw new AuthError(`Insufficient permissions: missing ${permission}`);
+    }
+  }
+
+  return user;
+}

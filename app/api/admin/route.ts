@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { getRegionFromProvince } from "@/lib/types";
+import { requirePermission } from "@/lib/auth";
 
 interface DatabaseRegistrant {
   province?: string;
@@ -18,24 +19,17 @@ interface DatabaseRegistration {
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    // Check if user has permission to view admin dashboard
+    const user = await requirePermission('admin.dashboard.view');
     
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const supabase = await createClient();
 
-    // Check if user has admin permissions
+    // Get user profile for region-based filtering (maintaining backward compatibility)
     const { data: profile } = await supabase
       .from("users")
       .select("role, region")
       .eq("id", user.id)
       .single();
-
-    if (!profile || !["event_organizer", "registration_manager", "group_leader", "regional_admin", "super_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
 
     // Get statistics
     const registrationQuery = supabase.from("registrations").select("*", { count: 'exact', head: true });
@@ -177,24 +171,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Check if user has permission to assign roles to users
+    await requirePermission('users.assign_roles');
     
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is super admin
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile || profile.role !== "super_admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const supabase = await createClient();
 
     const { action, userId, newRole, newRegion } = await request.json();
 
