@@ -113,7 +113,7 @@ export default async function RegisterPage() {
                     <h4 className="font-medium mb-2">Lưu ý</h4>
                     <ul className="text-sm text-muted-foreground space-y-1">
                       <li>• Chi phí di chuyển tự túc</li>
-                      <li>• Cần upload hóa đơn thanh toán sau khi chuyển khoản</li>
+                      <li>• Cần upload hóa đơn đóng phí tham dự sau khi chuyển khoản</li>
                     </ul>
                   </div>
                 </CardContent>

@@ -45,7 +45,7 @@ export function AdminRegistrations() {
           <span className="font-medium">Trang phân tích chi tiết</span>
         </div>
         <p className="text-blue-700 text-sm mt-1">
-          Sử dụng các bộ lọc để phân tích dữ liệu theo tỉnh thành, giáo phận, size áo và trạng thái thanh toán
+          Sử dụng các bộ lọc để phân tích dữ liệu theo tỉnh thành, giáo phận, size áo và trạng thái đóng phí tham dự
         </p>
       </div>
       

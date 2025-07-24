@@ -328,7 +328,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         throw new Error(result.error || 'Registration failed');
       }
 
-      toast.success("Đăng ký thành công! Bạn sẽ được chuyển đến trang thanh toán.");
+      toast.success("Đăng ký thành công! Bạn sẽ được chuyển đến trang đóng phí tham dự.");
       
       // Redirect to payment page
       window.location.href = `/payment/${result.invoiceCode}`;

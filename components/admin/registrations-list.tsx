@@ -49,13 +49,13 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
       case 'confirmed':
         return <Badge className="bg-green-500">Đã xác nhận</Badge>;
       case 'confirm_paid':
-        return <Badge className="bg-blue-500">Đã xác nhận thanh toán</Badge>;
+        return <Badge className="bg-blue-500">Đã xác nhận đóng phí tham dự</Badge>;
       case 'report_paid':
         return <Badge className="bg-purple-500">Đã gửi biên lai</Badge>;
       case 'pending':
-        return <Badge variant="secondary">Chờ thanh toán</Badge>;
+        return <Badge variant="secondary">Chờ đóng phí tham dự</Badge>;
       case 'payment_rejected':
-        return <Badge variant="destructive">Thanh toán bị từ chối</Badge>;
+        return <Badge variant="destructive">Đóng phí tham dự bị từ chối</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Đã hủy</Badge>;
       case 'checked_in':
@@ -163,8 +163,8 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
               className="px-3 py-2 border border-input bg-background rounded-md text-sm"
             >
               <option value="all">Tất cả trạng thái</option>
-              <option value="pending">Chờ thanh toán</option>
-              <option value="paid">Đã thanh toán</option>
+              <option value="pending">Chờ đóng phí tham dự</option>
+              <option value="paid">Đã đóng phí tham dự</option>
               <option value="confirmed">Đã xác nhận</option>
               <option value="cancelled">Đã hủy</option>
             </select>
