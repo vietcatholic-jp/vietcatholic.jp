@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { Registration } from "@/lib/types";
+import { formatRoleForExport } from "@/lib/role-utils";
 
 interface ExportButtonProps {
   registrations: Registration[];
@@ -18,9 +19,10 @@ export function ExportButton({ registrations }: ExportButtonProps) {
     // Create CSV headers
     const headers = [
       "Mã đăng ký",
-      "Trạng thái", 
+      "Trạng thái",
       "Người đăng ký",
       "Email",
+      "Vai trò người đăng ký",
       "Số người tham gia",
       "Tổng tiền (JPY)",
       "Ngày đăng ký",
@@ -28,16 +30,23 @@ export function ExportButton({ registrations }: ExportButtonProps) {
     ];
 
     // Create CSV data
-    const csvData = registrations.map(reg => [
-      reg.invoice_code,
-      reg.status,
-      reg.user?.full_name || '',
-      reg.user?.email || '',
-      reg.participant_count,
-      reg.total_amount,
-      new Date(reg.created_at).toLocaleDateString('vi-VN'),
-      reg.notes || ''
-    ]);
+    const csvData = registrations.map(reg => {
+      // Get primary registrant role
+      const primaryRegistrant = reg.registrants?.find(r => r.is_primary);
+      const primaryRole = primaryRegistrant?.event_roles || null;
+
+      return [
+        reg.invoice_code,
+        reg.status,
+        reg.user?.full_name || '',
+        reg.user?.email || '',
+        formatRoleForExport(primaryRole),
+        reg.participant_count,
+        reg.total_amount,
+        new Date(reg.created_at).toLocaleDateString('vi-VN'),
+        reg.notes || ''
+      ];
+    });
 
     // Combine headers and data
     const csvContent = [headers, ...csvData]

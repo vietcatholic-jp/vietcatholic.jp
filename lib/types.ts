@@ -110,6 +110,17 @@ export interface Registrant {
   event_role_id?: string;
   // Backward compatibility: some legacy components may still expect this
   event_role?: string;
+  // Event role object from database join
+  event_roles?: {
+    id: string;
+    event_config_id: string;
+    name: string;
+    description: string | null;
+    permissions: any | null;
+    team_name: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
   is_primary?: boolean;  // Marks the main registrant
   go_with?: boolean; // Indicates if this registrant is going with the primary registrant
   notes?: string;
@@ -588,69 +599,5 @@ export const JAPANESE_PROVINCES: { value: string; label: string }[] = [
   { value: 'Okinawa', label: 'Okinawa (沖縄県)' },
 ];
 
-// Backwards compatibility: Static role definitions for legacy components
-// NOTE: New components should use the dynamic event_roles from the database
-export const EVENT_PARTICIPATION_ROLES = [
-  { value: 'participant', label: 'Tham dự viên' },
-  
-  // Media team roles
-  { value: 'volunteer_media_leader', label: 'Trưởng ban Truyền thông' },
-  { value: 'volunteer_media_sub_leader', label: 'Phó ban Truyền thông' },
-  { value: 'volunteer_media_member', label: 'Thành viên ban Truyền thông' },
-  
-  // Activity team roles
-  { value: 'volunteer_activity_leader', label: 'Trưởng ban Sinh hoạt' },
-  { value: 'volunteer_activity_sub_leader', label: 'Phó ban Sinh hoạt' },
-  { value: 'volunteer_activity_member', label: 'Thành viên ban Sinh hoạt' },
-  
-  // Discipline team roles
-  { value: 'volunteer_discipline_leader', label: 'Trưởng ban Kỷ luật' },
-  { value: 'volunteer_discipline_sub_leader', label: 'Phó ban Kỷ luật' },
-  { value: 'volunteer_discipline_member', label: 'Thành viên ban Kỷ luật' },
-  
-  // Logistics team roles
-  { value: 'volunteer_logistics_leader', label: 'Trưởng ban Hậu cần' },
-  { value: 'volunteer_logistics_sub_leader', label: 'Phó ban Hậu cần' },
-  { value: 'volunteer_logistics_member', label: 'Thành viên ban Hậu cần' },
-  
-  // Liturgy team roles
-  { value: 'volunteer_liturgy_leader', label: 'Trưởng ban Phụng vụ' },
-  { value: 'volunteer_liturgy_sub_leader', label: 'Phó ban Phụng vụ' },
-  { value: 'volunteer_liturgy_member', label: 'Thành viên ban Phụng vụ' },
-  
-  // Security team roles
-  { value: 'volunteer_security_leader', label: 'Trưởng ban An ninh' },
-  { value: 'volunteer_security_sub_leader', label: 'Phó ban An ninh' },
-  { value: 'volunteer_security_member', label: 'Thành viên ban An ninh' },
-  
-  // Registration team roles
-  { value: 'volunteer_registration_leader', label: 'Trưởng ban Thư ký' },
-  { value: 'volunteer_registration_sub_leader', label: 'Phó ban Thư ký' },
-  { value: 'volunteer_registration_member', label: 'Thành viên ban Thư ký' },
-  
-  // Catering team roles
-  { value: 'volunteer_catering_leader', label: 'Trưởng ban Ẩm thực' },
-  { value: 'volunteer_catering_sub_leader', label: 'Phó ban Ẩm thực' },
-  { value: 'volunteer_catering_member', label: 'Thành viên ban Ẩm thực' },
-  
-  // Health team roles
-  { value: 'volunteer_health_leader', label: 'Trưởng ban Y tế' },
-  { value: 'volunteer_health_sub_leader', label: 'Phó ban Y tế' },
-  { value: 'volunteer_health_member', label: 'Thành viên ban Y tế' },
-  
-  // Audio Light team roles
-  { value: 'volunteer_audio_light_leader', label: 'Trưởng ban Âm thanh Ánh sáng' },
-  { value: 'volunteer_audio_light_sub_leader', label: 'Phó ban Âm thanh Ánh sáng' },
-  { value: 'volunteer_audio_light_member', label: 'Thành viên ban Âm thanh Ánh sáng' },
-  
-  // Group leadership roles
-  { value: 'volunteer_group_leader', label: 'Trưởng nhóm các đội' },
-  { value: 'volunteer_group_sub_leader', label: 'Phó trưởng nhóm các đội' },
-  
-  // Organizer roles
-  { value: 'organizer_core', label: 'Ban Tổ chức chính' },
-  
-  // Special roles
-  { value: 'speaker', label: 'Diễn giả' },
-  { value: 'performer', label: 'Nghệ sĩ biểu diễn' },
-] as const;
+// Legacy role definitions removed - now using dynamic event_roles from database
+// All role information is fetched from the event_roles table

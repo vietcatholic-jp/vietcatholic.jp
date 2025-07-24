@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { formatRoleForExport } from "@/lib/role-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,6 +44,11 @@ export async function POST(request: NextRequest) {
           diocese,
           email,
           phone,
+          event_roles:event_role_id(
+            id,
+            name,
+            description
+          ),
           registration:registrations!registrants_registration_id_fkey(
             invoice_code,
             status
@@ -107,6 +113,7 @@ export async function POST(request: NextRequest) {
             diocese: registrant.diocese || "",
             email: registrant.email || "",
             phone: registrant.phone || "",
+            role: formatRoleForExport(registrant.event_roles),
             invoice_code: registrant.registration && registrant.registration[0]?.invoice_code ? registrant.registration[0].invoice_code : "",
             registration_status: registrant.registration && registrant.registration[0]?.status ? registrant.registration[0].status : ""
           });
@@ -124,6 +131,7 @@ export async function POST(request: NextRequest) {
           diocese: "",
           email: "",
           phone: "",
+          role: "",
           invoice_code: "",
           registration_status: ""
         });
@@ -134,7 +142,7 @@ export async function POST(request: NextRequest) {
       // Generate CSV
       const headers = [
         "Tên đội",
-        "Mô tả đội", 
+        "Mô tả đội",
         "Sức chứa",
         "Tên thành viên",
         "Giới tính",
@@ -143,6 +151,7 @@ export async function POST(request: NextRequest) {
         "Giáo phận",
         "Email",
         "Số điện thoại",
+        "Vai trò",
         "Mã đăng ký",
         "Trạng thái đăng ký"
       ];
@@ -160,6 +169,7 @@ export async function POST(request: NextRequest) {
           `"${row.diocese}"`,
           `"${row.email}"`,
           `"${row.phone}"`,
+          `"${row.role}"`,
           `"${row.invoice_code}"`,
           `"${row.registration_status}"`
         ].join(","))

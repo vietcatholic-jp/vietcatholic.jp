@@ -23,6 +23,7 @@ import {
 import { UserPlus, User } from "lucide-react";
 import { useTeamAssignment } from "@/hooks/use-team-assignment";
 import { formatAgeGroup, formatGender } from "@/lib/utils";
+import { RoleBadgeCompact } from "@/components/ui/role-badge";
 
 interface Team {
   id: string;
@@ -39,6 +40,16 @@ interface Registrant {
   age_group: string;
   province: string;
   diocese?: string;
+  event_roles?: {
+    id: string;
+    event_config_id: string;
+    name: string;
+    description?: string | null;
+    permissions?: any | null;
+    team_name?: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
   registration: {
     invoice_code: string;
   };
@@ -135,6 +146,10 @@ export function AssignTeamDialog({
                 <div>
                   <span className="text-muted-foreground">Độ tuổi:</span>
                   <span className="font-medium">{formatAgeGroup(registrant.age_group)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Vai trò:</span>
+                  <RoleBadgeCompact role={registrant.event_roles} />
                 </div>
                 <div>
                   <span className="text-muted-foreground">Tỉnh/Thành phố:</span>

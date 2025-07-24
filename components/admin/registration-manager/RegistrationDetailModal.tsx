@@ -13,6 +13,7 @@ interface RegistrantWithRole extends Omit<Registrant, 'event_role'> {
     description?: string;
   };
 }
+
 import { 
   User, 
   Users, 
@@ -22,6 +23,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import Image from "next/image";
+import { RoleBadgeCompact } from "@/components/ui/role-badge";
 
 interface RegistrationDetailModalProps {
   registration: Registration;
@@ -49,7 +51,6 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -168,14 +169,7 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
                           <Badge variant="default" className="text-xs">Người chính</Badge>
                         )}
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          {registrant.event_role?.name || (registrant.event_role_id ? 'Không xác định' : 'Tham dự viên')}
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs">
-                          {registrant.event_role?.team_name || 'Chưa có nhóm'}
-                        </Badge>
-                      </div>
+                      <RoleBadgeCompact role={registrant.event_roles} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                       <div>
