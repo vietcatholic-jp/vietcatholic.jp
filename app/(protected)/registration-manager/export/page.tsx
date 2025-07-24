@@ -14,13 +14,16 @@ import {
   BarChart3,
   Users,
   MapPin,
-  Church
+  Church,
+  Download
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {Registrant,Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES } from "@/lib/types";
 import { format } from "date-fns";
 import { formatRoleForDisplay } from "@/lib/role-utils";
+import { exportRegistrantsWithRolesCSV, RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
+
 
 interface ExportFilters {
   status: string;
@@ -31,21 +34,25 @@ interface ExportFilters {
   includePaymentInfo: boolean;
   includeRegistrants: boolean;
   reportType: string;
+  teamName: string;
 }
 
 interface ExportPageState {
   registrations: Registration[];
   filteredRegistrations: Registration[];
+  registrants: RegistrantWithRoleAndRegistration[];
+  filteredRegistrants: RegistrantWithRoleAndRegistration[];
   loading: boolean;
   filters: ExportFilters;
+  availableTeams: string[];
 }
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tất cả trạng thái' },
-  { value: 'pending', label: 'Chờ thanh toán' },
-  { value: 'report_paid', label: 'Đã báo thanh toán' },
-  { value: 'confirm_paid', label: 'Đã xác nhận thanh toán' },
-  { value: 'payment_rejected', label: 'Thanh toán bị từ chối' },
+  { value: 'pending', label: 'Chờ đóng phí tham dự' },
+  { value: 'report_paid', label: 'Đã báo đóng phí tham dự' },
+  { value: 'confirm_paid', label: 'Đã xác nhận đóng phí tham dự' },
+  { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối' },
   { value: 'confirmed', label: 'Đã xác nhận' },
   { value: 'checked_in', label: 'Đã check-in' },
   { value: 'cancelled', label: 'Đã hủy' }
@@ -53,6 +60,7 @@ const STATUS_OPTIONS = [
 
 const REPORT_TYPES = [
   { value: 'detailed', label: 'Báo cáo chi tiết', icon: Users },
+  { value: 'registrants', label: 'Danh sách người tham gia theo ban', icon: Users },
   { value: 'shirt-size', label: 'Thống kê size áo', icon: BarChart3 },
   { value: 'province', label: 'Thống kê tỉnh thành', icon: MapPin },
   { value: 'diocese', label: 'Thống kê giáo phận', icon: Church }
@@ -60,10 +68,10 @@ const REPORT_TYPES = [
 
 function getStatusLabel(status: RegistrationStatus): string {
   const statusMap: Record<RegistrationStatus, string> = {
-    'pending': 'Chờ thanh toán',
-    'report_paid': 'Đã báo thanh toán',
-    'confirm_paid': 'Đã xác nhận thanh toán',
-    'payment_rejected': 'Thanh toán bị từ chối',
+    'pending': 'Chờ đóng phí tham dự',
+    'report_paid': 'Đã báo đóng phí tham dự',
+    'confirm_paid': 'Đã xác nhận đóng phí tham dự',
+    'payment_rejected': 'Đóng phí tham dự bị từ chối',
     'donation': 'Đã chuyển thành quyên góp',
     'cancel_pending': 'Chờ xử lý hủy',
     'cancel_accepted': 'Đã chấp nhận hủy',
@@ -172,7 +180,10 @@ export default function ExportPage() {
   const [state, setState] = useState<ExportPageState>({
     registrations: [],
     filteredRegistrations: [],
+    registrants: [],
+    filteredRegistrants: [],
     loading: true,
+    availableTeams: [],
     filters: {
       status: 'all',
       dateFrom: '',
@@ -181,7 +192,8 @@ export default function ExportPage() {
       includePersonalInfo: true,
       includePaymentInfo: true,
       includeRegistrants: true,
-      reportType: 'detailed'
+      reportType: 'detailed',
+      teamName: 'all'
     }
   });
 
@@ -205,18 +217,40 @@ export default function ExportPage() {
     }
   }, []);
 
-  // Fetch registration data
+  // Fetch registration and registrants data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/admin/export?type=registrations');
-        if (!response.ok) throw new Error('Failed to fetch data');
+        // Fetch both registrations and registrants data
+        const [registrationsResponse, registrantsResponse] = await Promise.all([
+          fetch('/api/admin/export?type=registrations'),
+          fetch('/api/admin/export?type=registrants')
+        ]);
         
-        const data = await response.json();
+        if (!registrationsResponse.ok || !registrantsResponse.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        
+        const [registrationsData, registrantsData] = await Promise.all([
+          registrationsResponse.json(),
+          registrantsResponse.json()
+        ]);
+
+        // Extract unique team names for filtering
+        const teams = new Set<string>();
+        registrantsData.registrants?.forEach((r: RegistrantWithRoleAndRegistration) => {
+          if (r.event_role?.team_name) {
+            teams.add(r.event_role.team_name);
+          }
+        });
+        
         setState(prev => ({
           ...prev,
-          registrations: data.registrations,
-          filteredRegistrations: data.registrations,
+          registrations: registrationsData.registrations || [],
+          filteredRegistrations: registrationsData.registrations || [],
+          registrants: registrantsData.registrants || [],
+          filteredRegistrants: registrantsData.registrants || [],
+          availableTeams: Array.from(teams).sort(),
           loading: false
         }));
       } catch (error) {
@@ -231,28 +265,29 @@ export default function ExportPage() {
 
   // Apply filters
   useEffect(() => {
-    let filtered = [...state.registrations];
+    // Filter registrations
+    let filteredRegs = [...state.registrations];
 
     // Status filter
     if (state.filters.status !== 'all') {
-      filtered = filtered.filter(reg => reg.status === state.filters.status);
+      filteredRegs = filteredRegs.filter(reg => reg.status === state.filters.status);
     }
 
     // Date range filter
     if (state.filters.dateFrom) {
       const fromDate = new Date(state.filters.dateFrom);
-      filtered = filtered.filter(reg => new Date(reg.created_at) >= fromDate);
+      filteredRegs = filteredRegs.filter(reg => new Date(reg.created_at) >= fromDate);
     }
     if (state.filters.dateTo) {
       const toDate = new Date(state.filters.dateTo);
       toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(reg => new Date(reg.created_at) <= toDate);
+      filteredRegs = filteredRegs.filter(reg => new Date(reg.created_at) <= toDate);
     }
 
     // Search filter
     if (state.filters.search) {
       const searchTerm = state.filters.search.toLowerCase();
-      filtered = filtered.filter(reg => 
+      filteredRegs = filteredRegs.filter(reg => 
         reg.invoice_code.toLowerCase().includes(searchTerm) ||
         reg.user?.full_name?.toLowerCase().includes(searchTerm) ||
         reg.user?.email?.toLowerCase().includes(searchTerm) ||
@@ -260,8 +295,54 @@ export default function ExportPage() {
       );
     }
 
-    setState(prev => ({ ...prev, filteredRegistrations: filtered }));
-  }, [state.filters, state.registrations]);
+    // Filter registrants
+    let filteredRegsts = [...state.registrants];
+
+    // Status filter for registrants (based on registration status)
+    if (state.filters.status !== 'all') {
+      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.status === state.filters.status);
+    }
+
+    // Date range filter for registrants
+    if (state.filters.dateFrom) {
+      const fromDate = new Date(state.filters.dateFrom);
+      filteredRegsts = filteredRegsts.filter(reg => 
+        reg.registration?.created_at && new Date(reg.registration.created_at) >= fromDate
+      );
+    }
+    if (state.filters.dateTo) {
+      const toDate = new Date(state.filters.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      filteredRegsts = filteredRegsts.filter(reg => 
+        reg.registration?.created_at && new Date(reg.registration.created_at) <= toDate
+      );
+    }
+
+    // Search filter for registrants
+    if (state.filters.search) {
+      const searchTerm = state.filters.search.toLowerCase();
+      filteredRegsts = filteredRegsts.filter(reg => 
+        reg.registration?.invoice_code?.toLowerCase().includes(searchTerm) ||
+        reg.registration?.user?.full_name?.toLowerCase().includes(searchTerm) ||
+        reg.registration?.user?.email?.toLowerCase().includes(searchTerm) ||
+        reg.full_name.toLowerCase().includes(searchTerm) ||
+        reg.email?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Team filter for registrants
+    if (state.filters.teamName && state.filters.teamName !== 'all') {
+      filteredRegsts = filteredRegsts.filter(reg => 
+        reg.event_role?.team_name === state.filters.teamName
+      );
+    }
+
+    setState(prev => ({ 
+      ...prev, 
+      filteredRegistrations: filteredRegs,
+      filteredRegistrants: filteredRegsts
+    }));
+  }, [state.filters, state.registrations, state.registrants]);
 
   const updateFilter = <K extends keyof ExportFilters>(key: K, value: ExportFilters[K]) => {
     setState(prev => ({
@@ -275,6 +356,15 @@ export default function ExportPage() {
   };
 
 
+  const handleExportCSV = () => {
+    if (state.filters.reportType === 'registrants') {
+      exportRegistrantsWithRolesCSV(state.filteredRegistrants);
+      toast.success('Đã xuất dữ liệu registrants thành công!');
+    } else {
+      toast.info('Chức năng xuất CSV chỉ có sẵn cho báo cáo registrants');
+    }
+  };
+
   const clearFilters = () => {
     setState(prev => ({
       ...prev,
@@ -286,7 +376,8 @@ export default function ExportPage() {
         includePersonalInfo: true,
         includePaymentInfo: true,
         includeRegistrants: true,
-        reportType: 'detailed'
+        reportType: 'detailed',
+        teamName: 'all'
       }
     }));
   };
@@ -314,6 +405,12 @@ export default function ExportPage() {
           </Link>
         </div>
         <div className="flex gap-2">
+          {state.filters.reportType === 'registrants' && (
+            <Button onClick={handleExportCSV} className="no-print" variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Xuất CSV
+            </Button>
+          )}
           <Button onClick={handlePrint} className="no-print">
             <Printer className="h-4 w-4 mr-2" />
             In / Xuất PDF
@@ -400,6 +497,26 @@ export default function ExportPage() {
             </div>
           </div>
 
+          {/* Team filter for registrants report */}
+          {state.filters.reportType === 'registrants' && (
+            <div>
+              <Label htmlFor="teamName">Lọc theo nhóm</Label>
+              <Select value={state.filters.teamName} onValueChange={(value) => updateFilter('teamName', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả nhóm" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả nhóm</SelectItem>
+                  {state.availableTeams.map(team => (
+                    <SelectItem key={team} value={team}>
+                      {team}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {state.filters.reportType === 'detailed' && (
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center space-x-2">
@@ -416,7 +533,7 @@ export default function ExportPage() {
                   checked={state.filters.includePaymentInfo}
                   onCheckedChange={(checked) => updateFilter('includePaymentInfo', checked as boolean)}
                 />
-                <Label htmlFor="includePaymentInfo">Thông tin thanh toán</Label>
+                <Label htmlFor="includePaymentInfo">Thông tin đóng phí tham dự</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -438,7 +555,7 @@ export default function ExportPage() {
       </Card>
 
       {/* Summary Stats */}
-      <Card className="print-include print-header">
+      <Card className={`print-include print-header`}>
         <CardHeader>
           <CardTitle className="text-center text-3xl font-bold">
             BÁO CÁO ĐĂNG KÝ THAM GIA ĐẠI HỘI NĂM THÁNH 2025 TẠI NHẬT BẢN
@@ -448,6 +565,20 @@ export default function ExportPage() {
           </p>
         </CardHeader>
         <CardContent>
+          {state.filters.reportType === 'registrants' ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-green-600">{state.filteredRegistrants.length}</div>
+              <div className="text-sm text-muted-foreground">Tổng người tham gia</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-orange-600">
+                {state.filteredRegistrants.filter(r => ['confirm_paid', 'confirmed', 'checked_in'].includes(r.registration?.status ?? "")).length}
+              </div>
+              <div className="text-sm text-muted-foreground">Đã xác nhận</div>
+            </div>
+          </div>
+          ):(
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-blue-600">{state.filteredRegistrations.length}</div>
@@ -457,10 +588,11 @@ export default function ExportPage() {
               <div className="text-2xl font-bold text-green-600">{totalParticipants}</div>
               <div className="text-sm text-muted-foreground">Tổng người tham gia</div>
             </div>
+            {state.filters.reportType === 'detailed' && (
             <div>
               <div className="text-2xl font-bold text-purple-600">{formatCurrency(totalAmount)}</div>
               <div className="text-sm text-muted-foreground">Tổng số tiền</div>
-            </div>
+            </div>)}
             <div>
               <div className="text-2xl font-bold text-orange-600">
                 {state.filteredRegistrations.filter(r => ['confirm_paid', 'confirmed', 'checked_in'].includes(r.status)).length}
@@ -468,6 +600,8 @@ export default function ExportPage() {
               <div className="text-sm text-muted-foreground">Đã xác nhận</div>
             </div>
           </div>
+          )}
+          
         </CardContent>
       </Card>
 
@@ -674,6 +808,89 @@ export default function ExportPage() {
                 <li><strong className="text-blue-600">Đi cùng:</strong> Người được đăng ký có nhu cầu đi xe bus chung</li>
                 <li><strong>Tổng số:</strong> Tổng cộng tất cả người tham gia từ giáo phận này</li>
               </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Registrants Report */}
+      {state.filters.reportType === 'registrants' && (
+        <Card className="print-include">
+          <CardHeader>
+            <CardTitle>
+              Danh sách người tham gia ({state.filteredRegistrants.length} người)
+              {state.filters.teamName && ` - Nhóm: ${state.filters.teamName}`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-300 p-2 text-left">Họ tên</th>
+                    <th className="border border-gray-300 p-2 text-left">Fb/Email</th>
+                    <th className="border border-gray-300 p-2 text-left">Giới tính</th>
+                    <th className="border border-gray-300 p-2 text-left">Giáo phận</th>
+                    <th className="border border-gray-300 p-2 text-left">Size áo</th>
+                    <th className="border border-gray-300 p-2 text-left">Vai trò</th>
+                    <th className="border border-gray-300 p-2 text-left">Trạng thái đăng ký</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {state.filteredRegistrants.map((registrant) => (
+                    <tr key={registrant.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 p-2">
+                        {registrant.full_name}
+                        {registrant.is_primary && <span className="ml-1 text-blue-600 text-xs">(Chính)</span>}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-sm">
+                        {registrant.facebook_link || registrant.email || 'N/A'}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {registrant.gender === 'male' ? 'Nam' : registrant.gender === 'female' ? 'Nữ' : 'Khác'}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {registrant.diocese || 'N/A'}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {SHIRT_SIZES.find(s => s.value === registrant.shirt_size)?.label || registrant.shirt_size}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {registrant.event_role?.name || (registrant.event_role_id ? 'Unknown Role' : 'Tham dự viên')}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        <Badge variant={getStatusBadgeVariant(registrant.registration?.status as RegistrationStatus)}>
+                          {getStatusLabel(registrant.registration?.status as RegistrationStatus)}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {state.filteredRegistrants.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                Không có dữ liệu phù hợp với bộ lọc
+              </div>
+            )}
+
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium mb-2">Thống kê:</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Tổng số người:</span> {state.filteredRegistrants.length}
+                </div>
+                <div>
+                  <span className="font-medium">Người có vai trò:</span> {state.filteredRegistrants.filter(r => r.event_role?.name).length}
+                </div>
+                <div>
+                  <span className="font-medium">Participants:</span> {state.filteredRegistrants.filter(r => !r.event_role?.name && !r.event_role_id).length}
+                </div>
+                <div>
+                  <span className="font-medium">Người chính:</span> {state.filteredRegistrants.filter(r => r.is_primary).length}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

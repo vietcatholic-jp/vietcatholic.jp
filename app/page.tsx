@@ -136,14 +136,14 @@ export default async function Home() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="bg-amber-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">3</div>
-                  <CardTitle className="text-amber-800">Thanh Toán</CardTitle>
+                  <CardTitle className="text-amber-800">Đóng Phí Tham Dự</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4">Hoàn tất thanh toán phí tham gia để xác nhận đăng ký</p>
+                <p className="text-gray-700 mb-4">Hoàn tất đóng phí tham dự để xác nhận đăng ký</p>
                 <div className="text-sm text-amber-700 font-medium">
                   <CheckCircle className="inline mr-1 h-4 w-4" />
-                  Thanh toán qua chuyển khoản ngân hàng
+                  Đóng phí tham dự qua chuyển khoản ngân hàng
                 </div>
               </CardContent>
             </Card>

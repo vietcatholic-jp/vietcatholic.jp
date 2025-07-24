@@ -82,12 +82,13 @@ export default async function DashboardPage({
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant={profile.role === 'super_admin' ? 'default' : 'secondary'} className="text-xs">
-                  {profile.role === 'participant' && 'Tham dự viên'}
-                  {profile.role === 'event_organizer' && 'Tổ chức sự kiện'}
-                  {profile.role === 'regional_admin' && 'Quản trị khu vực'}
-                  {profile.role === 'super_admin' && 'Quản trị tổng'}
-                </Badge>
+                {profile.role in ['registration_manager', 'super_admin','event_organizer'] && (
+                  <Badge variant={profile.role === 'super_admin' ? 'default' : 'secondary'} className="text-xs">
+                    {profile.role === 'event_organizer' && 'Tổ chức sự kiện'}
+                    {profile.role === 'registration_manager' && 'Quản lý đăng ký'}
+                    {profile.role === 'super_admin' && 'Quản trị tổng'}
+                  </Badge>
+                )}
                 {profile.region && (
                   <Badge variant="outline" className="text-xs">
                     {profile.region.charAt(0).toUpperCase() + profile.region.slice(1)}
@@ -105,7 +106,7 @@ export default async function DashboardPage({
                 <Button className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white " size="sm">
                   <Users className="h-4 w-4" />
                   <span className="hidden xs:inline text-center leading-tight">
-                    {registrations && registrations.length > 0 ? 'Thêm đăng ký' : 'Đăng ký mới'}
+                    {registrations && registrations.length > 0 ? 'Thêm đăng ký' : 'Đăng ký'}
                   </span>
                   <span className="xs:hidden text-center leading-tight">
                     {registrations && registrations.length > 0 ? 'Thêm đăng ký' : 'Đăng ký'}
@@ -120,7 +121,7 @@ export default async function DashboardPage({
                 </Button>
               </Link>
 
-              {(profile.role === 'regional_admin' || profile.role === 'super_admin' || profile.role === 'registration_manager') && (
+              {(profile.role === 'event_organizer' || profile.role === 'super_admin' || profile.role === 'registration_manager') && (
                 <Link href="/admin">
                   <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
                     <Settings className="h-4 w-4" />
@@ -148,7 +149,7 @@ export default async function DashboardPage({
                 </CardHeader>
                 <CardContent className="pt-0">
                   <Link href="/register">
-                    <Button className="w-full" size="sm">
+                    <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white" size="sm">
                       Đăng ký tham gia
                     </Button>
                   </Link>

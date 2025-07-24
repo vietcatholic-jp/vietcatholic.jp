@@ -58,13 +58,13 @@ export function PaymentInstructions({ registrationDate, amount, invoiceCode }: P
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-5 w-5" />
-          Hướng dẫn thanh toán
+          Hướng dẫn đóng phí tham dự
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Amount */}
         <div className="text-center p-4 bg-primary/5 rounded-lg border border-primary/20">
-          <p className="text-sm text-muted-foreground mb-1">Số tiền cần thanh toán</p>
+          <p className="text-sm text-muted-foreground mb-1">Số tiền cần đóng</p>
           <p className="text-2xl font-bold text-primary">¥{amount.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground mt-1">Mã đăng ký: {invoiceCode}</p>
         </div>
@@ -189,7 +189,7 @@ export function PaymentInstructions({ registrationDate, amount, invoiceCode }: P
             <li>Lưu ý một số ngân hàng sẽ yêu cầu bạn nhập kiểu Zenkaku (全角). 
               Trong trường hợp này, bạn hãy chọn bàn phím tiếng Nhật, chọn phím số, rồi bấm vào số cần nhập, chọn số có chữ 全 ở bên cạnh.</li>
             <li>Sau khi chuyển khoản, vui lòng upload hóa đơn/ảnh chụp màn hình xác nhận</li>
-            <li>Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc sau khi nhận được thanh toán</li>
+            <li>Đăng ký sẽ được xác nhận trong vòng 1-2 ngày làm việc sau khi nhận được phí tham dự</li>
             <li>Hạn chuyển khoản là 10 ngày kể từ ngày đăng ký và trước ngày 10/09/2025</li>
             <li>Vui lòng chuyển khoản trước ngày <strong className="text-xl">{new Date(new Date(registrationDate).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong> </li>
             <li>Nếu có thắc mắc, vui lòng liên hệ trực tiếp qua fanpage nhóm giới trẻ công giáo tại Nhật.</li>

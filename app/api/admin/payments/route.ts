@@ -19,7 +19,7 @@ export async function GET() {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
     }
 
-    // Calculate payment statistics
+    // Calculate fee payment statistics
     let registrationsQuery = supabase
       .from('registrations')
       .select('id, status, total_amount, user:users!inner(region)');
@@ -32,8 +32,8 @@ export async function GET() {
     const { data: registrations, error: regError } = await registrationsQuery;
 
     if (regError) {
-      console.error('Error fetching registrations for payment stats:', regError);
-      return NextResponse.json({ error: 'Failed to fetch payment data' }, { status: 500 });
+      console.error('Error fetching registrations for fee payment stats:', regError);
+      return NextResponse.json({ error: 'Failed to fetch fee payment data' }, { status: 500 });
     }
 
     // Calculate stats
@@ -104,9 +104,9 @@ export async function GET() {
       cancelRequests: formattedCancelRequests
     });
   } catch (error) {
-    console.error('Error fetching payment data:', error);
+    console.error('Error fetching fee payment data:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch payment data' },
+      { error: 'Failed to fetch fee payment data' },
       { status: 500 }
     );
   }

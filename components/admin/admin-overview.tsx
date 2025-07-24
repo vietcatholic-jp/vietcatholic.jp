@@ -60,7 +60,7 @@ export function AdminOverview() {
               onClick={() => router.push('/admin/payments')}
             >
               <BarChart3 className="h-6 w-6" />
-              <span className="text-sm">Quản lý thanh toán</span>
+              <span className="text-sm">Quản lý đóng phí tham dự</span>
             </Button>
             
             <Button

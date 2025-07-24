@@ -31,6 +31,7 @@ create table public.event_roles (
   event_config_id uuid references public.event_configs(id) on delete cascade not null,
   name text not null,
   description text,
+  team_name text, -- Optional team name this role belongs to
   permissions jsonb, -- For future use, e.g. { "can_check_in": true }
   created_at timestamptz default timezone('utc'::text, now()) not null,
   updated_at timestamptz default timezone('utc'::text, now()) not null,

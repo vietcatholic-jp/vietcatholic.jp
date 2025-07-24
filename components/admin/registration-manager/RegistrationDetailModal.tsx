@@ -4,9 +4,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Registration, Registrant } from "@/lib/types";
-import {
-  User,
-  Users,
+
+interface RegistrantWithRole extends Omit<Registrant, 'event_role'> {
+  event_role?: {
+    id: string;
+    name: string;
+    team_name: string;
+    description?: string;
+  };
+}
+
+import { 
+  User, 
+  Users, 
   CreditCard,
   FileText,
   Receipt,
@@ -41,8 +51,6 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-
-
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -146,7 +154,7 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {registration.registrants?.map((registrant: Registrant, index: number) => (
+                {(registration.registrants as RegistrantWithRole[])?.map((registrant, index) => (
                   <div key={registrant.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">

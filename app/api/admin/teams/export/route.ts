@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -70,11 +70,38 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare export data
-    const exportData: any[] = [];
+    interface ExportRegistrant {
+      team_name: string;
+      team_description: string;
+      team_capacity: string | number;
+      registrant_name: string;
+      gender: string;
+      age_group: string;
+      province: string;
+      diocese: string;
+      email: string;
+      phone: string;
+      invoice_code: string;
+      registration_status: string;
+    }
+    interface RawRegistrant {
+      full_name: string;
+      gender: string;
+      age_group: string;
+      province: string;
+      diocese?: string;
+      email?: string;
+      phone?: string;
+      registration?: Array<{
+        invoice_code?: string;
+        status?: string;
+      }>;
+    }
+    const exportData: ExportRegistrant[] = [];
     
     (teams || []).forEach(team => {
       if (team.registrants && team.registrants.length > 0) {
-        team.registrants.forEach((registrant: any) => {
+        team.registrants.forEach((registrant: RawRegistrant) => {
           exportData.push({
             team_name: team.name,
             team_description: team.description || "",
@@ -87,8 +114,8 @@ export async function POST(request: NextRequest) {
             email: registrant.email || "",
             phone: registrant.phone || "",
             role: formatRoleForExport(registrant.event_roles),
-            invoice_code: registrant.registration?.invoice_code || "",
-            registration_status: registrant.registration?.status || ""
+            invoice_code: registrant.registration && registrant.registration[0]?.invoice_code ? registrant.registration[0].invoice_code : "",
+            registration_status: registrant.registration && registrant.registration[0]?.status ? registrant.registration[0].status : ""
           });
         });
       } else {

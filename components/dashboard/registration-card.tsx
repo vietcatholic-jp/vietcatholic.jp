@@ -76,10 +76,10 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending': return 'Chờ thanh toán';
+      case 'pending': return 'Chờ đóng phí tham dự';
       case 'report_paid': return 'Chờ xác nhận';
-      case 'confirm_paid': return 'Đã xác nhận thanh toán';
-      case 'payment_rejected': return 'Thanh toán bị từ chối';
+      case 'confirm_paid': return 'Đã xác nhận đóng phí tham dự';
+      case 'payment_rejected': return 'Đóng phí tham dự bị từ chối';
       case 'donation': return 'Huỷ và quyên góp';
       case 'cancelled': return 'Đã hủy';
       case 'cancel_pending': return 'Yêu cầu hủy đang chờ xử lý';
@@ -153,7 +153,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
             <Link href={`/payment/${registration.invoice_code}`}>
               <Button size="sm" variant="outline" className="text-xs bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 text-amber-700 hover:from-amber-100 hover:to-orange-100 hover:border-amber-300 dark:from-amber-950/30 dark:to-orange-950/30 dark:border-amber-800 dark:text-amber-300">
                 <CreditCard className="h-3 w-3 mr-1" />
-                Thanh toán
+                Đóng phí tham dự
               </Button>
             </Link>
           )}
@@ -239,10 +239,10 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                   <div className="p-2 bg-blue-100 dark:bg-blue-800/50 rounded-full">
                     <Clock className="h-4 w-4 animate-pulse" />
                   </div>
-                  <div className="text-sm font-medium">Chờ xác nhận thanh toán</div>
+                  <div className="text-sm font-medium">Chờ xác nhận đóng phí tham dự</div>
                 </div>
                 <div className="text-xs text-blue-600 dark:text-blue-400 mt-3 ml-11">
-                  Thanh toán của bạn đang chờ xác nhận. <strong>Sau khi được xác nhận, bạn sẽ có thể tạo vé tham dự.</strong>
+                  Đóng phí tham dự của bạn đang chờ xác nhận. <strong>Sau khi được xác nhận, bạn sẽ có thể tạo vé tham dự.</strong>
                   <br />Vui lòng đợi trong thời gian ngắn. Nếu quá lâu, bạn có thể liên hệ với admin để được hỗ trợ.
                 </div>
               </div>
@@ -254,10 +254,10 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                   <div className="p-2 bg-red-100 dark:bg-red-800/50 rounded-full">
                     <XCircle className="h-4 w-4" />
                   </div>
-                  <div className="text-sm font-medium">Thanh toán bị từ chối</div>
+                  <div className="text-sm font-medium">Đóng phí tham dự bị từ chối</div>
                 </div>
                 <div className="text-xs text-red-600 dark:text-red-400 mt-3 ml-11">
-                  Biên lai thanh toán của bạn không được chấp nhận. Vui lòng kiểm tra lại thông tin và gửi lại biên lai mới.
+                  Biên lai đóng phí tham dự của bạn không được chấp nhận. Vui lòng kiểm tra lại thông tin và gửi lại biên lai mới.
                 </div>
               </div>
             )}
@@ -268,10 +268,10 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                   <div className="p-2 bg-green-100 dark:bg-green-800/50 rounded-full">
                     <CheckCircle className="h-4 w-4" />
                   </div>
-                  <div className="text-sm font-medium">Thanh toán đã được xác nhận</div>
+                  <div className="text-sm font-medium">Đóng phí tham dự đã được xác nhận</div>
                 </div>
                 <div className="text-xs text-green-600 dark:text-green-400 mt-3 ml-11">
-                  Thanh toán của bạn đã được admin xác nhận. Đăng ký đang chờ xử lý cuối cùng để cấp vé.
+                  Đóng phí tham dự của bạn đã được admin xác nhận. Đăng ký đang chờ xử lý cuối cùng để cấp vé.
                 </div>
               </div>
             )}

@@ -205,7 +205,7 @@ export function ReceiptUpload({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
-          Upload hóa đơn thanh toán
+          Upload hóa đơn đóng phí tham dự
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -220,7 +220,7 @@ export function ReceiptUpload({
           <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <span className="text-sm text-amber-800">
-              Vui lòng upload hóa đơn thanh toán để hoàn tất đăng ký
+              Vui lòng upload hóa đơn đóng phí tham dự để hoàn tất đăng ký
             </span>
           </div>
         )}

@@ -139,7 +139,7 @@ export function RegistrationManagerDashboard() {
             <div>
               <h1 className="text-3xl font-bold">Quản lý đăng ký</h1>
               <p className="text-muted-foreground mt-2">
-                Quản lý thông tin đăng ký, xác nhận thanh toán và xử lý yêu cầu hủy
+                Quản lý thông tin đăng ký, xác nhận đóng phí tham dự và xử lý yêu cầu hủy
               </p>
             </div>
             <div className="flex items-center gap-2">
