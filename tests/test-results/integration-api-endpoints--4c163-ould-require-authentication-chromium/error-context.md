@@ -1,0 +1,46 @@
+# Page snapshot
+
+```yaml
+- main:
+  - navigation:
+    - link "Logo Đại hội Năm Thánh 2025 Những Người Hành Hương Của Hy Vọng":
+      - /url: /
+      - img "Logo"
+      - text: Đại hội Năm Thánh 2025 Những Người Hành Hương Của Hy Vọng
+    - link "Đăng ký của tôi":
+      - /url: /dashboard
+    - link "Đăng ký mới":
+      - /url: /register
+    - link "Hướng dẫn":
+      - /url: /guide
+    - link "Chương trình":
+      - /url: /agenda
+    - link "Quản trị":
+      - /url: /admin
+    - button
+    - text: Xin chào, THU BÙI
+    - button "Đăng xuất"
+  - text: Đăng nhập Nhập email của bạn để đăng nhập vào tài khoản
+  - paragraph: Vui lòng mở trang web này qua trình duyệt Safari hoặc Chrome trên điện thoại. Không đăng nhập hoặc đăng ký trực tiếp trên trình duyệt của Messenger.
+  - button "Tiếp tục với Google":
+    - img
+    - text: Tiếp tục với Google
+  - paragraph:
+    - text: 💡
+    - strong: "Khuyến nghị:"
+    - text: Sử dụng Google để đăng nhập thuận tiện và nhanh chóng hơn!
+  - text: Hoặc tiếp tục với Email
+  - textbox "Email": dev.thubv@gmail.com
+  - text: Mật khẩu
+  - link "Quên mật khẩu?":
+    - /url: /auth/forgot-password
+  - textbox "Mật khẩu": "123456"
+  - button "Đang đăng nhập..." [disabled]
+  - text: Chưa có tài khoản?
+  - link "Đăng ký":
+    - /url: /auth/sign-up
+- region "Notifications alt+T"
+- alert
+- button "Open Next.js Dev Tools":
+  - img
+```

@@ -1,0 +1,50 @@
+<testsuites id="" name="" tests="4" failures="1" skipped="0" errors="0" time="5.432437">
+<testsuite name="integration/api-endpoints/teams-assignment-api.spec.ts" timestamp="2025-07-24T14:48:10.990Z" hostname="chromium" tests="4" failures="1" skipped="0" time="16.008" errors="0">
+<testcase name="Teams Assignment API › should get unassigned registrants" classname="integration/api-endpoints/teams-assignment-api.spec.ts" time="4.306">
+</testcase>
+<testcase name="Teams Assignment API › should handle assign team validation" classname="integration/api-endpoints/teams-assignment-api.spec.ts" time="3.96">
+</testcase>
+<testcase name="Teams Assignment API › should handle bulk assign validation" classname="integration/api-endpoints/teams-assignment-api.spec.ts" time="4.13">
+</testcase>
+<testcase name="Teams Assignment API › should require authentication" classname="integration/api-endpoints/teams-assignment-api.spec.ts" time="3.612">
+<failure message="teams-assignment-api.spec.ts:77:7 should require authentication" type="FAILURE">
+<![CDATA[  [chromium] › integration/api-endpoints/teams-assignment-api.spec.ts:77:7 › Teams Assignment API › should require authentication 
+
+    Error: page.evaluate: TypeError: Failed to execute 'fetch' on 'Window': Failed to parse URL from /api/admin/registrants/unassigned
+        at eval (eval at evaluate (:291:30), <anonymous>:2:25)
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:291:30), <anonymous>:2:25)
+        at UtilityScript.evaluate (<anonymous>:293:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at /Users/thu/workspace/daihoiconggiao.jp/tests/integration/api-endpoints/teams-assignment-api.spec.ts:82:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/integration-api-endpoints--4c163-ould-require-authentication-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/integration-api-endpoints--4c163-ould-require-authentication-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/integration-api-endpoints--4c163-ould-require-authentication-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/integration-api-endpoints--4c163-ould-require-authentication-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../test-results/integration-api-endpoints--4c163-ould-require-authentication-chromium/test-failed-2.png]]
+
+[[ATTACHMENT|../../../test-results/integration-api-endpoints--4c163-ould-require-authentication-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../../../test-results/integration-api-endpoints--4c163-ould-require-authentication-chromium/video.webm]]
+
+[[ATTACHMENT|../../../test-results/integration-api-endpoints--4c163-ould-require-authentication-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

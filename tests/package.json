@@ -1,0 +1,36 @@
+{
+  "name": "teams-assignment-tests",
+  "version": "1.0.0",
+  "description": "E2E tests for Teams Assignment functionality",
+  "scripts": {
+    "test": "playwright test --config=config/playwright.config.ts",
+    "test:ui": "playwright test --config=config/playwright.config.ts --ui",
+    "test:debug": "playwright test --config=config/playwright.config.ts --debug",
+    "test:headed": "playwright test --config=config/playwright.config.ts --headed",
+    "test:auth": "playwright test --config=config/playwright.config.ts e2e/authentication/",
+    "test:ui-components": "playwright test --config=config/playwright.config.ts e2e/ui-components/",
+    "test:teams": "playwright test --config=config/playwright.config.ts e2e/teams-assignment/",
+    "test:api": "playwright test --config=config/playwright.config.ts integration/api-endpoints/",
+    "test:chrome": "playwright test --config=config/playwright.config.ts --project=chromium",
+    "test:firefox": "playwright test --config=config/playwright.config.ts --project=firefox",
+    "test:safari": "playwright test --config=config/playwright.config.ts --project=webkit",
+    "test:mobile": "playwright test --config=config/playwright.config.ts --project=\"Mobile Chrome\"",
+    "report": "playwright show-report reports/html",
+    "install": "playwright install",
+    "clean": "rm -rf reports/screenshots/* reports/videos/* reports/traces/*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "teams-assignment",
+    "automation"
+  ],
+  "author": "Đại Hội Công Giáo Việt Nam 2025 Team",
+  "license": "MIT"
+}
