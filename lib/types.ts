@@ -115,6 +115,7 @@ export interface Registrant {
     id: string;
     name: string;
     description: string | null;
+    permissions: Record<string, unknown> | null;
     team_name: string | null;
   } | null;
   is_primary?: boolean;  // Marks the main registrant
