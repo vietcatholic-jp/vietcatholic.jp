@@ -4,6 +4,7 @@ import { ProfileForm } from "@/components/profile/profile-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Mail, MapPin, Shield, Facebook } from "lucide-react";
+import Image from "next/image";
 
 export default async function ProfilePage() {
   const user = await getServerUser();
@@ -39,10 +40,12 @@ export default async function ProfilePage() {
                 <CardContent className="space-y-4">
                   {profile.avatar_url && (
                     <div className="text-center">
-                      <img
+                      <Image
                         src={profile.avatar_url}
                         alt="Avatar"
-                        className="w-20 h-20 rounded-full mx-auto mb-2"
+                        width={80}
+                        height={80}
+                        className="rounded-full mx-auto mb-2"
                       />
                     </div>
                   )}

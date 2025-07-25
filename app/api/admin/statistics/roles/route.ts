@@ -1,16 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-interface RegistrantWithRole {
-  event_roles: {
-    id: string;
-    name: string;
-    description: string;
-  }[] | null;
-  registration: {
-    status: string;
-  }[];
-}
+
 
 export async function GET() {
   try {
@@ -60,10 +51,12 @@ export async function GET() {
     // Process the data to create statistics
     const roleStatsMap = new Map();
 
-    roleStats.forEach((registrant: RegistrantWithRole) => {
+    roleStats.forEach((registrant: {
+      event_roles: { id: string; name: string; description: string }[] | null;
+      registration: { status: string }[] | null;
+    }) => {
       const role = registrant.event_roles?.[0];
-      const registration = registrant.registration;
-      
+      const registration = registrant.registration?.[0];
       // Use role name or "Chưa phân vai trò" for null roles
       const roleName = role?.name || 'Chưa phân vai trò';
       const roleId = role?.id || 'unassigned';
@@ -83,7 +76,7 @@ export async function GET() {
       stats.total_count += 1;
 
       // Count by registration status
-      const regStatus = registration?.[0]?.status;
+      const regStatus = registration?.status;
       if (regStatus === 'confirmed') {
         stats.confirmed_count += 1;
       } else if (regStatus === 'report_paid' || regStatus === 'confirm_paid') {

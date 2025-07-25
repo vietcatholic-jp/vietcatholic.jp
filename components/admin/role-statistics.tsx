@@ -4,20 +4,19 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-// Chart components temporarily disabled - recharts dependency needed
-// import { 
-//   BarChart, 
-//   Bar, 
-//   XAxis, 
-//   YAxis, 
-//   CartesianGrid, 
-//   Tooltip, 
-//   ResponsiveContainer,
-//   PieChart,
-//   Pie,
-//   Cell,
-//   LabelList
-// } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LabelList
+} from "recharts";
 import { 
   Users, 
   UserCheck, 
@@ -25,10 +24,10 @@ import {
   Star,
   TrendingUp
 } from "lucide-react";
-import { 
-  getEventRoleCategory, 
+import {
+  getEventRoleCategory,
   getRoleCategoryColor,
-  type RoleCategory 
+  type RoleCategory
 } from "@/lib/role-utils";
 
 interface RoleStatistic {
@@ -98,28 +97,28 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
     roles: RoleStatistic[];
   }>);
 
-  // Chart data temporarily disabled - recharts dependency needed
-  // const categoryChartData = Object.values(categoryStats).map(cat => ({
-  //   name: cat.category,
-  //   value: cat.total_count,
-  //   confirmed: cat.confirmed_count,
-  //   paid: cat.paid_count,
-  //   pending: cat.pending_count
-  // }));
+  // Prepare data for charts
+  const categoryChartData = Object.values(categoryStats).map(cat => ({
+    name: cat.category,
+    value: cat.total_count,
+    confirmed: cat.confirmed_count,
+    paid: cat.paid_count,
+    pending: cat.pending_count
+  }));
 
-  // const topRolesData = statistics
-  //   .sort((a, b) => b.total_count - a.total_count)
-  //   .slice(0, 10)
-  //   .map(stat => ({
-  //     name: stat.role_label || stat.role_name,
-  //     total: stat.total_count,
-  //     confirmed: stat.confirmed_count,
-  //     paid: stat.paid_count,
-  //     pending: stat.pending_count
-  //   }));
+  const topRolesData = statistics
+    .sort((a, b) => b.total_count - a.total_count)
+    .slice(0, 10)
+    .map(stat => ({
+      name: stat.role_label || stat.role_name,
+      total: stat.total_count,
+      confirmed: stat.confirmed_count,
+      paid: stat.paid_count,
+      pending: stat.pending_count
+    }));
 
   // Colors for pie chart
-  // const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   if (isLoading) {
     return (
@@ -200,17 +199,53 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
                   <TrendingUp className="h-4 w-4" />
                   Phân bố theo loại vai trò
                 </h4>
-                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                  Biểu đồ phân bố vai trò (Cần cài đặt recharts)
-                </div>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={categoryChartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoryChartData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                      <LabelList dataKey="name" position="outside" />
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) => [value, 'Số người']}
+                      labelFormatter={(label: string) => `${label}`}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
 
               {/* Top Roles Bar Chart */}
               <div>
                 <h4 className="text-sm font-medium mb-4">Top 10 vai trò nhiều người nhất</h4>
-                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                  Biểu đồ top vai trò (Cần cài đặt recharts)
-                </div>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart
+                    data={topRolesData}
+                    layout="horizontal"
+                    margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={100}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip />
+                    <Bar dataKey="total" fill="#8884d8">
+                      <LabelList dataKey="total" position="right" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
