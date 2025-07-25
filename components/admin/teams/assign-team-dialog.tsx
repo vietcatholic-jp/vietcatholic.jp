@@ -141,7 +141,11 @@ export function AssignTeamDialog({
                 </div>
                 <div>
                   <span className="text-muted-foreground">Vai trò:</span>
-                  <RoleBadgeCompact role={registrant.event_roles} />
+                  <RoleBadgeCompact role={registrant.event_roles ? { 
+                    ...registrant.event_roles, 
+                    description: registrant.event_roles.description || null,
+                    permissions: registrant.event_roles.permissions || null
+                  } : null} />
                 </div>
                 <div>
                   <span className="text-muted-foreground">Tỉnh/Thành phố:</span>

@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -215,7 +215,7 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
                       ))}
                       <LabelList dataKey="name" position="outside" />
                     </Pie>
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value: number) => [value, 'Số người']}
                       labelFormatter={(label: string) => `${label}`}
                     />
@@ -234,9 +234,9 @@ export function RoleStatistics({ className }: RoleStatisticsProps) {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category" 
+                    <YAxis
+                      dataKey="name"
+                      type="category"
                       width={100}
                       tick={{ fontSize: 12 }}
                     />

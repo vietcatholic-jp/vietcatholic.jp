@@ -5,13 +5,13 @@
 
 export type EventRole = {
   id: string;
-  event_config_id: string;
+  event_config_id?: string;
   name: string;
   description: string | null;
   permissions: Record<string, unknown> | null;
   team_name?: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type RoleCategory = 'Tham gia' | 'Tình nguyện' | 'Tổ chức' | 'Đặc biệt';
@@ -125,35 +125,6 @@ export function isLeadershipRole(role: EventRole | string | null | undefined): b
          lowerName.includes('thủ quỹ');
 }
 
-/**
- * Gets the team name from a role
- * Prioritizes database team_name field over pattern matching
- */
-export function getTeamNameFromRole(role: EventRole | null | undefined): string {
-  if (!role) return '';
-
-  // Use team_name from database if available
-  if (role.team_name) {
-    return role.team_name;
-  }
-
-  // Fallback: Extract team name from role name for backward compatibility
-  const roleName = role.name.toLowerCase();
-
-  if (roleName.includes('truyền thông') || roleName.includes('media')) return 'Truyền thông';
-  if (roleName.includes('sinh hoạt') || roleName.includes('activity')) return 'Sinh hoạt';
-  if (roleName.includes('kỷ luật') || roleName.includes('discipline')) return 'Kỷ luật';
-  if (roleName.includes('hậu cần') || roleName.includes('logistics')) return 'Hậu cần';
-  if (roleName.includes('phụng vụ') || roleName.includes('liturgy')) return 'Phụng vụ';
-  if (roleName.includes('an ninh') || roleName.includes('security')) return 'An ninh';
-  if (roleName.includes('thư ký') || roleName.includes('registration')) return 'Thư ký';
-  if (roleName.includes('ẩm thực') || roleName.includes('catering')) return 'Ẩm thực';
-  if (roleName.includes('y tế') || roleName.includes('health')) return 'Y tế';
-  if (roleName.includes('âm thanh') || roleName.includes('ánh sáng') || roleName.includes('audio')) return 'Âm thanh Ánh sáng';
-  if (roleName.includes('tổ chức')) return 'Ban tổ chức';
-
-  return '';
-}
 
 /**
  * Formats role for display in tables and exports

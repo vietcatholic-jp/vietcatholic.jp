@@ -86,7 +86,8 @@ export async function POST(
       .single();
 
     if (teamError || !team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      console.error("Team not found:", teamError);
+      return NextResponse.json({ error: "Không tìm thấy đội" }, { status: 404 });
     }
 
     // Check team capacity

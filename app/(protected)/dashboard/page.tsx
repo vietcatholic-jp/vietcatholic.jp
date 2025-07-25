@@ -39,7 +39,14 @@ export default async function DashboardPage({
     .from('registrations')
     .select(`
       *,
-      registrants(*),
+      registrants(
+      *,
+      event_roles:event_role_id(
+          id,
+          name,
+          description
+        )
+      ),
       receipts(count)
     `)
     .eq('user_id', user.id)

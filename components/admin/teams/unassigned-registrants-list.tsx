@@ -261,7 +261,11 @@ export function UnassignedRegistrantsList() {
                       )}
                     </div>
                     <div className="text-sm">
-                      <RoleBadgeCompact role={registrant.event_roles} />
+                      <RoleBadgeCompact role={registrant.event_roles ? {
+                        ...registrant.event_roles,
+                        description: registrant.event_roles.description ?? null,
+                        permissions: registrant.event_roles.permissions ?? null
+                      } : null} />
                     </div>
                   </div>
 

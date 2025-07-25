@@ -113,13 +113,10 @@ export interface Registrant {
   // Event role object from database join
   event_roles?: {
     id: string;
-    event_config_id: string;
     name: string;
     description: string | null;
     permissions: Record<string, unknown> | null;
     team_name: string | null;
-    created_at: string;
-    updated_at: string;
   } | null;
   is_primary?: boolean;  // Marks the main registrant
   go_with?: boolean; // Indicates if this registrant is going with the primary registrant

@@ -10,7 +10,6 @@ import {
   getEventRoleCategory,
   getRoleCategoryColor,
   formatRoleForDisplay,
-  getTeamNameFromRole,
   isLeadershipRole,
   type EventRole
 } from "@/lib/role-utils";
@@ -39,30 +38,16 @@ export function RoleBadge({
         variant="outline"
         className={cn("text-gray-600", className)}
       >
-        Chưa phân vai trò
+        Tham dự viên
       </Badge>
     );
 
-    if (!showTooltip) return badge;
-
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {badge}
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Người tham gia chưa được phân vai trò cụ thể</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
+    return badge;
   }
 
   const category = getEventRoleCategory(role);
   const colorClass = getRoleCategoryColor(category);
   const roleLabel = formatRoleForDisplay(role);
-  const teamName = getTeamNameFromRole(role);
   const isLeader = isLeadershipRole(role);
 
   // Size classes
@@ -83,8 +68,8 @@ export function RoleBadge({
       )}
     >
       {roleLabel}
-      {showTeamInfo && teamName && (
-        <span className="ml-1 opacity-75">({teamName})</span>
+      {showTeamInfo && role.team_name && (
+        <span className="ml-1 opacity-75">({role.team_name})</span>
       )}
     </Badge>
   );
@@ -105,7 +90,7 @@ export function RoleBadge({
             )}
             <div className="text-xs space-y-1">
               <div><strong>Loại:</strong> {category}</div>
-              {teamName && <div><strong>Nhóm:</strong> {teamName}</div>}
+              {role.team_name && <div><strong>Nhóm:</strong> {role.team_name}</div>}
               {isLeader && (
                 <div className="text-amber-600 font-medium">
                   <Info className="h-3 w-3 inline mr-1" />
