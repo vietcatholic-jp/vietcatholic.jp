@@ -804,13 +804,17 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                         </div>
                         )}
                       <div className="space-y-2 md:col-span-2 mt-2">
-                          <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Ghi chú</Label>
+                          <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Nguyện vọng</Label>
                           <Textarea
                             id={`registrants.${index}.notes`}
                             {...register(`registrants.${index}.notes`)}
-                            placeholder="Ý kiến đóng góp hoặc yêu cầu đặc biệt"
+                            placeholder="Ý kiến đóng góp hoặc Nguyện vọng chia đội"
                             className="min-h-[80px]"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Nếu bạn muốn được chia đội cùng với bạn bè, xin hãy ghi rõ tên của họ ở đây.
+                            Nếu bạn có yêu cầu đặc biệt nào khác, hãy ghi chú để ban tổ chức có thể hỗ trợ bạn tốt nhất.
+                          </p>
                         </div>
                     </div>
 

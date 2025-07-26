@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ExportButton } from "@/components/admin/export-button";
 import { AdminProvider } from "@/components/admin/admin-context";
 import { 
-  Users, 
-  CreditCard,
+  Users,
   Loader2,
   Settings,
   UserCheck,
@@ -96,13 +94,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin',
       label: 'Tổng quan',
       icon: BarChart3,
-      roles: ['event_organizer','registration_manager', 'group_leader', 'regional_admin', 'super_admin']
+      roles: ['event_organizer','registration_manager', 'super_admin']
     },
     {
       href: '/admin/registrations',
       label: 'Đăng ký',
       icon: Users,
-      roles: ['event_organizer','registration_manager', 'group_leader', 'regional_admin', 'super_admin']
+      roles: ['event_organizer','registration_manager', 'super_admin']
     },
     {
       href: '/admin/teams-assignment',
@@ -114,31 +112,25 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/tools',
       label: 'Công cụ',
       icon: Wrench,
-      roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
+      roles: ['super_admin']
     },
     {
       href: '/admin/transportation',
       label: 'Phương tiện',
       icon: Truck,
-      roles: ['regional_admin', 'super_admin']
+      roles: [ 'super_admin']
     },
     {
       href: '/admin/users',
       label: 'Người dùng',
       icon: UserCheck,
-      roles: ['regional_admin', 'super_admin']
+      roles: ['super_admin']
     },
     {
       href: '/admin/events',
       label: 'Sự kiện',
       icon: Settings,
       roles: ['super_admin']
-    },
-    {
-      href: '/admin/payments',
-      label: 'Đóng phí tham dự',
-      icon: CreditCard,
-      roles: ['event_organizer', 'group_leader', 'regional_admin', 'super_admin']
     },
     {
       href: '/admin/backup',
@@ -162,9 +154,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <p className="text-muted-foreground mt-2">
               Quản lý Đại hội Công giáo Việt Nam 2025 - {userRole === 'super_admin' ? 'Quản trị viên' : 'Quản trị viên khu vực'}
             </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <ExportButton registrations={data.recentRegistrations} />
           </div>
         </div>
 
