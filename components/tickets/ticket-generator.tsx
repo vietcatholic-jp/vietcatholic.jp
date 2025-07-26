@@ -80,6 +80,11 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
             <div className="text-center">
               {registrant.saint_name && <p className="text-gray-500">({registrant.saint_name})</p>}
               <p className="text-2xl font-semibold">{registrant.full_name}</p>
+              {registrant.second_day_only && (
+                <div className="mt-2 inline-block px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
+                  Chỉ tham gia ngày 15/09
+                </div>
+              )}
             </div>
 
             <div className="flex items-center text-gray-600">

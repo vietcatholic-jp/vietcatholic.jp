@@ -120,6 +120,7 @@ export interface Registrant {
   } | null;
   is_primary?: boolean;  // Marks the main registrant
   go_with?: boolean; // Indicates if this registrant is going with the primary registrant
+  second_day_only?: boolean; // Indicates if registrant will only attend 15/09
   notes?: string;
   portrait_url?: string;
   group_id?: string;
@@ -205,6 +206,7 @@ export interface RegistrantFormData {
   event_team_id?: string;
   event_role_id?: string;
   is_primary?: boolean;
+  second_day_only?: boolean; // Indicates if registrant will only attend 15/09
   notes?: string;
 }
 

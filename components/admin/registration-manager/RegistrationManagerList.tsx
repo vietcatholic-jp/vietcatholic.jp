@@ -147,6 +147,7 @@ export function RegistrationManagerList({
                         <th className="text-left p-3">Trạng thái</th>
                         <th className="text-left p-3">Số người</th>
                         <th className="text-left p-3">Tổng tiền</th>
+                        <th className="text-left p-3">Tham gia</th>
                         <th className="text-left p-3">Ngày đăng ký</th>
                         <th className="text-left p-3">Thao tác</th>
                       </tr>
@@ -187,6 +188,18 @@ export function RegistrationManagerList({
                           </td>
                           <td className="p-3 font-medium">
                             ¥{registration.total_amount.toLocaleString()}
+                          </td>
+                          <td className="p-3 text-sm">
+                            <div className="space-y-1">
+                              {registration.registrants?.some(r => r.second_day_only) && (
+                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
+                                  Chỉ tham gia ngày 2
+                                </Badge>
+                              )}
+                              <div className="text-xs text-muted-foreground">
+                                {registration.registrants?.filter(r => r.second_day_only).length || 0} / {registration.participant_count} người
+                              </div>
+                            </div>
                           </td>
                           <td className="p-3 text-sm">
                             {new Date(registration.created_at).toLocaleDateString('vi-VN')}
@@ -273,6 +286,19 @@ export function RegistrationManagerList({
                         <span className="text-muted-foreground">Tổng tiền:</span>
                         <span className="font-medium">¥{registration.total_amount.toLocaleString()}</span>
                       </div>
+                      {registration.registrants?.some(r => r.second_day_only) && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Tham gia:</span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
+                              Có người chỉ ngày 15/09
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              ({registration.registrants?.filter(r => r.second_day_only).length || 0}/{registration.participant_count})
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
