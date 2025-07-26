@@ -3,7 +3,7 @@
 import { AnalyticsProvider, SummaryReport } from "@/components/admin/analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, Database } from "lucide-react";
+import { FileText, Users, Settings, Database } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAdminData } from "@/components/admin/admin-context";
 
@@ -25,8 +25,7 @@ export function AdminOverview() {
       <AnalyticsProvider>
         <SummaryReport />
       </AnalyticsProvider>
-      
-      {/* Quick Actions */}
+      {(userRole === 'registration_manager' || userRole === 'super_admin') && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -36,34 +35,32 @@ export function AdminOverview() {
         </CardHeader>
         <CardContent>
           <div className={`grid grid-cols-1 gap-4 ${userRole === 'super_admin' ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
-            <Button
-              variant="outline"
-              className="h-20 flex-col gap-2"
-              onClick={() => router.push('/admin/registrations')}
-            >
-              <Users className="h-6 w-6" />
-              <span className="text-sm">Quản lý đăng ký</span>
-            </Button>
             
-            <Button
-              variant="outline"
-              className="h-20 flex-col gap-2"
-              onClick={() => router.push('/registration-manager/export')}
-            >
-              <FileText className="h-6 w-6" />
-              <span className="text-sm">Xuất báo cáo</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              className="h-20 flex-col gap-2"
-              onClick={() => router.push('/admin/payments')}
-            >
-              <BarChart3 className="h-6 w-6" />
-              <span className="text-sm">Quản lý đóng phí tham dự</span>
-            </Button>
-            
-            <Button
+            {userRole === 'registration_manager' && (
+              <>
+                <Button
+                variant="outline"
+                className="h-20 flex-col gap-2"
+                onClick={() => router.push('/admin/registrations')}
+                >
+                  <Users className="h-6 w-6" />
+                  <span className="text-sm">Quản lý đăng ký</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="h-20 flex-col gap-2"
+                  onClick={() => router.push('/registration-manager/export')}
+                >
+                  <FileText className="h-6 w-6" />
+                  <span className="text-sm">Xuất báo cáo</span>
+                </Button>
+              </>
+            )}
+
+            {userRole === 'super_admin' && (
+              <>
+              <Button
               variant="outline"
               className="h-20 flex-col gap-2"
               onClick={() => router.push('/admin/users')}
@@ -72,7 +69,6 @@ export function AdminOverview() {
               <span className="text-sm">Quản lý người dùng</span>
             </Button>
 
-            {userRole === 'super_admin' && (
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
@@ -81,10 +77,14 @@ export function AdminOverview() {
                 <Database className="h-6 w-6" />
                 <span className="text-sm">Backup & Export</span>
               </Button>
+              </>
             )}
           </div>
         </CardContent>
       </Card>
+      )}
+
+      {/* Analytics Section */}
     </div>
   );
 }

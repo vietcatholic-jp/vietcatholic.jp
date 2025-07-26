@@ -93,6 +93,15 @@ export function RegistrationManagerList({
   };
 
   const priorityStatuses = ['report_paid', 'cancel_pending', 'payment_rejected'];
+  
+  // Check if registration is pending and over 10 days old
+  const isOverduePending = (registration: Registration) => {
+    if (registration.status !== 'pending') return false;
+    const createdDate = new Date(registration.created_at);
+    const now = new Date();
+    const daysDiff = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+    return daysDiff > 10;
+  };
 
   return (
     <>
@@ -165,7 +174,9 @@ export function RegistrationManagerList({
                         <tr
                           key={registration.id}
                           className={`border-b hover:bg-gray-50 ${
-                            priorityStatuses.includes(registration.status) 
+                            isOverduePending(registration)
+                              ? 'bg-red-50' 
+                              : priorityStatuses.includes(registration.status) 
                               ? 'bg-orange-50' 
                               : ''
                           }`}
@@ -175,7 +186,12 @@ export function RegistrationManagerList({
                               <span className="font-mono text-sm font-medium">
                                 #{registration.invoice_code}
                               </span>
-                              {priorityStatuses.includes(registration.status) && (
+                              {isOverduePending(registration) && (
+                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+                                  Chưa thanh toán
+                                </Badge>
+                              )}
+                              {priorityStatuses.includes(registration.status) && !isOverduePending(registration) && (
                                 <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
                                   Ưu tiên
                                 </Badge>
@@ -243,7 +259,9 @@ export function RegistrationManagerList({
                   <div
                     key={registration.id}
                     className={`border rounded-lg p-3 ${
-                      priorityStatuses.includes(registration.status) 
+                      isOverduePending(registration)
+                        ? 'border-red-200 bg-red-50'
+                        : priorityStatuses.includes(registration.status) 
                         ? 'border-orange-200 bg-orange-50' 
                         : 'border-border'
                     }`}
@@ -253,7 +271,12 @@ export function RegistrationManagerList({
                         <span className="font-mono text-sm font-medium">
                           #{registration.invoice_code}
                         </span>
-                        {priorityStatuses.includes(registration.status) && (
+                        {isOverduePending(registration) && (
+                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+                            Chưa thanh toán
+                          </Badge>
+                        )}
+                        {priorityStatuses.includes(registration.status) && !isOverduePending(registration) && (
                           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
                             Ưu tiên
                           </Badge>
