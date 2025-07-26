@@ -25,6 +25,7 @@ function getStatusLabel(status: RegistrationStatus): string {
     'cancel_processed': 'Đã hoàn tiền',
     'cancelled': 'Đã hủy',
     'confirmed': 'Đã xác nhận',
+    'temp_confirmed': 'Đã xác nhận (thanh toán sau)',
     'checked_in': 'Đã check-in',
     'checked_out': 'Đã check-out'
   };

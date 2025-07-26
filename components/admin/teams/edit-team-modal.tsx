@@ -30,14 +30,28 @@ const EditTeamSchema = z.object({
   description: z.string().optional(),
   leader_id: z.string().optional(),
   sub_leader_id: z.string().optional(),
+  capacity: z.string().optional().refine((val) => {
+    if (!val || val === "") return true;
+    const num = parseInt(val, 10);
+    return !isNaN(num) && num > 0;
+  }, {
+    message: "Sức chứa phải là số nguyên dương"
+  }),
 });
 
-type EditTeamFormData = z.infer<typeof EditTeamSchema>;
+type EditTeamFormData = {
+  name: string;
+  description?: string;
+  leader_id?: string;
+  sub_leader_id?: string;
+  capacity?: string;
+};
 
 interface Team {
   id: string;
   name: string;
   description?: string;
+  capacity?: number | null;
   leader?: {
     id: string;
     full_name: string;
@@ -57,11 +71,11 @@ interface User {
 interface EditTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onDataChange?: () => void; // New callback for data changes without closing dialog
   team: Team | null;
 }
 
-export function EditTeamModal({ isOpen, onClose, onSuccess, team }: EditTeamModalProps) {
+export function EditTeamModal({ isOpen, onClose, onDataChange, team }: EditTeamModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
@@ -73,6 +87,7 @@ export function EditTeamModal({ isOpen, onClose, onSuccess, team }: EditTeamModa
       description: "",
       leader_id: "",
       sub_leader_id: "",
+      capacity: "",
     },
   });
 
@@ -84,6 +99,7 @@ export function EditTeamModal({ isOpen, onClose, onSuccess, team }: EditTeamModa
         description: team.description || "",
         leader_id: team.leader?.id || "",
         sub_leader_id: team.sub_leader?.id || "",
+        capacity: team.capacity ? team.capacity.toString() : "",
       });
     }
   }, [team, form]);
@@ -128,6 +144,7 @@ export function EditTeamModal({ isOpen, onClose, onSuccess, team }: EditTeamModa
           ...data,
           leader_id: data.leader_id === "none" ? null : data.leader_id || null,
           sub_leader_id: data.sub_leader_id === "none" ? null : data.sub_leader_id || null,
+          capacity: data.capacity && data.capacity !== "" ? parseInt(data.capacity, 10) : null,
         }),
       });
 
@@ -137,8 +154,11 @@ export function EditTeamModal({ isOpen, onClose, onSuccess, team }: EditTeamModa
       }
 
       toast.success("Cập nhật đội thành công!");
-      onSuccess();
-      onClose();
+
+      // Notify parent component about data change without closing dialog
+      onDataChange?.();
+
+      // Note: Removed onSuccess() and onClose() calls to keep dialog open
     } catch (error) {
       console.error("Error updating team:", error);
       toast.error(error instanceof Error ? error.message : "Đã xảy ra lỗi");
@@ -233,6 +253,25 @@ export function EditTeamModal({ isOpen, onClose, onSuccess, team }: EditTeamModa
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Capacity */}
+          <div className="space-y-2">
+            <Label htmlFor="capacity">Sức chứa tối đa</Label>
+            <Input
+              id="capacity"
+              type="number"
+              min="1"
+              placeholder="Để trống nếu không giới hạn"
+              {...form.register("capacity")}
+              disabled={isSubmitting}
+            />
+            <p className="text-sm text-muted-foreground">
+              Số lượng thành viên tối đa trong đội. Để trống nếu không giới hạn.
+            </p>
+            {form.formState.errors.capacity && (
+              <p className="text-sm text-red-600">{form.formState.errors.capacity.message}</p>
+            )}
           </div>
 
           {/* Submit Buttons */}

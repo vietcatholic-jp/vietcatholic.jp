@@ -89,10 +89,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { name, description, event_config_id, leader_id, sub_leader_id } = await request.json();
+    const { name, description, event_config_id, leader_id, sub_leader_id, capacity } = await request.json();
 
     if (!name || !event_config_id) {
       return NextResponse.json({ error: "Team name and event config are required" }, { status: 400 });
+    }
+
+    // Validate capacity
+    if (capacity !== null && capacity !== undefined) {
+      if (!Number.isInteger(capacity) || capacity <= 0) {
+        return NextResponse.json({ error: "Capacity must be a positive integer or null" }, { status: 400 });
+      }
     }
 
     // Check if team name already exists for this event
@@ -116,6 +123,7 @@ export async function POST(request: NextRequest) {
         event_config_id,
         leader_id,
         sub_leader_id,
+        capacity: capacity || null,
       })
       .select(`
         *,
@@ -157,10 +165,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { id, name, description, leader_id, sub_leader_id } = await request.json();
+    const { id, name, description, leader_id, sub_leader_id, capacity } = await request.json();
 
     if (!id || !name) {
       return NextResponse.json({ error: "Team ID and name are required" }, { status: 400 });
+    }
+
+    // Validate capacity
+    if (capacity !== null && capacity !== undefined) {
+      if (!Number.isInteger(capacity) || capacity <= 0) {
+        return NextResponse.json({ error: "Capacity must be a positive integer or null" }, { status: 400 });
+      }
     }
 
     // Update team
@@ -171,6 +186,7 @@ export async function PUT(request: NextRequest) {
         description,
         leader_id,
         sub_leader_id,
+        capacity: capacity || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

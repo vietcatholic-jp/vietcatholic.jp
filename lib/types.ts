@@ -19,6 +19,7 @@ export type RegistrationStatus =
   | 'cancel_processed' // Admin processed cancellation and refunded
   | 'cancelled'        // Registration cancelled
   | 'confirmed'        // Fully confirmed, tickets can be generated
+  | 'temp_confirmed'   // Temporarily confirmed, payment to be made later
   | 'checked_in'       // Participant checked in at event
   | 'checked_out';     // Participant checked out from event
 

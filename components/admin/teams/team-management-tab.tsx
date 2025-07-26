@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Eye, UserMinus, MoreVertical, Edit, Trash2 } from "lucide-react";
@@ -9,6 +9,7 @@ import { formatAgeGroup } from "@/lib/utils";
 import { CreateTeamModal } from "./create-team-modal";
 import { EditTeamModal } from "./edit-team-modal";
 import { ManageTeamMembersModal } from "./manage-team-members-modal";
+import { TeamDetailModal } from "./team-detail-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +52,7 @@ export function TeamManagementTab() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editTeam, setEditTeam] = useState<Team | null>(null);
   const [manageTeam, setManageTeam] = useState<Team | null>(null);
+  const [detailTeamId, setDetailTeamId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeams();
@@ -152,9 +154,16 @@ export function TeamManagementTab() {
                       <Users className="h-5 w-5 text-primary flex-shrink-0" />
                       <h3 className="font-semibold text-lg truncate">{team.name}</h3>
                     </div>
-                    <Badge variant="secondary" className="flex-shrink-0">
-                      {team.member_count}/{team.capacity || '∞'} người
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge variant="secondary">
+                        {team.member_count}/{team.capacity || '∞'} người
+                      </Badge>
+                      {team.capacity && team.member_count / team.capacity > 0.8 && (
+                        <Badge variant="destructive" className="text-xs">
+                          {team.member_count >= team.capacity ? 'Đầy' : 'Gần đầy'}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   {team.description && (
@@ -213,7 +222,7 @@ export function TeamManagementTab() {
 
                 {/* Right section: Actions */}
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => setDetailTeamId(team.id)}>
                     <Eye className="h-4 w-4 mr-1" />
                     Xem chi tiết
                   </Button>
@@ -281,9 +290,9 @@ export function TeamManagementTab() {
       <EditTeamModal
         isOpen={!!editTeam}
         onClose={() => setEditTeam(null)}
-        onSuccess={() => {
+        onDataChange={() => {
+          // Refresh teams data without closing dialog
           fetchTeams();
-          setEditTeam(null);
         }}
         team={editTeam}
       />
@@ -291,11 +300,17 @@ export function TeamManagementTab() {
       <ManageTeamMembersModal
         isOpen={!!manageTeam}
         onClose={() => setManageTeam(null)}
-        onSuccess={() => {
+        onDataChange={() => {
+          // Refresh teams data without closing dialog
           fetchTeams();
-          setManageTeam(null);
         }}
         team={manageTeam}
+      />
+
+      <TeamDetailModal
+        teamId={detailTeamId}
+        isOpen={!!detailTeamId}
+        onClose={() => setDetailTeamId(null)}
       />
     </div>
   );
