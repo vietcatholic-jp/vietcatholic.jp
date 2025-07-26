@@ -26,6 +26,7 @@ const RegistrantSchema = z.object({
   shirt_size: z.enum(['1','2','3','4','5','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL']),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
+  second_day_only: z.boolean(),
   notes: z.string().optional(),
 });
 
@@ -102,7 +103,22 @@ export async function POST(request: NextRequest) {
     const { data: invoiceResult } = await supabase.rpc('generate_invoice_code');
     const invoiceCode = invoiceResult || `INV-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
     const totalAmount = validated.registrants.reduce((total, registrant) => {
-      const price = registrant.age_group === 'under_12' ? basePrice * 0.5 : basePrice;
+      let price = basePrice;
+      
+      // Children under 12 pricing
+      if (registrant.age_group === 'under_12') {
+        if (registrant.second_day_only) {
+          price = basePrice * 0.25; // 1/4 price for children second day only
+        } else {
+          price = basePrice * 0.5; // Half price for children full event
+        }
+      }
+      // Adults pricing
+      else if (registrant.second_day_only) {
+        price = basePrice * 0.5; // Half price for adults second day only
+      }
+      // Full price for adults full event (no change needed)
+      
       return total + price;
     }, 0);
 
@@ -163,6 +179,7 @@ export async function POST(request: NextRequest) {
         phone?: string;
         shirt_size: string;
         is_primary: boolean;
+        second_day_only?: boolean;
         notes?: string;
         event_team_id?: string | null;
         event_role_id?: string | null;
@@ -180,6 +197,7 @@ export async function POST(request: NextRequest) {
         phone: registrant.phone,
         shirt_size: registrant.shirt_size,
         is_primary: registrant.is_primary,
+        second_day_only: registrant.second_day_only,
         notes: registrant.notes,
       };
       if (registrant.event_role === 'participant') {

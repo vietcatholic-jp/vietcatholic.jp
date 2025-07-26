@@ -4,8 +4,26 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Settings, Eye, UserMinus } from "lucide-react";
+import { Users, Eye, UserMinus, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { formatAgeGroup } from "@/lib/utils";
+import { CreateTeamModal } from "./create-team-modal";
+import { EditTeamModal } from "./edit-team-modal";
+import { ManageTeamMembersModal } from "./manage-team-members-modal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface Team {
   id: string;
@@ -28,6 +46,11 @@ interface Team {
 export function TeamManagementTab() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [deleteTeamId, setDeleteTeamId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [editTeam, setEditTeam] = useState<Team | null>(null);
+  const [manageTeam, setManageTeam] = useState<Team | null>(null);
 
   useEffect(() => {
     fetchTeams();
@@ -45,6 +68,35 @@ export function TeamManagementTab() {
       console.error("Error fetching teams:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCreateTeamSuccess = () => {
+    fetchTeams(); // Refresh teams list
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!deleteTeamId) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/teams?id=${deleteTeamId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Không thể xóa đội");
+      }
+
+      toast.success("Xóa đội thành công!");
+      fetchTeams(); // Refresh teams list
+      setDeleteTeamId(null);
+    } catch (error) {
+      console.error("Error deleting team:", error);
+      toast.error(error instanceof Error ? error.message : "Đã xảy ra lỗi");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -68,7 +120,7 @@ export function TeamManagementTab() {
             Quản lý thông tin và thành viên của các đội
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsCreateModalOpen(true)}>
           <Users className="h-4 w-4 mr-2" />
           Tạo đội mới
         </Button>
@@ -82,7 +134,7 @@ export function TeamManagementTab() {
             <p className="text-muted-foreground mb-4">
               Bắt đầu bằng cách tạo đội đầu tiên cho sự kiện
             </p>
-            <Button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
               <Users className="h-4 w-4 mr-2" />
               Tạo đội đầu tiên
             </Button>
@@ -102,9 +154,26 @@ export function TeamManagementTab() {
                     <Badge variant="secondary">
                       {team.member_count}/{team.capacity || '∞'} người
                     </Badge>
-                    <Button variant="outline" size="sm">
-                      <Settings className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setEditTeam(team)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Sửa thông tin
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => setDeleteTeamId(team.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Xóa đội
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 {team.description && (
@@ -164,7 +233,7 @@ export function TeamManagementTab() {
                     <Eye className="h-4 w-4 mr-1" />
                     Xem chi tiết
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setManageTeam(team)}>
                     <UserMinus className="h-4 w-4 mr-1" />
                     Quản lý thành viên
                   </Button>
@@ -174,6 +243,56 @@ export function TeamManagementTab() {
           ))}
         </div>
       )}
+
+      <CreateTeamModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateTeamSuccess}
+      />
+
+      <Dialog open={!!deleteTeamId} onOpenChange={() => setDeleteTeamId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận xóa đội</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn xóa đội này? Hành động này không thể hoàn tác.
+              Tất cả thành viên trong đội sẽ trở thành người chưa được phân đội.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" disabled={isDeleting} onClick={() => setDeleteTeamId(null)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={handleDeleteTeam}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Đang xóa..." : "Xóa đội"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <EditTeamModal
+        isOpen={!!editTeam}
+        onClose={() => setEditTeam(null)}
+        onSuccess={() => {
+          fetchTeams();
+          setEditTeam(null);
+        }}
+        team={editTeam}
+      />
+
+      <ManageTeamMembersModal
+        isOpen={!!manageTeam}
+        onClose={() => setManageTeam(null)}
+        onSuccess={() => {
+          fetchTeams();
+          setManageTeam(null);
+        }}
+        team={manageTeam}
+      />
     </div>
   );
 }
