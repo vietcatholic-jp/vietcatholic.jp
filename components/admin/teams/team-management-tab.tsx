@@ -154,9 +154,16 @@ export function TeamManagementTab() {
                       <Users className="h-5 w-5 text-primary flex-shrink-0" />
                       <h3 className="font-semibold text-lg truncate">{team.name}</h3>
                     </div>
-                    <Badge variant="secondary" className="flex-shrink-0">
-                      {team.member_count}/{team.capacity || '∞'} người
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge variant="secondary">
+                        {team.member_count}/{team.capacity || '∞'} người
+                      </Badge>
+                      {team.capacity && team.member_count / team.capacity > 0.8 && (
+                        <Badge variant="destructive" className="text-xs">
+                          {team.member_count >= team.capacity ? 'Đầy' : 'Gần đầy'}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   {team.description && (

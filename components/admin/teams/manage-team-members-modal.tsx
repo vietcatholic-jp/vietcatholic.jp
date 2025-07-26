@@ -41,6 +41,8 @@ interface Team {
   id: string;
   name: string;
   description?: string;
+  capacity?: number;
+  member_count: number;
 }
 
 interface TeamMember {
@@ -139,7 +141,13 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
   };
 
   const handleAddMember = () => {
-    if (!selectedRegistrantId) return;
+    if (!selectedRegistrantId || !team) return;
+
+    // Check capacity limit
+    if (team.capacity && members.length >= team.capacity) {
+      toast.error(`Đội đã đầy! Sức chứa tối đa: ${team.capacity} người`);
+      return;
+    }
 
     const selectedRegistrant = unassignedRegistrants.find(r => r.id === selectedRegistrantId);
     if (selectedRegistrant) {
@@ -245,6 +253,35 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Capacity Warning */}
+          {team?.capacity && (
+            <div className={`p-3 rounded-lg border ${
+              members.length >= team.capacity
+                ? 'bg-red-50 border-red-200 text-red-800'
+                : members.length / team.capacity > 0.8
+                ? 'bg-orange-50 border-orange-200 text-orange-800'
+                : 'bg-blue-50 border-blue-200 text-blue-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">
+                  Sức chứa: {members.length}/{team.capacity} người
+                </span>
+                {members.length >= team.capacity && (
+                  <Badge variant="destructive" className="text-xs">Đầy</Badge>
+                )}
+                {members.length / team.capacity > 0.8 && members.length < team.capacity && (
+                  <Badge variant="destructive" className="text-xs">Gần đầy</Badge>
+                )}
+              </div>
+              {members.length >= team.capacity && (
+                <p className="text-sm mt-1">Đội đã đạt sức chứa tối đa. Không thể thêm thành viên mới.</p>
+              )}
+              {members.length / team.capacity > 0.8 && members.length < team.capacity && (
+                <p className="text-sm mt-1">Đội sắp đầy. Còn {team.capacity - members.length} chỗ trống.</p>
+              )}
+            </div>
+          )}
+
           {/* Current Members Section */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -363,7 +400,11 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
 
             <Button
               onClick={handleAddMember}
-              disabled={!selectedRegistrantId || isAddingMember}
+              disabled={
+                !selectedRegistrantId ||
+                isAddingMember ||
+                Boolean(team?.capacity && members.length >= team.capacity)
+              }
               className="w-full h-9"
               size="sm"
             >
@@ -371,6 +412,11 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
                 <>
                   <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                   <span className="text-sm">Đang thêm...</span>
+                </>
+              ) : team?.capacity && members.length >= team.capacity ? (
+                <>
+                  <UserPlus className="mr-2 h-3 w-3" />
+                  <span className="text-sm">Đội đã đầy</span>
                 </>
               ) : (
                 <>
