@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     
     const user = await getServerUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 });
     }
 
     const supabase = await createClient();
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Không có quyền thực hiện thao tác này" }, { status: 403 });
     }
 
     // Get teams with leader and sub-leader information
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Teams query error:", error);
-      return NextResponse.json({ error: "Failed to fetch teams" }, { status: 500 });
+      return NextResponse.json({ error: "Không thể tải danh sách đội" }, { status: 500 });
     }
 
     // Get team member counts
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ teams: teamsWithCounts });
   } catch (error) {
     console.error("Teams API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi hệ thống" }, { status: 500 });
   }
 }
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getServerUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 });
     }
 
     const supabase = await createClient();
@@ -86,19 +86,19 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Không có quyền thực hiện thao tác này" }, { status: 403 });
     }
 
     const { name, description, event_config_id, leader_id, sub_leader_id, capacity } = await request.json();
 
     if (!name || !event_config_id) {
-      return NextResponse.json({ error: "Team name and event config are required" }, { status: 400 });
+      return NextResponse.json({ error: "Tên đội và cấu hình sự kiện là bắt buộc" }, { status: 400 });
     }
 
     // Validate capacity
     if (capacity !== null && capacity !== undefined) {
       if (!Number.isInteger(capacity) || capacity <= 0) {
-        return NextResponse.json({ error: "Capacity must be a positive integer or null" }, { status: 400 });
+        return NextResponse.json({ error: "Sức chứa phải là số nguyên dương hoặc để trống" }, { status: 400 });
       }
     }
 
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingTeam) {
-      return NextResponse.json({ error: "Team name already exists for this event" }, { status: 400 });
+      return NextResponse.json({ error: "Tên đội đã tồn tại cho sự kiện này" }, { status: 400 });
     }
 
     // Create new team
@@ -135,13 +135,13 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Team creation error:", error);
-      return NextResponse.json({ error: "Failed to create team" }, { status: 500 });
+      return NextResponse.json({ error: "Không thể tạo đội" }, { status: 500 });
     }
 
     return NextResponse.json({ team: { ...team, member_count: 0 } });
   } catch (error) {
     console.error("Team creation API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi hệ thống" }, { status: 500 });
   }
 }
 
@@ -149,7 +149,7 @@ export async function PUT(request: NextRequest) {
   try {
     const user = await getServerUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 });
     }
 
     const supabase = await createClient();
@@ -162,19 +162,19 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Không có quyền thực hiện thao tác này" }, { status: 403 });
     }
 
     const { id, name, description, leader_id, sub_leader_id, capacity } = await request.json();
 
     if (!id || !name) {
-      return NextResponse.json({ error: "Team ID and name are required" }, { status: 400 });
+      return NextResponse.json({ error: "ID đội và tên đội là bắt buộc" }, { status: 400 });
     }
 
     // Validate capacity
     if (capacity !== null && capacity !== undefined) {
       if (!Number.isInteger(capacity) || capacity <= 0) {
-        return NextResponse.json({ error: "Capacity must be a positive integer or null" }, { status: 400 });
+        return NextResponse.json({ error: "Sức chứa phải là số nguyên dương hoặc để trống" }, { status: 400 });
       }
     }
 
@@ -200,7 +200,7 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error("Team update error:", error);
-      return NextResponse.json({ error: "Failed to update team" }, { status: 500 });
+      return NextResponse.json({ error: "Không thể cập nhật đội" }, { status: 500 });
     }
 
     // Get member count
@@ -212,7 +212,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ team: { ...team, member_count: count || 0 } });
   } catch (error) {
     console.error("Team update API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi hệ thống" }, { status: 500 });
   }
 }
 
@@ -223,7 +223,7 @@ export async function DELETE(request: NextRequest) {
     
     const user = await getServerUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 });
     }
 
     const supabase = await createClient();
@@ -236,23 +236,33 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Không có quyền thực hiện thao tác này" }, { status: 403 });
     }
 
     if (!teamId) {
-      return NextResponse.json({ error: "Team ID is required" }, { status: 400 });
+      return NextResponse.json({ error: "ID đội là bắt buộc" }, { status: 400 });
     }
 
-    // Check if team has members
+    // Check if team has members and unassign them before deletion
     const { count } = await supabase
       .from("registrants")
       .select("*", { count: "exact", head: true })
       .eq("event_team_id", teamId);
 
+    // If team has members, unassign them first
     if (count && count > 0) {
-      return NextResponse.json({ 
-        error: "Cannot delete team with existing members. Please reassign members first." 
-      }, { status: 400 });
+      const { error: unassignError } = await supabase
+        .from("registrants")
+        .update({
+          event_team_id: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("event_team_id", teamId);
+
+      if (unassignError) {
+        console.error("Team member unassignment error:", unassignError);
+        return NextResponse.json({ error: "Không thể chuyển thành viên ra khỏi đội" }, { status: 500 });
+      }
     }
 
     // Delete team
@@ -263,12 +273,12 @@ export async function DELETE(request: NextRequest) {
 
     if (error) {
       console.error("Team deletion error:", error);
-      return NextResponse.json({ error: "Failed to delete team" }, { status: 500 });
+      return NextResponse.json({ error: "Không thể xóa đội" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Team deletion API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi hệ thống" }, { status: 500 });
   }
 }

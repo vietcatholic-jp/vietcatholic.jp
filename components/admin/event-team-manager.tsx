@@ -179,7 +179,7 @@ export function EventTeamManager({ eventConfig }: EventTeamManagerProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete team');
+        throw new Error(errorData.error || 'Không thể xóa đội');
       }
 
       setTeams(prev => prev.filter(t => t.id !== team.id));
