@@ -12,3 +12,6 @@ ON DELETE CASCADE;
 -- Add go_with column to registrants table
 alter table public.registrants
   add column if not exists go_with boolean default false;
+
+alter table public.registrants
+  add column if not exists second_day_only boolean default false;

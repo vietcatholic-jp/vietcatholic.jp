@@ -46,6 +46,7 @@ const primaryRegistrantSchema = z.object({
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
   go_with: z.boolean(),
+  second_day_only: z.boolean(),
   notes: z.string().optional(),
   // Facebook link is required for primary registrant
   facebook_link: z.string().url("Link Facebook không hợp lệ").min(1, "Link Facebook là bắt buộc cho người đăng ký chính").refine((val) => val && val.trim() !== '', {
@@ -78,6 +79,7 @@ const additionalRegistrantSchema = z.object({
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
   go_with: z.boolean(),
+  second_day_only: z.boolean(),
   notes: z.string().optional(),
   // Optional contact fields
   email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
@@ -192,6 +194,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           event_role: "participant",
           is_primary: true,
           go_with: false,
+          second_day_only: false,
           notes: "",
           // Optional fields
           email: userEmail || "",
@@ -212,7 +215,22 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   const registrants = watch("registrants");
   const basePrice = eventConfig?.base_price || 6000; // Dynamic price from event config
   const totalAmount = registrants.reduce((total, registrant) => {
-    const price = registrant.age_group === 'under_12' ? basePrice * 0.5 : basePrice;
+    let price = basePrice;
+    
+    // Children under 12 pricing
+    if (registrant.age_group === 'under_12') {
+      if (registrant.second_day_only) {
+        price = basePrice * 0.25; // 1/4 price for children second day only
+      } else {
+        price = basePrice * 0.5; // Half price for children full event
+      }
+    }
+    // Adults pricing
+    else if (registrant.second_day_only) {
+      price = basePrice * 0.5; // Half price for adults second day only
+    }
+    // Full price for adults full event (no change needed)
+    
     return total + price;
   }, 0);
 
@@ -242,6 +260,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       event_role: selectedRole === 'participant' ? selectedRole : 'participant', // Default to participant unless primary is already participant
       is_primary: false,
       go_with: false,
+      second_day_only: false,
       notes: "",
       // Optional fields
       email: "",
@@ -278,6 +297,10 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         setValue(`registrants.${index}.shirt_size` as const, "M-M" as const);
       }
   };
+
+  const onRegistrationDayChange = (index: number, isSecondDayOnly: boolean) => {
+    setValue(`registrants.${index}.second_day_only` as const, isSecondDayOnly);
+  }
 
   const handleAgeGroupChange = (index: number, selectedAgeGroup: string) => {
       setValue(`registrants.${index}.age_group` as const, selectedAgeGroup as AgeGroupType);
@@ -681,14 +704,40 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           )}
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.second_day_only`}>Tùy chọn tham gia</Label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`registrants.${index}.second_day_only`}
+                          {...register(`registrants.${index}.second_day_only`)}
+                          checked={registrants[index]?.second_day_only || false}
+                          onChange={(e) => onRegistrationDayChange(index, e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <Label htmlFor={`registrants.${index}.second_day_only`} className="text-sm font-normal">
+                          Chỉ tham gia ngày 15/09
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Nếu bạn chỉ có thể tham gia ngày 15/09, chọn tùy chọn này để được giảm giá 50%. 
+                        Trẻ em dưới 12 tuổi: giá ¥3,000 (tham gia đầy đủ) hoặc ¥1,500 (chỉ ngày 15/09).
+                      </p>
+                    </div>
+
                       <div className="space-y-2 mt-2">
                         <Label htmlFor={`registrants.${index}.go_with`}>Bạn có nhu cầu đi xe chung không?</Label>
-                        <Input
-                          type="checkbox"
-                          id={`registrants.${index}.go_with`}
-                          {...register(`registrants.${index}.go_with`)}
-                          className="h-4 w-4"
-                        />
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="checkbox"
+                            id={`registrants.${index}.go_with`}
+                            {...register(`registrants.${index}.go_with`)}
+                            className="h-4 w-4"
+                          />
+                          <Label htmlFor={`registrants.${index}.go_with`} className="text-sm font-normal">
+                            Tôi muốn đi chung với nhóm
+                          </Label>
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           Lưu ý: Nếu bạn muốn đi chung với nhóm hoặc cộng đoàn ở gần bạn, hãy chọn ô này.
                           Thông tin về các nhóm hoặc cộng đoàn có tổ chức xe chung sẽ được cập nhật sau,
@@ -768,6 +817,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                     {/* Hidden fields */}
                     <input type="hidden" {...register(`registrants.${index}.event_role`)} />
                     <input type="hidden" {...register(`registrants.${index}.is_primary`)} />
+                    <input type="hidden" {...register(`registrants.${index}.second_day_only`)} />
                   </div>
                   
                   {/* Add person button after each registrant (except the last one) */}
@@ -852,27 +902,41 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                 <span>Số người tham gia:</span>
                 <span className="font-medium">{registrants.length}</span>
               </div>
-              {/* Show breakdown by age group */}
-              {registrants.some(r => r.age_group === 'under_12') && (
-                <div className="text-sm space-y-1 pl-4 border-l-2 border-blue-200">
+              {/* Show detailed pricing breakdown */}
+              <div className="text-sm space-y-1 pl-4 border-l-2 border-blue-200">
+                {/* Adults full event */}
+                {registrants.filter(r => !r.second_day_only && r.age_group !== 'under_12').length > 0 && (
                   <div className="flex justify-between">
-                    <span>Trẻ em dưới 12 tuổi ({registrants.filter(r => r.age_group === 'under_12').length} người):</span>
+                    <span>Người lớn - Tham gia đầy đủ ({registrants.filter(r => !r.second_day_only && r.age_group !== 'under_12').length} người):</span>
+                    <span>¥{basePrice.toLocaleString()}/người</span>
+                  </div>
+                )}
+                
+                {/* Adults second day only */}
+                {registrants.filter(r => r.second_day_only && r.age_group !== 'under_12').length > 0 && (
+                  <div className="flex justify-between">
+                    <span>Người lớn - Chỉ ngày 15/09 ({registrants.filter(r => r.second_day_only && r.age_group !== 'under_12').length} người):</span>
                     <span>¥{(basePrice * 0.5).toLocaleString()}/người</span>
                   </div>
-                  {registrants.some(r => r.age_group !== 'under_12') && (
-                    <div className="flex justify-between">
-                      <span>Từ 12 tuổi trở lên ({registrants.filter(r => r.age_group !== 'under_12').length} người):</span>
-                      <span>¥{basePrice.toLocaleString()}/người</span>
-                    </div>
-                  )}
-                </div>
-              )}
-              {!registrants.some(r => r.age_group === 'under_12') && (
-                <div className="flex justify-between">
-                  <span>Chi phí mỗi người:</span>
-                  <span className="font-medium">¥{basePrice.toLocaleString()}</span>
-                </div>
-              )}
+                )}
+
+                {/* Children full event */}
+                {registrants.filter(r => !r.second_day_only && r.age_group === 'under_12').length > 0 && (
+                  <div className="flex justify-between">
+                    <span>Trẻ em dưới 12 tuổi - Tham gia đầy đủ ({registrants.filter(r => !r.second_day_only && r.age_group === 'under_12').length} người):</span>
+                    <span>¥{(basePrice * 0.5).toLocaleString()}/người</span>
+                  </div>
+                )}
+
+                {/* Children second day only */}
+                {registrants.filter(r => r.second_day_only && r.age_group === 'under_12').length > 0 && (
+                  <div className="flex justify-between">
+                    <span>Trẻ em dưới 12 tuổi - Chỉ ngày 15/09 ({registrants.filter(r => r.second_day_only && r.age_group === 'under_12').length} người):</span>
+                    <span>¥{(basePrice * 0.25).toLocaleString()}/người</span>
+                  </div>
+                )}
+
+              </div>
               <div className="border-t pt-2">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Tổng chi phí:</span>

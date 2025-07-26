@@ -168,6 +168,11 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
                         {registrant.is_primary && (
                           <Badge variant="default" className="text-xs">Người chính</Badge>
                         )}
+                        {registrant.second_day_only && (
+                          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
+                            Chỉ ngày 15/09
+                          </Badge>
+                        )}
                       </div>
                       <RoleBadgeCompact role={registrant.event_roles} />
                     </div>

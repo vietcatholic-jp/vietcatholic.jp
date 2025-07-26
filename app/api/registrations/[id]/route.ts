@@ -25,6 +25,7 @@ const UpdateRegistrationSchema = z.object({
     shirt_size: z.enum(['1','2','3','4','5','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL']),
     event_role: z.string() as z.ZodType<EventParticipationRole>,
     is_primary: z.boolean(),
+    second_day_only: z.boolean().optional(),
     notes: z.string().optional(),
   })).min(1),
   notes: z.string().optional(),

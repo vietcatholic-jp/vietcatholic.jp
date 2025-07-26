@@ -355,6 +355,12 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                                   {registrant.gender === 'male' ? 'Nam' : registrant.gender === 'female' ? 'Nữ' : 'Khác'}
                                 </span>
                               )}
+                              {registrant.second_day_only && (
+                                <span className="flex items-center gap-1 text-orange-600 font-medium">
+                                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                                  Chỉ ngày 15/09
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
