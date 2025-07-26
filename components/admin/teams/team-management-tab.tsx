@@ -141,104 +141,108 @@ export function TeamManagementTab() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4">
           {teams.map((team) => (
-            <Card key={team.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    {team.name}
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">
+            <Card key={team.id} className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                {/* Left section: Team info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Users className="h-5 w-5 text-primary flex-shrink-0" />
+                      <h3 className="font-semibold text-lg truncate">{team.name}</h3>
+                    </div>
+                    <Badge variant="secondary" className="flex-shrink-0">
                       {team.member_count}/{team.capacity || '∞'} người
                     </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditTeam(team)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Sửa thông tin
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => setDeleteTeamId(team.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Xóa đội
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  </div>
+
+                  {team.description && (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {team.description}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    {/* Leader Info */}
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">Trưởng nhóm:</span>
+                      <span className="text-muted-foreground">
+                        {team.leader ? team.leader.full_name : "Chưa có"}
+                      </span>
+                    </div>
+
+                    {/* Sub Leader Info */}
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">Phó nhóm:</span>
+                      <span className="text-muted-foreground">
+                        {team.sub_leader ? team.sub_leader.full_name : "Chưa có"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Age and Gender Distribution */}
+                  <div className="flex flex-wrap gap-4 mt-3">
+                    {team.age_breakdown && Object.keys(team.age_breakdown).length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Độ tuổi:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(team.age_breakdown).map(([ageGroup, count]) => (
+                            <Badge key={ageGroup} variant="secondary" className="text-xs">
+                              {formatAgeGroup(ageGroup)}: {count}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {team.gender_breakdown && Object.keys(team.gender_breakdown).length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Giới tính:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(team.gender_breakdown).map(([gender, count]) => (
+                            <Badge key={gender} variant="outline" className="text-xs">
+                              {gender === "male" ? "Nam" : "Nữ"}: {count}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-                {team.description && (
-                  <p className="text-sm text-muted-foreground">{team.description}</p>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Leader Info */}
-                  <div>
-                    <div className="text-sm font-medium mb-1">Trưởng nhóm</div>
-                    <div className="text-sm text-muted-foreground">
-                      {team.leader ? team.leader.full_name : "Chưa có"}
-                    </div>
-                  </div>
 
-                  {/* Sub Leader Info */}
-                  <div>
-                    <div className="text-sm font-medium mb-1">Phó nhóm</div>
-                    <div className="text-sm text-muted-foreground">
-                      {team.sub_leader ? team.sub_leader.full_name : "Chưa có"}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Age Distribution */}
-                {team.age_breakdown && Object.keys(team.age_breakdown).length > 0 && (
-                  <div className="mb-4">
-                    <div className="text-sm font-medium mb-2">Phân bố độ tuổi</div>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(team.age_breakdown).map(([ageGroup, count]) => (
-                        <Badge key={ageGroup} variant="secondary" className="text-xs">
-                          {formatAgeGroup(ageGroup)}: {count}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Gender Distribution */}
-                {team.gender_breakdown && Object.keys(team.gender_breakdown).length > 0 && (
-                  <div className="mb-4">
-                    <div className="text-sm font-medium mb-2">Phân bố giới tính</div>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(team.gender_breakdown).map(([gender, count]) => (
-                        <Badge key={gender} variant="outline" className="text-xs">
-                          {gender === "male" ? "Nam" : "Nữ"}: {count}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 pt-2 border-t">
-                  <Button variant="outline" size="sm" className="flex-1">
+                {/* Right section: Actions */}
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">
                     <Eye className="h-4 w-4 mr-1" />
                     Xem chi tiết
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setManageTeam(team)}>
+                  <Button variant="outline" size="sm" onClick={() => setManageTeam(team)}>
                     <UserMinus className="h-4 w-4 mr-1" />
                     Quản lý thành viên
                   </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setEditTeam(team)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Sửa thông tin
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => setDeleteTeamId(team.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Xóa đội
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           ))}
         </div>
