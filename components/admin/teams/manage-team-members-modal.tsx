@@ -22,6 +22,21 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, UserPlus, UserMinus, Search } from "lucide-react";
 import { toast } from "sonner";
 
+// Age group mapping function
+const formatAgeGroup = (ageGroup: string): string => {
+  const ageGroupMap: Record<string, string> = {
+    under_12: "Dưới 12 tuổi",
+    "12_17": "12-17 tuổi",
+    "18_25": "18-25 tuổi",
+    "26_35": "26-35 tuổi",
+    "36_45": "36-45 tuổi",
+    "46_55": "46-55 tuổi",
+    "56_65": "56-65 tuổi",
+    over_65: "Trên 65 tuổi"
+  };
+  return ageGroupMap[ageGroup] || ageGroup;
+};
+
 interface Team {
   id: string;
   name: string;
@@ -37,8 +52,10 @@ interface TeamMember {
   diocese: string;
   email?: string;
   phone?: string;
+  facebook_url?: string;
   registration: {
     id: string;
+    invoice_code?: string;
     user: {
       full_name: string;
       email: string;
@@ -73,6 +90,8 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
   const [isRemovingMember, setIsRemovingMember] = useState<string | null>(null);
   const [selectedRegistrantId, setSelectedRegistrantId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [confirmRemoveMember, setConfirmRemoveMember] = useState<TeamMember | null>(null);
+  const [confirmAddMember, setConfirmAddMember] = useState<UnassignedRegistrant | null>(null);
 
   // Fetch team members when modal opens
   useEffect(() => {
@@ -119,7 +138,16 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
     }
   };
 
-  const handleAddMember = async () => {
+  const handleAddMember = () => {
+    if (!selectedRegistrantId) return;
+
+    const selectedRegistrant = unassignedRegistrants.find(r => r.id === selectedRegistrantId);
+    if (selectedRegistrant) {
+      setConfirmAddMember(selectedRegistrant);
+    }
+  };
+
+  const confirmAddMemberAction = async () => {
     if (!team || !selectedRegistrantId) return;
 
     setIsAddingMember(true);
@@ -141,6 +169,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
 
       toast.success("Thêm thành viên thành công!");
       setSelectedRegistrantId("");
+      setConfirmAddMember(null);
       fetchTeamMembers();
       fetchUnassignedRegistrants();
       onSuccess();
@@ -152,12 +181,16 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
     }
   };
 
-  const handleRemoveMember = async (memberId: string) => {
-    if (!team) return;
+  const handleRemoveMember = (member: TeamMember) => {
+    setConfirmRemoveMember(member);
+  };
 
-    setIsRemovingMember(memberId);
+  const confirmRemoveMemberAction = async () => {
+    if (!team || !confirmRemoveMember) return;
+
+    setIsRemovingMember(confirmRemoveMember.id);
     try {
-      const response = await fetch(`/api/admin/teams/${team.id}/members?registrant_id=${memberId}`, {
+      const response = await fetch(`/api/admin/teams/${team.id}/members?registrant_id=${confirmRemoveMember.id}`, {
         method: "DELETE",
       });
 
@@ -167,6 +200,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
       }
 
       toast.success("Xóa thành viên thành công!");
+      setConfirmRemoveMember(null);
       fetchTeamMembers();
       fetchUnassignedRegistrants();
       onSuccess();
@@ -183,6 +217,8 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
     setUnassignedRegistrants([]);
     setSelectedRegistrantId("");
     setSearchTerm("");
+    setConfirmRemoveMember(null);
+    setConfirmAddMember(null);
     onClose();
   };
 
@@ -195,8 +231,8 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-[900px] max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Quản lý thành viên đội</DialogTitle>
           <DialogDescription>
@@ -204,9 +240,9 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Current Members Section */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Thành viên hiện tại</h3>
               <Badge variant="secondary">{members.length} người</Badge>
@@ -222,24 +258,33 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
                 Đội chưa có thành viên nào
               </div>
             ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="space-y-1 max-h-80 overflow-y-auto">
                 {members.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
+                  <div key={member.id} className="flex items-center justify-between p-2 border rounded-lg">
+                    <div className="flex-1 min-w-0">
                       <div className="font-medium">{member.full_name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {member.gender} • {member.age_group} • {member.province}
+                        {member.gender === "male" ? "Nam" : "Nữ"} • {formatAgeGroup(member.age_group)} • {member.province}
                       </div>
-                      {member.email && (
-                        <div className="text-sm text-muted-foreground">{member.email}</div>
+                      {member.registration.invoice_code && (
+                        <div className="text-sm text-muted-foreground">
+                          Mã đăng ký: {member.registration.invoice_code}
+                        </div>
+                      )}
+                      {member.facebook_url && (
+                        <div className="text-sm text-blue-600 truncate">
+                          <a href={member.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            Facebook: {member.facebook_url}
+                          </a>
+                        </div>
                       )}
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRemoveMember(member.id)}
+                      onClick={() => handleRemoveMember(member)}
                       disabled={isRemovingMember === member.id}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
                     >
                       {isRemovingMember === member.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -254,7 +299,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
           </div>
 
           {/* Add Member Section */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h3 className="text-lg font-medium">Thêm thành viên mới</h3>
             
             {/* Search Input */}
@@ -298,7 +343,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
                         <div className="flex flex-col">
                           <span>{registrant.full_name}</span>
                           <span className="text-sm text-muted-foreground">
-                            {registrant.gender} • {registrant.age_group} • {registrant.province}
+                            {registrant.gender === "male" ? "Nam" : "Nữ"} • {formatAgeGroup(registrant.age_group)} • {registrant.province}
                           </span>
                         </div>
                       </SelectItem>
@@ -334,6 +379,54 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
           </Button>
         </div>
       </DialogContent>
+
+      {/* Confirm Remove Member Dialog */}
+      <Dialog open={!!confirmRemoveMember} onOpenChange={() => setConfirmRemoveMember(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận xóa thành viên</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn xóa <strong>{confirmRemoveMember?.full_name}</strong> khỏi đội này?
+              Thành viên sẽ trở về danh sách chưa phân đội.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setConfirmRemoveMember(null)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={confirmRemoveMemberAction}
+              disabled={!!isRemovingMember}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isRemovingMember ? "Đang xóa..." : "Xóa thành viên"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Add Member Dialog */}
+      <Dialog open={!!confirmAddMember} onOpenChange={() => setConfirmAddMember(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận thêm thành viên</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn thêm <strong>{confirmAddMember?.full_name}</strong> vào đội này?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setConfirmAddMember(null)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={confirmAddMemberAction}
+              disabled={isAddingMember}
+            >
+              {isAddingMember ? "Đang thêm..." : "Thêm thành viên"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
