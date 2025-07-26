@@ -71,11 +71,11 @@ interface User {
 interface EditTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onDataChange?: () => void; // New callback for data changes without closing dialog
   team: Team | null;
 }
 
-export function EditTeamModal({ isOpen, onClose, onSuccess, team }: EditTeamModalProps) {
+export function EditTeamModal({ isOpen, onClose, onDataChange, team }: EditTeamModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
@@ -154,8 +154,11 @@ export function EditTeamModal({ isOpen, onClose, onSuccess, team }: EditTeamModa
       }
 
       toast.success("Cập nhật đội thành công!");
-      onSuccess();
-      onClose();
+
+      // Notify parent component about data change without closing dialog
+      onDataChange?.();
+
+      // Note: Removed onSuccess() and onClose() calls to keep dialog open
     } catch (error) {
       console.error("Error updating team:", error);
       toast.error(error instanceof Error ? error.message : "Đã xảy ra lỗi");

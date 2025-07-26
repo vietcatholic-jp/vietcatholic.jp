@@ -79,11 +79,11 @@ interface UnassignedRegistrant {
 interface ManageTeamMembersModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onDataChange?: () => void; // New callback for data changes without closing dialog
   team: Team | null;
 }
 
-export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: ManageTeamMembersModalProps) {
+export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: ManageTeamMembersModalProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [unassignedRegistrants, setUnassignedRegistrants] = useState<UnassignedRegistrant[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
@@ -156,9 +156,38 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
   };
 
   const confirmAddMemberAction = async () => {
-    if (!team || !selectedRegistrantId) return;
+    if (!team || !selectedRegistrantId || !confirmAddMember) return;
 
     setIsAddingMember(true);
+
+    // Optimistic update: Add member to UI immediately
+    const newMember: TeamMember = {
+      id: confirmAddMember.id,
+      full_name: confirmAddMember.full_name,
+      gender: confirmAddMember.gender,
+      age_group: confirmAddMember.age_group,
+      province: confirmAddMember.province,
+      diocese: confirmAddMember.diocese,
+      email: confirmAddMember.email,
+      phone: confirmAddMember.phone,
+      facebook_url: undefined,
+      registration: {
+        id: `temp-${confirmAddMember.id}`,
+        user: {
+          full_name: confirmAddMember.full_name,
+          email: confirmAddMember.email || "",
+        },
+      },
+    };
+
+    // Update UI optimistically
+    const previousMembers = [...members];
+    const previousUnassigned = [...unassignedRegistrants];
+    setMembers(prev => [...prev, newMember]);
+    setUnassignedRegistrants(prev => prev.filter(r => r.id !== selectedRegistrantId));
+    setSelectedRegistrantId("");
+    setConfirmAddMember(null);
+
     try {
       const response = await fetch(`/api/admin/teams/${team.id}/members`, {
         method: "POST",
@@ -175,14 +204,20 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
         throw new Error(error.error || "Không thể thêm thành viên");
       }
 
+      // Success: Refresh data to get accurate information
+      await Promise.all([fetchTeamMembers(), fetchUnassignedRegistrants()]);
       toast.success("Thêm thành viên thành công!");
-      setSelectedRegistrantId("");
-      setConfirmAddMember(null);
-      fetchTeamMembers();
-      fetchUnassignedRegistrants();
-      onSuccess();
+
+      // Notify parent component about data change without closing dialog
+      onDataChange?.();
     } catch (error) {
       console.error("Error adding member:", error);
+
+      // Rollback optimistic update
+      setMembers(previousMembers);
+      setUnassignedRegistrants(previousUnassigned);
+      setSelectedRegistrantId(selectedRegistrantId);
+
       toast.error(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     } finally {
       setIsAddingMember(false);
@@ -197,8 +232,31 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
     if (!team || !confirmRemoveMember) return;
 
     setIsRemovingMember(confirmRemoveMember.id);
+
+    // Optimistic update: Remove member from UI immediately
+    const memberToRemove = confirmRemoveMember;
+    const previousMembers = [...members];
+    const previousUnassigned = [...unassignedRegistrants];
+
+    // Create unassigned registrant object from removed member
+    const newUnassignedRegistrant: UnassignedRegistrant = {
+      id: memberToRemove.id,
+      full_name: memberToRemove.full_name,
+      gender: memberToRemove.gender,
+      age_group: memberToRemove.age_group,
+      province: memberToRemove.province,
+      diocese: memberToRemove.diocese,
+      email: memberToRemove.email,
+      phone: memberToRemove.phone,
+    };
+
+    // Update UI optimistically
+    setMembers(prev => prev.filter(m => m.id !== memberToRemove.id));
+    setUnassignedRegistrants(prev => [newUnassignedRegistrant, ...prev]);
+    setConfirmRemoveMember(null);
+
     try {
-      const response = await fetch(`/api/admin/teams/${team.id}/members?registrant_id=${confirmRemoveMember.id}`, {
+      const response = await fetch(`/api/admin/teams/${team.id}/members?registrant_id=${memberToRemove.id}`, {
         method: "DELETE",
       });
 
@@ -207,13 +265,20 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
         throw new Error(error.error || "Không thể xóa thành viên");
       }
 
+      // Success: Refresh data to get accurate information
+      await Promise.all([fetchTeamMembers(), fetchUnassignedRegistrants()]);
       toast.success("Xóa thành viên thành công!");
-      setConfirmRemoveMember(null);
-      fetchTeamMembers();
-      fetchUnassignedRegistrants();
-      onSuccess();
+
+      // Notify parent component about data change without closing dialog
+      onDataChange?.();
     } catch (error) {
       console.error("Error removing member:", error);
+
+      // Rollback optimistic update
+      setMembers(previousMembers);
+      setUnassignedRegistrants(previousUnassigned);
+      setConfirmRemoveMember(memberToRemove);
+
       toast.error(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     } finally {
       setIsRemovingMember(null);
