@@ -49,7 +49,7 @@ interface CreateTeamModalProps {
 export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
 
   const {
@@ -82,7 +82,7 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
       const response = await fetch("/api/admin/events");
       if (response.ok) {
         const data = await response.json();
-        const activeEvent = data.events?.find((event: any) => event.is_active);
+        const activeEvent = data.events?.find((event: { is_active: boolean; id: string }) => event.is_active);
         setActiveEventId(activeEvent?.id || null);
       }
     } catch (error) {
@@ -91,7 +91,6 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
   };
 
   const fetchUsers = async () => {
-    setIsLoadingUsers(true);
     try {
       const response = await fetch("/api/admin/users");
       if (response.ok) {
@@ -100,8 +99,6 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-    } finally {
-      setIsLoadingUsers(false);
     }
   };
 
