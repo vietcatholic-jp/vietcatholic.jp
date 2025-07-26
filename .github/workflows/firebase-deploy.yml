@@ -46,13 +46,23 @@ jobs:
             "universe_domain": "googleapis.com"
           }
 
-    - name: 🚀 Deploy to Firebase App Hosting
-      uses: FirebaseExtended/action-apphosting-deploy@v0
-      with:
-        repoToken: ${{ secrets.GITHUB_TOKEN }}
-        firebaseServiceAccount: ${{ runner.temp }}/firebase-service-account.json
-        projectId: daihoiconggiaojp-dev
+    - name: 🔧 Setup Firebase CLI
+      run: |
+        npm install -g firebase-tools
+
+    - name: 🔐 Authenticate Firebase
+      run: |
+        export GOOGLE_APPLICATION_CREDENTIALS="${{ runner.temp }}/firebase-service-account.json"
+        firebase use daihoiconggiaojp-dev
       env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+
+    - name: 🚀 Deploy to Firebase App Hosting
+      run: |
+        export GOOGLE_APPLICATION_CREDENTIALS="${{ runner.temp }}/firebase-service-account.json"
+        firebase deploy --only apphosting
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
         NEXT_PUBLIC_SUPABASE_URL: https://nlnhhiasteknrfcfnzxd.supabase.co
         NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sbmhoaWFzdGVrbnJmY2ZuenhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwNzI3MTgsImV4cCI6MjA2NzY0ODcxOH0.XJwplXGzxW0Wa_nw3WaHYggCiRXqJK5RKgOINvfpxBM
         NEXT_PUBLIC_SITE_URL: https://nlnhhiasteknrfcfnzxd.supabase.co
