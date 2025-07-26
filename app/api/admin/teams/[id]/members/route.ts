@@ -53,7 +53,7 @@ export async function GET(
           id,
           user_id,
           status,
-          user:users!registrations_user_id_fkey(id, full_name, email, phone)
+          user:users!registrations_user_id_fkey(id, full_name, email)
         ),
         event_role:event_roles!registrants_event_role_id_fkey(id, name, description)
       `)
