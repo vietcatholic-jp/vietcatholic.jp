@@ -9,6 +9,7 @@ import { formatAgeGroup } from "@/lib/utils";
 import { CreateTeamModal } from "./create-team-modal";
 import { EditTeamModal } from "./edit-team-modal";
 import { ManageTeamMembersModal } from "./manage-team-members-modal";
+import { TeamDetailModal } from "./team-detail-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +52,7 @@ export function TeamManagementTab() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editTeam, setEditTeam] = useState<Team | null>(null);
   const [manageTeam, setManageTeam] = useState<Team | null>(null);
+  const [detailTeamId, setDetailTeamId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeams();
@@ -213,7 +215,7 @@ export function TeamManagementTab() {
 
                 {/* Right section: Actions */}
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => setDetailTeamId(team.id)}>
                     <Eye className="h-4 w-4 mr-1" />
                     Xem chi tiết
                   </Button>
@@ -296,6 +298,12 @@ export function TeamManagementTab() {
           setManageTeam(null);
         }}
         team={manageTeam}
+      />
+
+      <TeamDetailModal
+        teamId={detailTeamId}
+        isOpen={!!detailTeamId}
+        onClose={() => setDetailTeamId(null)}
       />
     </div>
   );
