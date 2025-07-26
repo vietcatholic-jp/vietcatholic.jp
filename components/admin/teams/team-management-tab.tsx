@@ -290,9 +290,9 @@ export function TeamManagementTab() {
       <EditTeamModal
         isOpen={!!editTeam}
         onClose={() => setEditTeam(null)}
-        onSuccess={() => {
+        onDataChange={() => {
+          // Refresh teams data without closing dialog
           fetchTeams();
-          setEditTeam(null);
         }}
         team={editTeam}
       />
@@ -300,9 +300,9 @@ export function TeamManagementTab() {
       <ManageTeamMembersModal
         isOpen={!!manageTeam}
         onClose={() => setManageTeam(null)}
-        onSuccess={() => {
+        onDataChange={() => {
+          // Refresh teams data without closing dialog
           fetchTeams();
-          setManageTeam(null);
         }}
         team={manageTeam}
       />
