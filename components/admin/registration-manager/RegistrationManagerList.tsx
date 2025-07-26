@@ -79,6 +79,14 @@ export function RegistrationManagerList({
         return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Chờ hủy</Badge>;
       case 'cancel_processed':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Đã hoàn tiền</Badge>;
+      case 'donation':
+        return <Badge variant="secondary">Đã chuyển thành quyên góp</Badge>;
+      case 'checked_in':
+        return <Badge variant="secondary">Đã check-in</Badge>;
+      case 'checked_out':
+        return <Badge variant="secondary">Đã check-out</Badge>;
+      case 'temp_confirmed':
+        return <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200">Đã xác nhận (thanh toán sau)</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

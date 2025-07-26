@@ -45,6 +45,13 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
     { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối', description: 'Admin từ chối đóng phí tham dự' },
     { value: 'confirmed', label: 'Đã xác nhận', description: 'Đăng ký hoàn tất, có thể xuất vé' },
     { value: 'cancel_pending', label: 'Chờ hủy', description: 'Đang chờ xử lý yêu cầu hủy' },
+    { value: 'cancel_accepted', label: 'Đã chấp nhận hủy', description: 'Yêu cầu hủy đã được chấp nhận' },
+    { value: 'cancel_rejected', label: 'Đã từ chối hủy', description: 'Yêu cầu hủy đã bị từ chối' },
+    { value: 'cancel_processed', label: 'Đã hoàn tiền', description: 'Đăng ký đã được hoàn tiền' },
+    { value: 'donation', label: 'Đã chuyển thành quyên góp', description: 'Đăng ký đã được chuyển thành quyên góp' },
+    { value: 'checked_in', label: 'Đã check-in', description: 'Người dùng đã check-in sự kiện' },
+    { value: 'checked_out', label: 'Đã check-out', description: 'Người dùng đã check-out sự kiện' },
+    { value: 'temp_confirmed', label: 'Đã xác nhận (thanh toán sau)', description: 'Đăng ký tạm thời xác nhận, thanh toán sau' },
     { value: 'cancelled', label: 'Đã hủy', description: 'Đăng ký đã bị hủy' },
   ];
 

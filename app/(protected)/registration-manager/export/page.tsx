@@ -54,7 +54,14 @@ const STATUS_OPTIONS = [
   { value: 'confirm_paid', label: 'Đã xác nhận đóng phí tham dự' },
   { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối' },
   { value: 'confirmed', label: 'Đã xác nhận' },
+  { value: 'temp_confirmed', label: 'Đã xác nhận (thanh toán sau)' },
   { value: 'checked_in', label: 'Đã check-in' },
+  { value: 'checked_out', label: 'Đã check-out' },
+  { value: 'donation', label: 'Đã chuyển thành quyên góp' },
+  { value: 'cancel_pending', label: 'Chờ xử lý hủy' },
+  { value: 'cancel_accepted', label: 'Đã chấp nhận hủy' },
+  { value: 'cancel_rejected', label: 'Đã từ chối hủy' },
+  { value: 'cancel_processed', label: 'Đã hoàn tiền' },
   { value: 'cancelled', label: 'Đã hủy' }
 ];
 
@@ -80,7 +87,8 @@ function getStatusLabel(status: RegistrationStatus): string {
     'cancelled': 'Đã hủy',
     'confirmed': 'Đã xác nhận',
     'checked_in': 'Đã check-in',
-    'checked_out': 'Đã check-out'
+    'checked_out': 'Đã check-out',
+    'temp_confirmed': 'Đã xác nhận (thanh toán sau)'
   };
   return statusMap[status] || status;
 }
@@ -93,7 +101,15 @@ function getStatusBadgeVariant(status: RegistrationStatus) {
     'confirmed': 'default',
     'checked_in': 'default',
     'payment_rejected': 'destructive',
-    'cancelled': 'destructive'
+    'cancelled': 'destructive',
+    'cancel_pending': 'outline',
+    'cancel_accepted': 'outline',
+    'cancel_rejected': 'destructive',
+    'cancel_processed': 'destructive',
+    'donation': 'secondary',
+    'checked_out': 'secondary',
+    'temp_confirmed': 'secondary',
+    'default': 'outline' // Fallback for any unknown status
   };
   return variants[status] || 'outline';
 }

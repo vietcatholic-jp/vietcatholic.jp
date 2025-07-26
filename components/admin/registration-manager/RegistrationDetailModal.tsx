@@ -46,7 +46,21 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
       case 'cancelled':
         return <Badge variant="destructive">Đã hủy</Badge>;
       case 'cancel_pending':
-        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Chờ hủy</Badge>;
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Chờ xác nhận hủy</Badge>;
+      case 'cancel_accepted':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Đã chấp nhận hủy</Badge>;
+      case 'cancel_rejected':
+        return <Badge variant="destructive">Đã từ chối hủy</Badge>;
+      case 'cancel_processed':
+        return <Badge variant="destructive" className="bg-red-50 text-red-700 border-red-200">Đã hoàn tiền</Badge>;
+      case 'donation':
+        return <Badge variant="secondary" className="bg-yellow-50 text-yellow-700 border-yellow-200">Đã chuyển thành quyên góp</Badge>;
+      case 'checked_in':
+        return <Badge variant="default" className="bg-blue-50 text-blue-700 border-blue-200">Đã check-in</Badge>;
+      case 'checked_out':
+        return <Badge variant="secondary" className="bg-gray-50 text-gray-700 border-gray-200">Đã check-out</Badge>;
+      case 'temp_confirmed':
+        return <Badge variant="secondary" className="bg-yellow-50 text-yellow-700 border-yellow-200">Đã xác nhận (thanh toán sau)</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
