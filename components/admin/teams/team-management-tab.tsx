@@ -147,10 +147,12 @@ export function TeamManagementTab() {
               <div className="flex items-center justify-between gap-4">
                 {/* Left section: Team info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Users className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-lg">{team.name}</h3>
-                    <Badge variant="secondary" className="ml-auto">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Users className="h-5 w-5 text-primary flex-shrink-0" />
+                      <h3 className="font-semibold text-lg truncate">{team.name}</h3>
+                    </div>
+                    <Badge variant="secondary" className="flex-shrink-0">
                       {team.member_count}/{team.capacity || '∞'} người
                     </Badge>
                   </div>
