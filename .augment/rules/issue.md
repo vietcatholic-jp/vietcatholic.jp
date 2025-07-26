@@ -13,5 +13,6 @@ description: "Các bước khi có yêu cầu giải quyết issuse"
 9. When AI completes the smaller tasks, combine them into a PR
 10. Send the PR to Github, wait for about 2 minutes and check if Github Action checks for lint, build, test have any errors
 11. If there are errors, request AI to fix them until there are no errors and repeat steps 8 to 11
-12. I will merge to staging branch manually
+12. Close issuse when 11 is done
+13. I will merge to staging branch manually
 
