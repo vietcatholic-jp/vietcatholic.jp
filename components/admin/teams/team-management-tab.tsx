@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Settings, Eye, UserMinus } from "lucide-react";
 import { formatAgeGroup } from "@/lib/utils";
+import { CreateTeamModal } from "./create-team-modal";
 
 interface Team {
   id: string;
@@ -28,6 +29,7 @@ interface Team {
 export function TeamManagementTab() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     fetchTeams();
@@ -46,6 +48,10 @@ export function TeamManagementTab() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCreateTeamSuccess = () => {
+    fetchTeams(); // Refresh teams list
   };
 
   if (isLoading) {
@@ -68,7 +74,7 @@ export function TeamManagementTab() {
             Quản lý thông tin và thành viên của các đội
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsCreateModalOpen(true)}>
           <Users className="h-4 w-4 mr-2" />
           Tạo đội mới
         </Button>
@@ -82,7 +88,7 @@ export function TeamManagementTab() {
             <p className="text-muted-foreground mb-4">
               Bắt đầu bằng cách tạo đội đầu tiên cho sự kiện
             </p>
-            <Button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
               <Users className="h-4 w-4 mr-2" />
               Tạo đội đầu tiên
             </Button>
@@ -174,6 +180,12 @@ export function TeamManagementTab() {
           ))}
         </div>
       )}
+
+      <CreateTeamModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateTeamSuccess}
+      />
     </div>
   );
 }
