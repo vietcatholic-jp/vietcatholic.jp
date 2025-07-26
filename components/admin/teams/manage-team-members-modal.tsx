@@ -232,7 +232,11 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-[900px] max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
+      <DialogContent
+        className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Quản lý thành viên đội</DialogTitle>
           <DialogDescription>
@@ -244,8 +248,8 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
           {/* Current Members Section */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Thành viên hiện tại</h3>
-              <Badge variant="secondary">{members.length} người</Badge>
+              <h3 className="text-base font-semibold">Thành viên hiện tại</h3>
+              <Badge variant="secondary" className="text-xs">{members.length} người</Badge>
             </div>
             
             {isLoadingMembers ? (
@@ -258,23 +262,27 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
                 Đội chưa có thành viên nào
               </div>
             ) : (
-              <div className="space-y-1 max-h-80 overflow-y-auto">
+              <div className="space-y-1 max-h-96 overflow-y-auto">
                 {members.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-2 border rounded-lg">
+                  <div key={member.id} className="flex items-center justify-between px-3 py-2 border rounded-lg hover:bg-gray-50">
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium">{member.full_name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {member.gender === "male" ? "Nam" : "Nữ"} • {formatAgeGroup(member.age_group)} • {member.province}
+                      <div className="font-medium text-sm">{member.full_name}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <span>{member.gender === "male" ? "Nam" : "Nữ"}</span>
+                        <span>•</span>
+                        <span>{formatAgeGroup(member.age_group)}</span>
+                        <span>•</span>
+                        <span>{member.province}</span>
                       </div>
                       {member.registration.invoice_code && (
-                        <div className="text-sm text-muted-foreground">
-                          Mã đăng ký: {member.registration.invoice_code}
+                        <div className="text-xs text-blue-600 font-mono">
+                          {member.registration.invoice_code}
                         </div>
                       )}
                       {member.facebook_url && (
-                        <div className="text-sm text-blue-600 truncate">
+                        <div className="text-xs text-blue-600 truncate">
                           <a href={member.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            Facebook: {member.facebook_url}
+                            Facebook
                           </a>
                         </div>
                       )}
@@ -284,12 +292,12 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
                       size="sm"
                       onClick={() => handleRemoveMember(member)}
                       disabled={isRemovingMember === member.id}
-                      className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
+                      className="text-red-600 hover:text-red-700 h-6 w-6 p-0 ml-2"
                     >
                       {isRemovingMember === member.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        <UserMinus className="h-4 w-4" />
+                        <UserMinus className="h-3 w-3" />
                       )}
                     </Button>
                   </div>
@@ -299,32 +307,32 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
           </div>
 
           {/* Add Member Section */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-medium">Thêm thành viên mới</h3>
-            
+          <div className="space-y-3 border-t pt-4">
+            <h3 className="text-base font-semibold">Thêm thành viên mới</h3>
+
             {/* Search Input */}
             <div className="space-y-2">
-              <Label>Tìm kiếm người chưa phân đội</Label>
+              <Label className="text-sm">Tìm kiếm người chưa phân đội</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Nhập tên để tìm kiếm..."
                   value={searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-9"
                 />
               </div>
             </div>
 
             {/* Select Registrant */}
             <div className="space-y-2">
-              <Label>Chọn người tham dự</Label>
+              <Label className="text-sm">Chọn người tham dự</Label>
               <Select
                 value={selectedRegistrantId}
                 onValueChange={setSelectedRegistrantId}
                 disabled={isLoadingUnassigned}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9">
                   <SelectValue placeholder="Chọn người tham dự..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -334,15 +342,15 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
                       Đang tải...
                     </div>
                   ) : unassignedRegistrants.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">
+                    <div className="text-center py-4 text-muted-foreground text-sm">
                       Không có người nào chưa phân đội
                     </div>
                   ) : (
                     unassignedRegistrants.map((registrant) => (
                       <SelectItem key={registrant.id} value={registrant.id}>
                         <div className="flex flex-col">
-                          <span>{registrant.full_name}</span>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm">{registrant.full_name}</span>
+                          <span className="text-xs text-muted-foreground">
                             {registrant.gender === "male" ? "Nam" : "Nữ"} • {formatAgeGroup(registrant.age_group)} • {registrant.province}
                           </span>
                         </div>
@@ -356,25 +364,26 @@ export function ManageTeamMembersModal({ isOpen, onClose, onSuccess, team }: Man
             <Button
               onClick={handleAddMember}
               disabled={!selectedRegistrantId || isAddingMember}
-              className="w-full"
+              className="w-full h-9"
+              size="sm"
             >
               {isAddingMember ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Đang thêm...
+                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  <span className="text-sm">Đang thêm...</span>
                 </>
               ) : (
                 <>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Thêm thành viên
+                  <UserPlus className="mr-2 h-3 w-3" />
+                  <span className="text-sm">Thêm thành viên</span>
                 </>
               )}
             </Button>
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
-          <Button variant="outline" onClick={handleClose}>
+        <div className="flex justify-end pt-3 border-t">
+          <Button variant="outline" onClick={handleClose} size="sm" className="h-9">
             Đóng
           </Button>
         </div>
