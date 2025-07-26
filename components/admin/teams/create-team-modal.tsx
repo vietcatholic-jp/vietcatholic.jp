@@ -30,9 +30,22 @@ const CreateTeamSchema = z.object({
   description: z.string().optional(),
   leader_id: z.string().optional(),
   sub_leader_id: z.string().optional(),
+  capacity: z.string().optional().refine((val) => {
+    if (!val || val === "") return true;
+    const num = parseInt(val, 10);
+    return !isNaN(num) && num > 0;
+  }, {
+    message: "Sức chứa phải là số nguyên dương"
+  }),
 });
 
-type CreateTeamFormData = z.infer<typeof CreateTeamSchema>;
+type CreateTeamFormData = {
+  name: string;
+  description?: string;
+  leader_id?: string;
+  sub_leader_id?: string;
+  capacity?: string;
+};
 
 interface User {
   id: string;
@@ -66,6 +79,7 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
       description: "",
       leader_id: "",
       sub_leader_id: "",
+      capacity: "",
     },
   });
 
@@ -121,6 +135,7 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
           event_config_id: activeEventId,
           leader_id: data.leader_id === "none" ? null : data.leader_id || null,
           sub_leader_id: data.sub_leader_id === "none" ? null : data.sub_leader_id || null,
+          capacity: data.capacity && data.capacity !== "" ? parseInt(data.capacity, 10) : null,
         }),
       });
 
@@ -219,6 +234,23 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
             </Select>
             {errors.sub_leader_id && (
               <p className="text-sm text-red-500">{errors.sub_leader_id.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="capacity">Sức chứa tối đa</Label>
+            <Input
+              id="capacity"
+              type="number"
+              min="1"
+              placeholder="Để trống nếu không giới hạn"
+              {...register("capacity")}
+            />
+            <p className="text-sm text-muted-foreground">
+              Số lượng thành viên tối đa trong đội. Để trống nếu không giới hạn.
+            </p>
+            {errors.capacity && (
+              <p className="text-sm text-red-500">{errors.capacity.message}</p>
             )}
           </div>
 
