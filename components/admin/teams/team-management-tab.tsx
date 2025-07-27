@@ -300,9 +300,15 @@ export function TeamManagementTab() {
       <ManageTeamMembersModal
         isOpen={!!manageTeam}
         onClose={() => setManageTeam(null)}
-        onDataChange={() => {
-          // Refresh teams data without closing dialog
-          fetchTeams();
+        onMemberCountChange={(teamId, newCount) => {
+          // Update only the member count for the specific team without full refresh
+          setTeams(prevTeams =>
+            prevTeams.map(team =>
+              team.id === teamId
+                ? { ...team, member_count: newCount }
+                : team
+            )
+          );
         }}
         team={manageTeam}
       />

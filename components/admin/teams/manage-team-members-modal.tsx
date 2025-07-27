@@ -99,11 +99,11 @@ interface UnassignedRegistrant {
 interface ManageTeamMembersModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onDataChange?: () => void; // New callback for data changes without closing dialog
+  onMemberCountChange?: (teamId: string, newCount: number) => void; // Callback to update member count only
   team: Team | null;
 }
 
-export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: ManageTeamMembersModalProps) {
+export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, team }: ManageTeamMembersModalProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [unassignedRegistrants, setUnassignedRegistrants] = useState<UnassignedRegistrant[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
@@ -228,8 +228,16 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
       await Promise.all([fetchTeamMembers(), fetchUnassignedRegistrants()]);
       toast.success("Thêm thành viên thành công!");
 
-      // Notify parent component about data change without closing dialog
-      onDataChange?.();
+      // Update member count in parent component without full refresh
+      // Use the updated members count after fetch
+      if (team && onMemberCountChange) {
+        // Fetch the updated member count from the API response
+        const response = await fetch(`/api/admin/teams/${team.id}/members`);
+        if (response.ok) {
+          const data = await response.json();
+          onMemberCountChange(team.id, data.member_count || data.members?.length || 0);
+        }
+      }
     } catch (error) {
       console.error("Error adding member:", error);
 
@@ -289,8 +297,16 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
       await Promise.all([fetchTeamMembers(), fetchUnassignedRegistrants()]);
       toast.success("Xóa thành viên thành công!");
 
-      // Notify parent component about data change without closing dialog
-      onDataChange?.();
+      // Update member count in parent component without full refresh
+      // Use the updated members count after fetch
+      if (team && onMemberCountChange) {
+        // Fetch the updated member count from the API response
+        const response = await fetch(`/api/admin/teams/${team.id}/members`);
+        if (response.ok) {
+          const data = await response.json();
+          onMemberCountChange(team.id, data.member_count || data.members?.length || 0);
+        }
+      }
     } catch (error) {
       console.error("Error removing member:", error);
 
