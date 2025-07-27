@@ -68,7 +68,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
             <p className="text-muted-foreground">
               Mã đăng ký: <span className="font-mono font-medium">{registration.invoice_code}</span>
             </p>
-            <Badge className="mt-2">Đã xác nhận đóng phí tham dự</Badge>
+            <Badge className="mt-2">Đã xác nhận</Badge>
           </div>
 
           {/* Event Info */}
