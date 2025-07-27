@@ -1,6 +1,7 @@
 import { createClient } from './supabase/client';
 import { createClient as createServerClient } from './supabase/server';
 import { User, UserRole, RegionType } from './types';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 // Client-side auth utilities
 export class AuthError extends Error {
@@ -8,6 +9,15 @@ export class AuthError extends Error {
     super(message);
     this.name = 'AuthError';
   }
+}
+
+// Utility function to get auth providers from user session (fallback approach)
+export function getUserAuthProviders(user: SupabaseUser | null): string[] {
+  if (!user?.identities || user.identities.length === 0) {
+    return ['email']; // Default fallback
+  }
+
+  return user.identities.map(identity => identity.provider);
 }
 
 export async function signInWithEmail(email: string, password: string) {
