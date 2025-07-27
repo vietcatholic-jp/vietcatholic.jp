@@ -20,6 +20,26 @@ import {
 import { formatAgeGroup, formatGender } from "@/lib/utils";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
 
+// Format Facebook URL for display
+const formatFacebookUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    // Remove protocol and www for cleaner display
+    let displayUrl = urlObj.hostname + urlObj.pathname;
+    if (displayUrl.startsWith('www.')) {
+      displayUrl = displayUrl.substring(4);
+    }
+    // Truncate if too long
+    if (displayUrl.length > 35) {
+      displayUrl = displayUrl.substring(0, 32) + '...';
+    }
+    return displayUrl;
+  } catch {
+    // If URL is invalid, just truncate the original
+    return url.length > 35 ? url.substring(0, 32) + '...' : url;
+  }
+};
+
 interface TeamMember {
   id: string;
   full_name: string;
@@ -377,8 +397,9 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-blue-600 hover:underline"
+                                  title={member.facebook_link}
                                 >
-                                  Facebook
+                                  {formatFacebookUrl(member.facebook_link)}
                                 </a>
                               </div>
                             )}
