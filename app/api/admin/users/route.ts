@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { getMultipleUsersAuthIdentities } from "@/lib/supabase/admin";
 
 export async function GET(request: Request) {
   try {
@@ -85,29 +86,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
     }
 
-    // Add auth provider information to users
-    // For now, we'll use a simple heuristic based on available data
+    // Get auth provider information from Supabase Admin API
+    const userIds = (users || []).map(user => user.id);
+    const authIdentitiesMap = await getMultipleUsersAuthIdentities(userIds);
+
     const enrichedUsers = (users || []).map(user => {
-      let providers = ['email']; // Default fallback
+      const identities = authIdentitiesMap[user.id] || [];
 
-      // Simple heuristic: if user has avatar_url from OAuth, likely social login
-      if (user.avatar_url) {
-        // Check if avatar URL suggests a provider
-        if (user.avatar_url.includes('googleusercontent.com')) {
-          providers = ['google'];
-        } else if (user.avatar_url.includes('facebook.com') || user.avatar_url.includes('fbcdn.net')) {
-          providers = ['facebook'];
-        } else if (user.avatar_url.includes('github.com') || user.avatar_url.includes('githubusercontent.com')) {
-          providers = ['github'];
-        } else {
-          providers = ['email']; // Unknown social provider
-        }
-      }
-
-      // If user has facebook_url, they likely used Facebook login
-      if (user.facebook_url) {
-        providers = ['facebook'];
-      }
+      // Extract provider names from identities
+      const providers = identities.length > 0
+        ? identities.map(identity => identity.provider)
+        : ['email']; // Default fallback if no identities found
 
       return {
         ...user,
