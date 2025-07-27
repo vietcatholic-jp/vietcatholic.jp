@@ -37,6 +37,26 @@ const formatAgeGroup = (ageGroup: string): string => {
   return ageGroupMap[ageGroup] || ageGroup;
 };
 
+// Format Facebook URL for display
+const formatFacebookUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    // Remove protocol and www for cleaner display
+    let displayUrl = urlObj.hostname + urlObj.pathname;
+    if (displayUrl.startsWith('www.')) {
+      displayUrl = displayUrl.substring(4);
+    }
+    // Truncate if too long
+    if (displayUrl.length > 30) {
+      displayUrl = displayUrl.substring(0, 27) + '...';
+    }
+    return displayUrl;
+  } catch {
+    // If URL is invalid, just truncate the original
+    return url.length > 30 ? url.substring(0, 27) + '...' : url;
+  }
+};
+
 interface Team {
   id: string;
   name: string;
@@ -383,8 +403,8 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
                       )}
                       {member.facebook_link && (
                         <div className="text-xs text-blue-600 truncate">
-                          <a href={member.facebook_link} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            Facebook
+                          <a href={member.facebook_link} target="_blank" rel="noopener noreferrer" className="hover:underline" title={member.facebook_link}>
+                            {formatFacebookUrl(member.facebook_link)}
                           </a>
                         </div>
                       )}
