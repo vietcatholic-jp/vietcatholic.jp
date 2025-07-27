@@ -245,6 +245,9 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
         params.append('region', regionFilter);
       }
 
+      // Request auth provider information for admin user management
+      params.append('includeAuthProviders', 'true');
+
       const response = await fetch(`/api/admin/users?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch users');

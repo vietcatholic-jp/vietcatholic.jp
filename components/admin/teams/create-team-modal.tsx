@@ -79,7 +79,7 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
       description: "",
       leader_id: "",
       sub_leader_id: "",
-      capacity: "",
+      capacity: "50",
     },
   });
 
@@ -135,7 +135,7 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
           event_config_id: activeEventId,
           leader_id: data.leader_id === "none" ? null : data.leader_id || null,
           sub_leader_id: data.sub_leader_id === "none" ? null : data.sub_leader_id || null,
-          capacity: data.capacity && data.capacity !== "" ? parseInt(data.capacity, 10) : null,
+          capacity: data.capacity && data.capacity !== "" ? parseInt(data.capacity, 10) : 50,
         }),
       });
 
@@ -243,11 +243,11 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
               id="capacity"
               type="number"
               min="1"
-              placeholder="Để trống nếu không giới hạn"
+              placeholder="50"
               {...register("capacity")}
             />
             <p className="text-sm text-muted-foreground">
-              Số lượng thành viên tối đa trong đội. Để trống nếu không giới hạn.
+              Số lượng thành viên tối đa trong đội. Mặc định là 50 người.
             </p>
             {errors.capacity && (
               <p className="text-sm text-red-500">{errors.capacity.message}</p>
