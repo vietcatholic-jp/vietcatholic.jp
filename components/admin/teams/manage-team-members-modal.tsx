@@ -342,7 +342,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
-        className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto"
+        className="sm:max-w-[1200px] max-h-[95vh] overflow-y-auto"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -400,7 +400,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
                 Đội chưa có thành viên nào
               </div>
             ) : (
-              <div className="space-y-1 max-h-96 overflow-y-auto">
+              <div className="space-y-1 max-h-[500px] overflow-y-auto">
                 {members.map((member) => (
                   <div key={member.id} className="flex items-center justify-between px-3 py-2 border rounded-lg hover:bg-gray-50">
                     <div className="flex-1 min-w-0">
@@ -473,7 +473,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Chọn người tham dự..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   {isLoadingUnassigned ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -527,12 +527,6 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
               )}
             </Button>
           </div>
-        </div>
-
-        <div className="flex justify-end pt-3 border-t">
-          <Button variant="outline" onClick={handleClose} size="sm" className="h-9">
-            Đóng
-          </Button>
         </div>
       </DialogContent>
 
