@@ -85,14 +85,19 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="font-medium">Đại hội Công giáo Việt Nam 2025</p>
-                    <p className="text-sm text-muted-foreground">Ngày diễn ra sẽ được thông báo</p>
+                    <p className="text-sm text-muted-foreground">14-15/09/2025</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="font-medium">Địa điểm</p>
-                    <p className="text-sm text-muted-foreground">Sẽ được thông báo sớm</p>
+                    <p className="text-sm text-green-600 font-medium">
+                      📍 Kamiozuki, Hanado, Kanagawa (〒257-0005)
+                    </p>
+                    <p className="text-sm text-green-600 font-medium">
+                      <a href="https://maps.app.goo.gl/YbZy9rFzni7ztTMv6" className="text-blue-600 hover:underline">Google map</a>
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

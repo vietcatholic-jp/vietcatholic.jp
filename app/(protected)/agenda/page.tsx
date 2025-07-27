@@ -123,8 +123,11 @@ export default async function AgendaPage() {
                   <MapPin className="h-6 w-6 text-primary" />
                   <div>
                     <p className="font-medium">Địa điểm</p>
-                    <p className="text-sm text-muted-foreground">
-                      Sẽ được thông báo sớm
+                    <p className="text-sm text-green-600 font-medium">
+                      📍 Kamiozuki, Hanado, Kanagawa (〒257-0005)
+                    </p>
+                    <p className="text-sm text-green-600 font-medium">
+                      <a href="https://maps.app.goo.gl/YbZy9rFzni7ztTMv6" className="text-blue-600 hover:underline">Google map</a>
                     </p>
                   </div>
                 </div>
