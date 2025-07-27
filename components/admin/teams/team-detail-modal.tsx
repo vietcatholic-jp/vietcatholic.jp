@@ -5,20 +5,39 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Users, 
-  User, 
-  Calendar, 
-  Mail, 
+import {
+  Users,
+  User,
+  Calendar,
+  Mail,
   Phone,
   MapPin,
-  UserCheck,
   UserX,
   Loader2,
   AlertCircle
 } from "lucide-react";
 import { formatAgeGroup, formatGender } from "@/lib/utils";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
+
+// Format Facebook URL for display
+const formatFacebookUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    // Remove protocol and www for cleaner display
+    let displayUrl = urlObj.hostname + urlObj.pathname;
+    if (displayUrl.startsWith('www.')) {
+      displayUrl = displayUrl.substring(4);
+    }
+    // Truncate if too long
+    if (displayUrl.length > 35) {
+      displayUrl = displayUrl.substring(0, 32) + '...';
+    }
+    return displayUrl;
+  } catch {
+    // If URL is invalid, just truncate the original
+    return url.length > 35 ? url.substring(0, 32) + '...' : url;
+  }
+};
 
 interface TeamMember {
   id: string;
@@ -29,6 +48,7 @@ interface TeamMember {
   diocese?: string;
   email?: string;
   phone?: string;
+  facebook_link?: string;
   registration?: {
     id: string;
     status: string;
@@ -193,7 +213,7 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
 
         {!isLoading && !error && teamInfo && (
           <div className="space-y-6">
-            {/* Team Basic Info */}
+            {/* Team Info - Combined with Leadership */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -201,7 +221,8 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                   Thông tin đội
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* Basic Team Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h3 className="font-semibold text-lg">{teamInfo.name}</h3>
@@ -211,63 +232,56 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
+                      <Users className="h-4 w-4" />
+                      <span>
+                        Số thành viên: {stats?.total_members || 0}
+                        {teamInfo.capacity && ` / ${teamInfo.capacity}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
                       <Calendar className="h-4 w-4" />
                       <span>Tạo lúc: {formatDate(teamInfo.created_at)}</span>
                     </div>
-                    {teamInfo.capacity && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4" />
-                        <span>Sức chứa: {teamInfo.capacity} người</span>
-                      </div>
-                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Team Leadership */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserCheck className="h-5 w-5" />
-                  Ban lãnh đạo
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Trưởng nhóm</h4>
-                    {teamInfo.leader ? (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          <span>{teamInfo.leader.full_name}</span>
+                {/* Leadership Info */}
+                <div className="border-t pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Trưởng nhóm</h4>
+                      {teamInfo.leader ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            <span>{teamInfo.leader.full_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            <span>{teamInfo.leader.email}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="h-4 w-4" />
-                          <span>{teamInfo.leader.email}</span>
+                      ) : (
+                        <p className="text-muted-foreground">Chưa có trưởng nhóm</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Phó nhóm</h4>
+                      {teamInfo.sub_leader ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            <span>{teamInfo.sub_leader.full_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            <span>{teamInfo.sub_leader.email}</span>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">Chưa có trưởng nhóm</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Phó nhóm</h4>
-                    {teamInfo.sub_leader ? (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          <span>{teamInfo.sub_leader.full_name}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="h-4 w-4" />
-                          <span>{teamInfo.sub_leader.email}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">Chưa có phó nhóm</p>
-                    )}
+                      ) : (
+                        <p className="text-muted-foreground">Chưa có phó nhóm</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -321,26 +335,67 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {members.map((member) => (
-                      <div key={member.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{member.full_name}</span>
+                      <div key={member.id} className="border rounded-lg p-3 hover:bg-gray-50">
+                        <div className="flex items-center justify-between gap-3">
+                          {/* Main Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-sm">{member.full_name}</span>
                               {member.event_role && (
                                 <RoleBadgeCompact role={member.event_role} />
                               )}
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <span>{formatGender(member.gender)}</span>
+
+                            {/* Compact Info Row */}
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <span className={member.gender === 'male' ? 'text-blue-600' : 'text-pink-600'}>
+                                  {member.gender === 'male' ? '♂' : '♀'}
+                                </span>
+                                {formatGender(member.gender)}
+                              </span>
                               <span>{formatAgeGroup(member.age_group)}</span>
-                              <div className="flex items-center gap-1">
+                              <span className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
-                                <span>{member.province}</span>
-                              </div>
+                                {member.province}
+                              </span>
+                              {member.diocese && (
+                                <span>GP: {member.diocese}</span>
+                              )}
+                            </div>
+
+                            {/* Contact Info - Compact */}
+                            <div className="flex flex-wrap items-center gap-3 mt-1 text-xs">
+                              {member.email && (
+                                <span className="flex items-center gap-1 text-muted-foreground">
+                                  <Mail className="h-3 w-3" />
+                                  {member.email}
+                                </span>
+                              )}
+                              {member.phone && (
+                                <span className="flex items-center gap-1 text-muted-foreground">
+                                  <Phone className="h-3 w-3" />
+                                  {member.phone}
+                                </span>
+                              )}
+                              {member.facebook_link && (
+                                <a
+                                  href={member.facebook_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-blue-600 hover:underline"
+                                  title={member.facebook_link}
+                                >
+                                  <span>📘</span>
+                                  {formatFacebookUrl(member.facebook_link)}
+                                </a>
+                              )}
                             </div>
                           </div>
+
+                          {/* Status */}
                           <div className="flex flex-col items-end gap-1">
                             {member.registration?.[0] && (
                               <div className="flex items-center gap-2">
@@ -352,31 +407,6 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                             )}
                           </div>
                         </div>
-
-                        {/* Contact Info */}
-                        {(member.email || member.phone) && (
-                          <div className="flex flex-wrap gap-4 text-sm">
-                            {member.email && (
-                              <div className="flex items-center gap-1 text-muted-foreground">
-                                <Mail className="h-3 w-3" />
-                                <span>{member.email}</span>
-                              </div>
-                            )}
-                            {member.phone && (
-                              <div className="flex items-center gap-1 text-muted-foreground">
-                                <Phone className="h-3 w-3" />
-                                <span>{member.phone}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Diocese info */}
-                        {member.diocese && (
-                          <div className="text-sm text-muted-foreground">
-                            Giáo phận: {member.diocese}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>

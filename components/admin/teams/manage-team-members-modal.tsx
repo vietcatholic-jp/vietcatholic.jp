@@ -37,6 +37,26 @@ const formatAgeGroup = (ageGroup: string): string => {
   return ageGroupMap[ageGroup] || ageGroup;
 };
 
+// Format Facebook URL for display
+const formatFacebookUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    // Remove protocol and www for cleaner display
+    let displayUrl = urlObj.hostname + urlObj.pathname;
+    if (displayUrl.startsWith('www.')) {
+      displayUrl = displayUrl.substring(4);
+    }
+    // Truncate if too long
+    if (displayUrl.length > 30) {
+      displayUrl = displayUrl.substring(0, 27) + '...';
+    }
+    return displayUrl;
+  } catch {
+    // If URL is invalid, just truncate the original
+    return url.length > 30 ? url.substring(0, 27) + '...' : url;
+  }
+};
+
 interface Team {
   id: string;
   name: string;
@@ -54,7 +74,7 @@ interface TeamMember {
   diocese: string;
   email?: string;
   phone?: string;
-  facebook_url?: string;
+  facebook_link?: string;
   registration: {
     id: string;
     invoice_code?: string;
@@ -79,11 +99,11 @@ interface UnassignedRegistrant {
 interface ManageTeamMembersModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onDataChange?: () => void; // New callback for data changes without closing dialog
+  onMemberCountChange?: (teamId: string, newCount: number) => void; // Callback to update member count only
   team: Team | null;
 }
 
-export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: ManageTeamMembersModalProps) {
+export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, team }: ManageTeamMembersModalProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [unassignedRegistrants, setUnassignedRegistrants] = useState<UnassignedRegistrant[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
@@ -170,7 +190,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
       diocese: confirmAddMember.diocese,
       email: confirmAddMember.email,
       phone: confirmAddMember.phone,
-      facebook_url: undefined,
+      facebook_link: undefined,
       registration: {
         id: `temp-${confirmAddMember.id}`,
         user: {
@@ -208,8 +228,16 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
       await Promise.all([fetchTeamMembers(), fetchUnassignedRegistrants()]);
       toast.success("Thêm thành viên thành công!");
 
-      // Notify parent component about data change without closing dialog
-      onDataChange?.();
+      // Update member count in parent component without full refresh
+      // Use the updated members count after fetch
+      if (team && onMemberCountChange) {
+        // Fetch the updated member count from the API response
+        const response = await fetch(`/api/admin/teams/${team.id}/members`);
+        if (response.ok) {
+          const data = await response.json();
+          onMemberCountChange(team.id, data.member_count || data.members?.length || 0);
+        }
+      }
     } catch (error) {
       console.error("Error adding member:", error);
 
@@ -269,8 +297,16 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
       await Promise.all([fetchTeamMembers(), fetchUnassignedRegistrants()]);
       toast.success("Xóa thành viên thành công!");
 
-      // Notify parent component about data change without closing dialog
-      onDataChange?.();
+      // Update member count in parent component without full refresh
+      // Use the updated members count after fetch
+      if (team && onMemberCountChange) {
+        // Fetch the updated member count from the API response
+        const response = await fetch(`/api/admin/teams/${team.id}/members`);
+        if (response.ok) {
+          const data = await response.json();
+          onMemberCountChange(team.id, data.member_count || data.members?.length || 0);
+        }
+      }
     } catch (error) {
       console.error("Error removing member:", error);
 
@@ -306,7 +342,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
-        className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto"
+        className="sm:max-w-[1200px] max-h-[95vh] overflow-y-auto"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -364,7 +400,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
                 Đội chưa có thành viên nào
               </div>
             ) : (
-              <div className="space-y-1 max-h-96 overflow-y-auto">
+              <div className="space-y-1 max-h-[500px] overflow-y-auto">
                 {members.map((member) => (
                   <div key={member.id} className="flex items-center justify-between px-3 py-2 border rounded-lg hover:bg-gray-50">
                     <div className="flex-1 min-w-0">
@@ -381,10 +417,10 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
                           {member.registration.invoice_code}
                         </div>
                       )}
-                      {member.facebook_url && (
+                      {member.facebook_link && (
                         <div className="text-xs text-blue-600 truncate">
-                          <a href={member.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            Facebook
+                          <a href={member.facebook_link} target="_blank" rel="noopener noreferrer" className="hover:underline" title={member.facebook_link}>
+                            {formatFacebookUrl(member.facebook_link)}
                           </a>
                         </div>
                       )}
@@ -437,7 +473,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Chọn người tham dự..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   {isLoadingUnassigned ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -491,12 +527,6 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
               )}
             </Button>
           </div>
-        </div>
-
-        <div className="flex justify-end pt-3 border-t">
-          <Button variant="outline" onClick={handleClose} size="sm" className="h-9">
-            Đóng
-          </Button>
         </div>
       </DialogContent>
 
