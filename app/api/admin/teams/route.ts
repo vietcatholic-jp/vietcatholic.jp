@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         event_config_id,
         leader_id,
         sub_leader_id,
-        capacity: capacity || null,
+        capacity: capacity || 50,
       })
       .select(`
         *,
