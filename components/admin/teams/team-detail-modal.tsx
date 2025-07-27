@@ -29,6 +29,7 @@ interface TeamMember {
   diocese?: string;
   email?: string;
   phone?: string;
+  facebook_link?: string;
   registration?: {
     id: string;
     status: string;
@@ -354,7 +355,7 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                         </div>
 
                         {/* Contact Info */}
-                        {(member.email || member.phone) && (
+                        {(member.email || member.phone || member.facebook_link) && (
                           <div className="flex flex-wrap gap-4 text-sm">
                             {member.email && (
                               <div className="flex items-center gap-1 text-muted-foreground">
@@ -366,6 +367,19 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                               <div className="flex items-center gap-1 text-muted-foreground">
                                 <Phone className="h-3 w-3" />
                                 <span>{member.phone}</span>
+                              </div>
+                            )}
+                            {member.facebook_link && (
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <span className="text-blue-600">📘</span>
+                                <a
+                                  href={member.facebook_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline"
+                                >
+                                  Facebook
+                                </a>
                               </div>
                             )}
                           </div>

@@ -54,7 +54,7 @@ interface TeamMember {
   diocese: string;
   email?: string;
   phone?: string;
-  facebook_url?: string;
+  facebook_link?: string;
   registration: {
     id: string;
     invoice_code?: string;
@@ -170,7 +170,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
       diocese: confirmAddMember.diocese,
       email: confirmAddMember.email,
       phone: confirmAddMember.phone,
-      facebook_url: undefined,
+      facebook_link: undefined,
       registration: {
         id: `temp-${confirmAddMember.id}`,
         user: {
@@ -381,9 +381,9 @@ export function ManageTeamMembersModal({ isOpen, onClose, onDataChange, team }: 
                           {member.registration.invoice_code}
                         </div>
                       )}
-                      {member.facebook_url && (
+                      {member.facebook_link && (
                         <div className="text-xs text-blue-600 truncate">
-                          <a href={member.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                          <a href={member.facebook_link} target="_blank" rel="noopener noreferrer" className="hover:underline">
                             Facebook
                           </a>
                         </div>
