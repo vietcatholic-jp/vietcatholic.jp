@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const search = searchParams.get('search') || '';
     const roleFilter = searchParams.get('role') || '';
     const regionFilter = searchParams.get('region') || '';
+    const includeAuthProviders = searchParams.get('includeAuthProviders') === 'true';
 
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -86,23 +87,27 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
     }
 
-    // Get auth provider information from Supabase Admin API
-    const userIds = (users || []).map(user => user.id);
-    const authIdentitiesMap = await getMultipleUsersAuthIdentities(userIds);
+    let enrichedUsers = users || [];
 
-    const enrichedUsers = (users || []).map(user => {
-      const identities = authIdentitiesMap[user.id] || [];
+    // Only fetch auth provider information if explicitly requested (for admin/users page)
+    if (includeAuthProviders) {
+      const userIds = (users || []).map(user => user.id);
+      const authIdentitiesMap = await getMultipleUsersAuthIdentities(userIds);
 
-      // Extract provider names from identities
-      const providers = identities.length > 0
-        ? identities.map(identity => identity.provider)
-        : ['email']; // Default fallback if no identities found
+      enrichedUsers = (users || []).map(user => {
+        const identities = authIdentitiesMap[user.id] || [];
 
-      return {
-        ...user,
-        auth_identities: providers.map(provider => ({ provider }))
-      };
-    });
+        // Extract provider names from identities
+        const providers = identities.length > 0
+          ? identities.map(identity => identity.provider)
+          : ['email']; // Default fallback if no identities found
+
+        return {
+          ...user,
+          auth_identities: providers.map(provider => ({ provider }))
+        };
+      });
+    }
 
     const totalPages = Math.ceil((totalCount || 0) / limit);
 
