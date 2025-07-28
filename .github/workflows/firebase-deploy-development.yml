@@ -1,4 +1,5 @@
 name: 🚀 Deploy to Development
+# Updated with proper service account permissions
 
 on:
   push:
