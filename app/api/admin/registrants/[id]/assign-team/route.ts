@@ -45,6 +45,7 @@ export async function POST(
         event_team_id,
         registration:registrations!registrants_registration_id_fkey(
           id,
+          invoice_code,
           user:users!registrations_user_id_fkey(
             region
           )
@@ -59,17 +60,64 @@ export async function POST(
 
     // Regional admin permission check
     if (profile.role === "regional_admin" && profile.region) {
-      if (registrant.registration[0].user[0].region !== profile.region) {
-        return NextResponse.json({ 
-          error: "Cannot assign registrants from other regions" 
+      const registration = Array.isArray(registrant.registration)
+        ? registrant.registration[0]
+        : registrant.registration;
+      const user = registration && Array.isArray(registration.user)
+        ? registration.user[0]
+        : registration?.user;
+
+      if (user?.region !== profile.region) {
+        return NextResponse.json({
+          error: "Cannot assign registrants from other regions"
         }, { status: 403 });
       }
     }
 
     // Check if registrant is already assigned
     if (registrant.event_team_id) {
-      return NextResponse.json({ 
-        error: "Registrant is already assigned to a team" 
+      return NextResponse.json({
+        error: "Registrant is already assigned to a team"
+      }, { status: 400 });
+    }
+
+    // Check for other registrants with the same registration code
+    const registration = Array.isArray(registrant.registration)
+      ? registrant.registration[0]
+      : registrant.registration;
+
+    if (!registration) {
+      return NextResponse.json({ error: "Registration not found" }, { status: 404 });
+    }
+
+    const registrationId = registration.id;
+    const invoiceCode = registration.invoice_code;
+
+    const { data: sameRegistrationRegistrants, error: sameRegError } = await supabase
+      .from("registrants")
+      .select(`
+        id,
+        full_name,
+        event_team_id
+      `)
+      .eq("registration_id", registrationId)
+      .neq("id", registrantId); // Exclude current registrant
+
+    if (sameRegError) {
+      console.error("Error fetching same registration registrants:", sameRegError);
+    }
+
+    // Check if any of the same registration registrants are unassigned
+    const unassignedSameReg = sameRegistrationRegistrants?.filter(r => !r.event_team_id) || [];
+
+    if (unassignedSameReg.length > 0) {
+      return NextResponse.json({
+        error: `Có ${unassignedSameReg.length} người khác cùng đăng ký ${invoiceCode} chưa được phân đội. Vui lòng phân đội tất cả cùng lúc để đảm bảo họ ở cùng một đội.`,
+        suggestion: "bulk_assign",
+        same_registration_registrants: unassignedSameReg.map(r => ({
+          id: r.id,
+          name: r.full_name
+        }))
       }, { status: 400 });
     }
 

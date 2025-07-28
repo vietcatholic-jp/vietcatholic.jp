@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
         event_team_id,
         registration:registrations!registrants_registration_id_fkey(
           id,
+          invoice_code,
           user:users!registrations_user_id_fkey(
             region
           )
@@ -76,6 +77,45 @@ export async function POST(request: NextRequest) {
 
     if (registrantsError) {
       return NextResponse.json({ error: "Failed to fetch registrants" }, { status: 500 });
+    }
+
+    // Check for incomplete registration groups
+    const registrationGroups = new Map<string, string[]>();
+    registrants?.forEach(registrant => {
+      const registration = Array.isArray(registrant.registration)
+        ? registrant.registration[0]
+        : registrant.registration;
+
+      if (!registration) return;
+
+      const regId = registration.id;
+      if (!registrationGroups.has(regId)) {
+        registrationGroups.set(regId, []);
+      }
+      registrationGroups.get(regId)!.push(registrant.id);
+    });
+
+    // For each registration group, check if all unassigned registrants are included
+    for (const [regId, selectedIds] of registrationGroups) {
+      const { data: allRegRegistrants } = await supabase
+        .from("registrants")
+        .select("id, full_name, event_team_id")
+        .eq("registration_id", regId);
+
+      const unassignedInReg = allRegRegistrants?.filter(r => !r.event_team_id) || [];
+      const unassignedIds = unassignedInReg.map(r => r.id);
+      const missingIds = unassignedIds.filter(id => !selectedIds.includes(id));
+
+      if (missingIds.length > 0) {
+        const missingNames = unassignedInReg
+          .filter(r => missingIds.includes(r.id))
+          .map(r => r.full_name);
+
+        return NextResponse.json({
+          error: `Thiếu ${missingIds.length} người cùng đăng ký chưa được chọn: ${missingNames.join(', ')}. Vui lòng chọn tất cả người cùng đăng ký để đảm bảo họ ở cùng một đội.`,
+          missing_registrants: missingNames
+        }, { status: 400 });
+      }
     }
 
     const result: BulkAssignResult = {
