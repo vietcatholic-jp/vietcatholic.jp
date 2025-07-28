@@ -34,9 +34,9 @@ export async function GET(
       return NextResponse.json({ error: "Registration not found" }, { status: 404 });
     }
 
-    if (registration.status !== "confirmed") {
+    if (!['confirmed', 'temp_confirmed'].includes(registration.status)) {
       return NextResponse.json({ 
-        error: "Tickets not available. Registration must be confirmed first." 
+        error: "Chưa thanh toán hoặc đăng ký không hợp lệ" 
       }, { status: 400 });
     }
 
