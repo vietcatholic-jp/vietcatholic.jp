@@ -261,7 +261,7 @@ export function UnassignedRegistrantsList() {
                     )}
 
                     {/* Group Members */}
-                    {groupRegistrants.map((registrant, index) => (
+                    {groupRegistrants.map((registrant, _) => (
                       <div
                         key={registrant.id}
                         className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 ${
