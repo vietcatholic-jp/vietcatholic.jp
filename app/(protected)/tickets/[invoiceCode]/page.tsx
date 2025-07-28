@@ -46,7 +46,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
   }
 
   // Only allow access if payment is confirmed
-  if (registration.status !== 'confirmed' && registration.status !== 'checked_in') {
+  if (!['confirmed', 'temp_confirmed'].includes(registration.status)) {
     redirect(`/payment/${invoiceCode}`);
   }
 
@@ -68,7 +68,9 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
             <p className="text-muted-foreground">
               Mã đăng ký: <span className="font-mono font-medium">{registration.invoice_code}</span>
             </p>
-            <Badge className="mt-2">Đã xác nhận</Badge>
+            <Badge className="mt-2 bg-green-500 text-white">
+              {registration.status === 'confirmed' ? 'Đã thanh toán' : 'Tạm xác nhận (thanh toán sau)'}
+            </Badge>
           </div>
 
           {/* Event Info */}

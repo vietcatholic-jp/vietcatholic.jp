@@ -43,6 +43,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-50 border-green-200 text-green-800';
+      case 'temp_confirmed': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
       case 'donation': return 'bg-green-50 border-green-200 text-green-800';
       case 'confirm_paid': return 'bg-blue-50 border-blue-200 text-blue-800';
       case 'report_paid': return 'bg-purple-50 border-purple-200 text-purple-800';
@@ -60,6 +61,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'confirmed': return <CheckCircle className="h-4 w-4" />;
+      case 'temp_confirmed': return <Clock className="h-4 w-4 animate-pulse" />;
       case 'confirm_paid': return <CheckCircle className="h-4 w-4" />;
       case 'report_paid': return <Clock className="h-4 w-4 animate-pulse" />;
       case 'pending': return <Clock className="h-4 w-4" />;
@@ -86,6 +88,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
       case 'cancel_accepted': return 'Yêu cầu hủy đã được chấp nhận';
       case 'cancel_rejected': return 'Yêu cầu hủy đã bị từ chối';
       case 'confirmed': return 'Đã xác nhận';
+      case 'temp_confirmed': return 'Tạm xác nhận (thanh toán sau)';
       case 'checked_in': return 'Đã check-in';
       case 'checked_out': return 'Đã check-out';
       default: return status;
@@ -157,8 +160,8 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
               </Button>
             </Link>
           )}
-          
-          {(registration.status === 'confirmed' || registration.status === 'checked_in' || registration.status === 'checked_out') && (
+
+          {(registration.status === 'confirmed' || registration.status === 'temp_confirmed' || registration.status === 'checked_in' || registration.status === 'checked_out') && (
             <Link href={`/tickets/${registration.invoice_code}`}>
               <Button size="sm" variant="outline" className="text-xs bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 dark:from-green-950/30 dark:to-emerald-950/30 dark:border-green-800 dark:text-green-300">
                 <QrCode className="h-3 w-3 mr-1" />
@@ -168,7 +171,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
             </Link>
           )}
 
-          {(registration.status === 'confirmed' || registration.status === 'checked_in' || registration.status === 'checked_out') && (
+          {(registration.status === 'confirmed' || registration.status === 'temp_confirmed' || registration.status === 'checked_in' || registration.status === 'checked_out') && (
             <Link href={`/register/${registration.id}`}>
               <Button size="sm" variant="outline" className="text-xs bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-purple-100 hover:border-blue-300 dark:from-blue-950/30 dark:to-purple-950/30 dark:border-blue-800 dark:text-blue-300">
                 <Eye className="h-3 w-3 mr-1" />
@@ -209,7 +212,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
               <div>
                 <span className="text-muted-foreground block">Vé:</span>
                 <span className="font-medium">
-                  {(registration.status === 'confirmed' || registration.status === 'checked_in' || registration.status === 'checked_out') ? (
+                  {(registration.status === 'confirmed' || registration.status === 'temp_confirmed' || registration.status === 'checked_in' || registration.status === 'checked_out') ? (
                     <span className="text-green-600 flex items-center gap-1">
                       <CheckCircle className="h-3 w-3" />
                       Có sẵn
