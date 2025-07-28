@@ -1,0 +1,19 @@
+runConfig:
+  runtime: nodejs20
+  cpu: 1
+  memory: 1GiB
+  concurrency: 100
+  maxInstances: 100
+  minInstances: 0
+
+env:
+  # Supabase Configuration
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    value: https://nlnhhiasteknrfcfnzxd.supabase.co
+  - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sbmhoaWFzdGVrbnJmY2ZuenhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwNzI3MTgsImV4cCI6MjA2NzY0ODcxOH0.XJwplXGzxW0Wa_nw3WaHYggCiRXqJK5RKgOINvfpxBM
+  - variable: SUPABASE_SERVICE_ROLE_KEY
+    secret: supabase-service-role-key-dev
+  # Production Site URL
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://daihoiconggiaojp-dev--daihoiconggiaojp-dev.asia-east1.hosted.app

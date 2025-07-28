@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "daihoiconggiaojp-dev",
+  "private_key_id": "06ea6ca573d3cc37ed2bfb5b5f75e1221d5d6156",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDXuwiioa5ysvId\n4QRMCY0+pgYlw4SVWm+kdHqQg/le7I7t/Qp37L63GmD6Js4jYayAi+6HY3VKf5Hv\nk4oLt5AMgGrRHzZ6ssMetlXK58dz5cza5YDgnhQD8wY9k2CEw35HGRY/ogDnbb/u\njDaXrcF2sQ3H+30/it+7IS+UEEr7Wt2KrIch9KlP13J01iDUoZe56G4N9S4DyTMY\nJ+HvPkkkyFZ50HKuKwmJI781V4U51hGaqqeJGMAL55YoDDCDdLLhxjopMkBRR76L\nUQJaA+mzy2wjSt/UmGVfc9eD+xKE32uobBm+VzWL/UrP9zr/1b2Cs8xUGbX7MXXh\nf/zE5xBxAgMBAAECggEAGsows9WFLtw3AevgFzs2bZm7eLQTgmKVK6SFVe31qUqS\nI07BnovpUR62/UmVXsJx5BK8f9ajialW65v0UCku+8Z0vVx1bP5HCcjV1Zk75RIc\nAvDuNLacwLLMyxfCrCoEw/qDD0rkdtjjtVF3NBXRSRaKohOChcIOr5Pa7zWowhbX\nvrzTHEx2k1IzK2b/UDdh+phjHbazdHL1rYBba3o4fyQ5tPPTP+EEICtrSyUPxWhl\njYh8f4X1jkAUT5Zr2idWGxQMTYNtTtIj65dwf1VDJj7yDWJRXO9rbXkPOlkEJSRc\nHk7zZfXueDvwTMruqIJSEU5baWxqFb6Gb0kLtZv+gwKBgQDsvGfqjQUlDqs4TcRR\nGwpacTL6RYOWnzOfWa8yzrtZMsUk4xtPu72RKdi0/DigvY7grzS1KcFuYDdniA3G\nswW+gyWRGEojYC6b+bYRs0MVMxESvoKVKulu0hGubxzw1GEq/MzAunjTDklZmVCI\nYfeHjgCGiik6c+3cpWl71de/2wKBgQDpSQ1VYOfwmAc8Yfr3zuVKNoAU3PFTmguk\nHihhgA2L49W2w/CAlVe3+CI2QjtIn/F57hYFv6ixFYgPDeBD5G7iLORHEJG16t8j\nrZrf1HMmxjXBU+kfk5/SVbEniwm+qarNEQBJboYPYW1nAbxfPvOxQdTUJbNJJcO1\n/a5SzLA4owKBgQCzBPp0JTXpwwD5b91wE8mtgQKyvVR312X7L5/MBQcpubnZXiAu\nGGOO3Z0xp7XO3+mmwPdTtALBS+M52GnKg2Bpo9UJttuBit9UNe5Xzj6BTn+vs/8d\nfDjQA+05Am9ZMtFT552SdLCfsaMILWb361V63YhKNTpeKIKMI030Rk6DlwKBgQCD\nksstY1mNrgEuwkhNKejSgYidu7t0noaASu4Vh6acRqULztk/fHub7BxHo/VR0bvd\nPDY5ic54Ch/R9c6OHDGZ6R3bIvI7uzudINYf9e/4Z4R8BHqQb6+Nbv1awyV83q7R\nuAwEXozH8fhFR4pZ4eSKDgoemSDUWbNXWrvOQVoGpwKBgQCKLO/9Fyxd6kxAxwKa\nxjVeiBMjHlLDncmagHXrscKIlwBO0XsjdNSFK2xj4lWVq6mDL/90IVqOZUcEnSBG\nAp7tIXKHxmclRsYuW4WU0mV6P+ktIoeeAlVhXBvqTuVf1d/cYSRReZ9qrZ9P/nKN\nXonYwGBIzli4keraPa3PHf0vvg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com",
+  "client_id": "104885723611600907870",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/github-actions-apphosting%40daihoiconggiaojp-dev.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

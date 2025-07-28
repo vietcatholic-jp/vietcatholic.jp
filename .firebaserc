@@ -1,5 +1,14 @@
 {
   "projects": {
-    "default": "daihoiconggiaojp-dev"
+    "default": "daihoiconggiaojp-prod",
+    "production": "daihoiconggiaojp-prod",
+    "dev": "daihoiconggiaojp-dev"
+  },
+  "targets": {
+    "daihoiconggiaojp-prod": {
+      "apphosting": [
+        "daihoiconggiaojp-prod"
+      ]
+    }
   }
 }
