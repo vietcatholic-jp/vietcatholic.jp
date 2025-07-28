@@ -1,5 +1,5 @@
 name: 🚀 Deploy to Development
-# Updated with proper service account permissions and IAM policy access
+# Updated with proper service account permissions and IAM policy access + actAs permission
 
 on:
   push:
