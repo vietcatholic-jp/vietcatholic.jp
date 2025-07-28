@@ -88,7 +88,6 @@ export async function GET(request: Request) {
     if (cancelRequestsError) {
       throw cancelRequestsError;
     }
-    console.log("Fetched registrations:", registrations[1].registrants);
     return NextResponse.json({
       stats,
       registrations,
