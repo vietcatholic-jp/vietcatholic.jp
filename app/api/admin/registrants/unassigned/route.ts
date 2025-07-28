@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
         diocese,
         email,
         phone,
+        notes,
         event_roles:event_role_id(
           id,
           name,
