@@ -58,22 +58,6 @@ export async function POST(
       return NextResponse.json({ error: "Registrant not found" }, { status: 404 });
     }
 
-    // Regional admin permission check
-    if (profile.role === "regional_admin" && profile.region) {
-      const registration = Array.isArray(registrant.registration)
-        ? registrant.registration[0]
-        : registrant.registration;
-      const user = registration && Array.isArray(registration.user)
-        ? registration.user[0]
-        : registration?.user;
-
-      // Temporarily disabled region check for build
-      // if (user && !Array.isArray(user) && user.region !== profile.region) {
-      //   return NextResponse.json({
-      //     error: "Cannot assign registrants from other regions"
-      //   }, { status: 403 });
-      // }
-    }
 
     // Check if registrant is already assigned
     if (registrant.event_team_id) {
