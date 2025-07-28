@@ -33,6 +33,7 @@ interface Registrant {
   diocese?: string;
   email?: string;
   phone?: string;
+  notes?: string;
   event_roles?: EventRole | null;
   registration: {
     id: string;
@@ -80,7 +81,15 @@ export function UnassignedRegistrantsList() {
       }
 
       const data = await response.json();
-      setRegistrants(data.data || []);
+
+      // Sort registrants by registration code to group them together
+      const sortedRegistrants = (data.data || []).sort((a: Registrant, b: Registrant) => {
+        const codeA = a.registration?.invoice_code || '';
+        const codeB = b.registration?.invoice_code || '';
+        return codeA.localeCompare(codeB);
+      });
+
+      setRegistrants(sortedRegistrants);
       setTotalPages(data.pagination?.totalPages || 1);
       setTotalCount(data.pagination?.total || 0);
     } catch (error) {
@@ -228,12 +237,37 @@ export function UnassignedRegistrantsList() {
               Không có người tham dự nào chưa được phân đội
             </div>
           ) : (
-            <div className="space-y-2">
-              {registrants.map((registrant) => (
-                <div
-                  key={registrant.id}
-                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
-                >
+            <div className="space-y-4">
+              {(() => {
+                // Group registrants by registration code
+                const groups = registrants.reduce((acc, registrant) => {
+                  const code = registrant.registration?.invoice_code || 'N/A';
+                  if (!acc[code]) {
+                    acc[code] = [];
+                  }
+                  acc[code].push(registrant);
+                  return acc;
+                }, {} as Record<string, Registrant[]>);
+
+                return Object.entries(groups).map(([code, groupRegistrants]) => (
+                  <div key={code} className="space-y-2">
+                    {/* Group Header */}
+                    {groupRegistrants.length > 1 && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="text-sm font-medium text-blue-800">
+                          📋 Đăng ký #{code} ({groupRegistrants.length} người)
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Group Members */}
+                    {groupRegistrants.map((registrant) => (
+                      <div
+                        key={registrant.id}
+                        className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 ${
+                          groupRegistrants.length > 1 ? 'ml-4 border-l-4 border-l-blue-300' : ''
+                        }`}
+                      >
                   <Checkbox
                     checked={selectedRegistrants.includes(registrant.id)}
                     onCheckedChange={(checked) => 
@@ -247,6 +281,11 @@ export function UnassignedRegistrantsList() {
                       <div className="text-sm text-muted-foreground">
                         #{registrant.registration?.invoice_code || 'N/A'}
                       </div>
+                      {registrant.notes && (
+                        <div className="text-xs text-blue-600 mt-1 italic">
+                          💬 {registrant.notes}
+                        </div>
+                      )}
                     </div>
                     <div className="text-sm">
                       <Badge variant="outline">
@@ -269,17 +308,20 @@ export function UnassignedRegistrantsList() {
                     </div>
                   </div>
 
-                  <Button
-                    onClick={() => handleAssignSingle(registrant)}
-                    disabled={isAssigning}
-                    size="sm"
-                    className="ml-auto"
-                  >
-                    <UserPlus className="h-4 w-4 mr-1" />
-                    Phân đội
-                  </Button>
-                </div>
-              ))}
+                      <Button
+                        onClick={() => handleAssignSingle(registrant)}
+                        disabled={isAssigning}
+                        size="sm"
+                        className="ml-auto"
+                      >
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Phân đội
+                      </Button>
+                    </div>
+                    ))}
+                  </div>
+                ));
+              })()}
             </div>
           )}
 

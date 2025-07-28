@@ -218,11 +218,12 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
   }, [currentPage, searchTerm, roleFilter, regionFilter]);
 
   // Reset to page 1 when filters change (except searchTerm)
+  // Fixed: Removed currentPage from dependency array to prevent infinite loop
   useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  }, [currentPage, roleFilter, regionFilter]);
+  }, [roleFilter, regionFilter]);
 
   const fetchUsers = async () => {
     try {
