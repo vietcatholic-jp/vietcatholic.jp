@@ -184,7 +184,7 @@ export function Navbar() {
                   </Link>
                   {isAdmin && (
                     <Link 
-                      href={profile?.role === 'registration_manager' ? '/admin/registration-manager' : '/admin'}
+                      href={profile?.role === 'registration_manager' ? '/registration-manager' : '/admin'}
                       className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-orange-600 hover:bg-orange-50 px-3 py-3 rounded-lg"
                       onClick={() => setIsMenuOpen(false)}
                     >
