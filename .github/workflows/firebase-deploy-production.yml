@@ -1,16 +1,16 @@
-name: 🚀 Deploy to Development
-# Updated with proper service account permissions and IAM policy access + actAs permission
+name: 🚀 Deploy to Production
+# Production deployment workflow with proper service account permissions
 
 on:
   push:
-    branches: [ staging ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   deploy:
-    name: 🔥 Deploy to Firebase App Hosting (Development)
+    name: 🔥 Deploy to Firebase App Hosting (Production)
     runs-on: ubuntu-latest
-    environment: development
+    environment: production
 
     steps:
     - name: 📥 Checkout code
@@ -31,14 +31,15 @@ jobs:
     - name: 🔐 Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
       with:
-        credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+        credentials_json: ${{ secrets.GOOGLE_CREDENTIALS_PROD }}
+
     - name: ☁️ Setup Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
     - name: 🔧 Setup Firebase CLI
       run: npm install -g firebase-tools
 
-    - name: 🚀 Deploy to Firebase App Hosting (Development)
+    - name: 🚀 Deploy to Firebase App Hosting (Production)
       run: |
-        firebase use daihoiconggiaojp-dev
-        firebase deploy --only apphosting:daihoiconggiaojp-dev
+        firebase use daihoiconggiaojp-prod
+        firebase deploy --only apphosting:daihoiconggiaojp-prod
