@@ -26,3 +26,5 @@ alter table public.event_roles
 ALTER TYPE registration_status ADD VALUE IF NOT EXISTS 'cancel_processed';
 
 ALTER TYPE registration_status ADD VALUE IF NOT EXISTS 'temp_confirmed'; -- for those who want to pay later by cash
+
+-- Add shirt_size column to registrations table

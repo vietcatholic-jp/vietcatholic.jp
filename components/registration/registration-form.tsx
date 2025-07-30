@@ -12,15 +12,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Users, ArrowLeft, Calendar, AlertCircle } from "lucide-react";
 import { 
   GENDERS, 
-  AGE_GROUPS, 
-  SHIRT_SIZES,
+  AGE_GROUPS,
   EventParticipationRole,
   JAPANESE_PROVINCES,
   PROVINCE_DIOCESE_MAPPING,
   EventConfig,
   EventRole,
   GenderType,
-  AgeGroupType
+  AgeGroupType,
+  SHIRT_SIZES_PARTICIPANT,
+  SHIRT_SIZES_ORGANIZER
 } from "@/lib/types";
 import { toast } from "sonner";
 import { RoleSelection } from "./role-selection";
@@ -40,7 +41,7 @@ const primaryRegistrantSchema = z.object({
     message: "Tỉnh/Phủ là bắt buộc cho người đăng ký chính"
   }),
   diocese: z.string().min(1, "Giáo phận là bắt buộc"),
-  shirt_size: z.enum(['1','2','3','4','5','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const, {
+  shirt_size: z.enum(['1','2','3','4','5','XS','S','M','L','XL','XXL','3XL','4XL','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
@@ -73,7 +74,7 @@ const additionalRegistrantSchema = z.object({
   }),
   province: z.string().optional(),
   diocese: z.string().optional(),
-  shirt_size: z.enum(['1','2','3','4','5','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const, {
+  shirt_size: z.enum(['1','2','3','4','5','XS','S','M','L','XL','XXL','3XL','4XL','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const, {
     required_error: "Vui lòng chọn size áo"
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
@@ -290,11 +291,15 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
   const handleGenderChange = (index: number, selectedGender: string) => {
       setValue(`registrants.${index}.gender` as const, selectedGender as GenderType);
-      if (selectedGender === "female") {
-        setValue(`registrants.${index}.shirt_size` as const, "F-M" as const);
-      }
-      if (selectedGender === "male") {
-        setValue(`registrants.${index}.shirt_size` as const, "M-M" as const);
+      if(selectedRole === 'participant') {
+        setValue(`registrants.${index}.shirt_size` as const, "M" as const);
+      }else{
+        if (selectedGender === "female") {
+          setValue(`registrants.${index}.shirt_size` as const, "F-M" as const);
+        }
+        if (selectedGender === "male") {
+          setValue(`registrants.${index}.shirt_size` as const, "M-M" as const);
+        }
       }
   };
 
@@ -660,11 +665,20 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="">Chọn size</option>
-                        {SHIRT_SIZES.map((size) => (
-                          <option key={size.value} value={size.value}>
-                            {size.label}
-                          </option>
-                        ))}
+                        {
+                          (selectedRole === 'participant') ? (
+                            SHIRT_SIZES_PARTICIPANT.map((size) => (
+                              <option key={size.value} value={size.value}>
+                                {size.label}
+                              </option>
+                            ))
+                          ) : (
+                            SHIRT_SIZES_ORGANIZER.map((size) => (
+                              <option key={size.value} value={size.value}>
+                                {size.label}
+                              </option>
+                            ))
+                          )}
                       </select>
                       <p className="text-xs text-muted-foreground">
                           Chọn size áo theo cân nặng và giới tính.
