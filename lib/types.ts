@@ -2,7 +2,9 @@ export type UserRole = 'participant' | 'registration_manager' | 'event_organizer
 export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | 'shikoku' | 'tohoku' | 'hokkaido';
 export type GenderType = 'male' | 'female' | 'other';
 export type AgeGroupType = 'under_12' | '12_17' | '18_25' | '26_35' | '36_50' | 'over_50';
-export type ShirtSizeType = '1'|'2'|'3'|'4'|'5'|'M-XS' | 'M-S' | 'M-M' | 'M-L' | 'M-XL' | 'M-XXL' | 'M-3XL' | 'M-4XL'|'F-XS' | 'F-S' | 'F-M' | 'F-L' | 'F-XL' | 'F-XXL';
+export type ParticipantShirtSizeType = '1'|'2'|'3'|'4'|'5'|'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | '3XL' | '4XL';
+export type OrganizerShirtSizeType = 'M-XS' | 'M-S' | 'M-M' | 'M-L' | 'M-XL' | 'M-XXL' | 'M-3XL' | 'M-4XL'|'F-XS' | 'F-S' | 'F-M' | 'F-L' | 'F-XL' | 'F-XXL';
+export type ShirtSizeType = ParticipantShirtSizeType | OrganizerShirtSizeType;
 
 // For registration role selection - can be 'participant' or an event role ID
 export type EventParticipationRole = string;
@@ -376,7 +378,23 @@ export const AGE_GROUPS: { value: AgeGroupType; label: string }[] = [
   { value: 'over_50', label: 'Trên 50 tuổi' },
 ];
 
-export const SHIRT_SIZES: { value: ShirtSizeType; label: string }[] = [
+export const SHIRT_SIZES_PARTICIPANT: { value: ParticipantShirtSizeType; label: string }[] = [
+  { value: '1', label: 'Em bé 1 (9-11)Kg' },
+  { value: '2', label: 'Em bé 2 (12-14)Kg' },
+  { value: '3', label: 'Trẻ em 3 (15-17)Kg' },
+  { value: '4', label: 'Trẻ em 4 (18-21)Kg' },
+  { value: '5', label: 'Trẻ em 5 (22-26)Kg' },
+  { value: 'XS', label: 'XS (26-35)Kg' },
+  { value: 'S', label: 'S (36-44)Kg' },
+  { value: 'M', label: 'M (44-52)Kg' },
+  { value: 'L', label: 'L (53-59)Kg' },
+  { value: 'XL', label: 'XL (60-66)Kg' },
+  { value: 'XXL', label: 'XXL (67-78)Kg' },
+  { value: '3XL', label: '3XL (78-93)Kg' },
+  { value: '4XL', label: '4XL (>94)Kg' }
+];
+
+export const SHIRT_SIZES_ORGANIZER: { value: OrganizerShirtSizeType; label: string }[] = [
   { value: 'M-XS', label: 'Nam XS (40-47)Kg' },
   { value: 'M-S', label: 'Nam S (48-53)Kg' },
   { value: 'M-M', label: 'Nam M (54-60)Kg' },
@@ -390,13 +408,9 @@ export const SHIRT_SIZES: { value: ShirtSizeType; label: string }[] = [
   { value: 'F-M', label: 'Nữ M (43-47)Kg' },
   { value: 'F-L', label: 'Nữ L (48-53)Kg' },
   { value: 'F-XL', label: 'Nữ XL (54-60)Kg' },
-  { value: 'F-XXL', label: 'Nữ XXL (61-67)Kg' },
-  { value: '1', label: 'Em bé 1 (9-11)Kg' },
-  { value: '2', label: 'Em bé 2 (12-14)Kg' },
-  { value: '3', label: 'Trẻ em 3 (15-17)Kg' },
-  { value: '4', label: 'Trẻ em 4 (18-21)Kg' },
-  { value: '5', label: 'Trẻ em 5 (22-26)Kg' },
+  { value: 'F-XXL', label: 'Nữ XXL (61-67)Kg' }
 ];
+export const SHIRT_SIZES:{ value: ShirtSizeType; label: string }[] = [ ...SHIRT_SIZES_PARTICIPANT, ...SHIRT_SIZES_ORGANIZER ];
 
 // Province to Diocese mapping
 export const PROVINCE_DIOCESE_MAPPING: { [key: string]: string } = {
