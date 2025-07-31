@@ -70,9 +70,29 @@ jobs:
         }
         EOF
 
+    - name: 🔍 Check if production backend exists
+      id: check_backend
+      run: |
+        firebase use daihoiconggiaojp-prod
+        if firebase apphosting:backends:list | grep -q "daihoiconggiaojp-prod"; then
+          echo "backend_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "backend_exists=false" >> $GITHUB_OUTPUT
+        fi
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
     - name: 🚀 Deploy to Firebase App Hosting (Production)
+      if: steps.check_backend.outputs.backend_exists == 'true'
       run: |
         firebase use daihoiconggiaojp-prod
         firebase deploy --only apphosting --token "$FIREBASE_TOKEN" --non-interactive
       env:
         FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+    - name: ⚠️ Production backend not found
+      if: steps.check_backend.outputs.backend_exists == 'false'
+      run: |
+        echo "Production backend 'daihoiconggiaojp-prod' does not exist."
+        echo "Please create the backend manually in Firebase Console first."
+        echo "Skipping deployment to avoid interactive prompts."
