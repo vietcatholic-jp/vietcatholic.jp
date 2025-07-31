@@ -28,10 +28,16 @@ jobs:
     - name: 🔍 Lint code
       run: npm run lint
 
+    - name: 🏗️ Build application
+      run: npm run build
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
     - name: 🔐 Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
       with:
-        credentials_json: ${{ secrets.GOOGLE_CREDENTIALS_PROD }}
+        credentials_json: ${{ secrets.DEPLOY_GOOGLE_CREDENTIAL }}
 
     - name: ☁️ Setup Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
@@ -42,4 +48,6 @@ jobs:
     - name: 🚀 Deploy to Firebase App Hosting (Production)
       run: |
         firebase use daihoiconggiaojp-prod
-        firebase deploy --only apphosting:daihoiconggiaojp-prod
+        firebase deploy --only apphosting --token "$FIREBASE_TOKEN" --non-interactive
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
