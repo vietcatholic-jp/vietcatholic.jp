@@ -1,0 +1,98 @@
+[debug] [2025-07-31T12:29:28.099Z] ----------------------------------------------------------------------
+[debug] [2025-07-31T12:29:28.102Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy --only apphosting --project=daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:28.102Z] CLI Version:   14.6.0
+[debug] [2025-07-31T12:29:28.102Z] Platform:      darwin
+[debug] [2025-07-31T12:29:28.103Z] Node Version:  v22.14.0
+[debug] [2025-07-31T12:29:28.103Z] Time:          Thu Jul 31 2025 21:29:28 GMT+0900 (Japan Standard Time)
+[debug] [2025-07-31T12:29:28.103Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-07-31T12:29:28.287Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-31T12:29:28.287Z] > authorizing via signed-in user (buithu.ktmt05@gmail.com)
+[debug] [2025-07-31T12:29:28.287Z] [iam] checking project daihoiconggiaojp-dev for permissions ["firebase.projects.get",null]
+[debug] [2025-07-31T12:29:28.288Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:28.289Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:28.289Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/daihoiconggiaojp-dev:testIamPermissions [none]
+[debug] [2025-07-31T12:29:28.290Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/daihoiconggiaojp-dev:testIamPermissions x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:28.290Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/daihoiconggiaojp-dev:testIamPermissions {"permissions":["firebase.projects.get",null]}
+[debug] [2025-07-31T12:29:28.646Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/daihoiconggiaojp-dev:testIamPermissions 200
+[debug] [2025-07-31T12:29:28.646Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/daihoiconggiaojp-dev:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-07-31T12:29:28.647Z] [iam] error while checking permissions, command may fail: Authorization failed. This account is missing the following required permissions on project daihoiconggiaojp-dev:
+
+  
+[info] 
+[info] === Deploying to 'daihoiconggiaojp-dev'...
+[info] 
+[info] i  deploying apphosting 
+[debug] [2025-07-31T12:29:28.649Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:28.649Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:28.649Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-07-31T12:29:28.649Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:29.766Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-07-31T12:29:29.766Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2025-07-31T12:29:29.766Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.766Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.766Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.766Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:29.767Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/developerconnect.googleapis.com [none]
+[debug] [2025-07-31T12:29:29.767Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/developerconnect.googleapis.com x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:29.768Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/cloudbuild.googleapis.com [none]
+[debug] [2025-07-31T12:29:29.768Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/cloudbuild.googleapis.com x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:29.769Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/secretmanager.googleapis.com [none]
+[debug] [2025-07-31T12:29:29.769Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/secretmanager.googleapis.com x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:29.771Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/run.googleapis.com [none]
+[debug] [2025-07-31T12:29:29.771Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/run.googleapis.com x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:29.773Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/artifactregistry.googleapis.com [none]
+[debug] [2025-07-31T12:29:29.773Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/artifactregistry.googleapis.com x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:29.774Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/iam.googleapis.com [none]
+[debug] [2025-07-31T12:29:29.775Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/iam.googleapis.com x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:30.283Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/developerconnect.googleapis.com 200
+[debug] [2025-07-31T12:29:30.283Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/developerconnect.googleapis.com [omitted]
+[debug] [2025-07-31T12:29:30.323Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/cloudbuild.googleapis.com 200
+[debug] [2025-07-31T12:29:30.323Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/cloudbuild.googleapis.com [omitted]
+[debug] [2025-07-31T12:29:30.845Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/secretmanager.googleapis.com 200
+[debug] [2025-07-31T12:29:30.845Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/secretmanager.googleapis.com [omitted]
+[debug] [2025-07-31T12:29:30.848Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/run.googleapis.com 200
+[debug] [2025-07-31T12:29:30.848Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/run.googleapis.com [omitted]
+[debug] [2025-07-31T12:29:30.852Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/iam.googleapis.com 200
+[debug] [2025-07-31T12:29:30.852Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/iam.googleapis.com [omitted]
+[debug] [2025-07-31T12:29:30.918Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/artifactregistry.googleapis.com 200
+[debug] [2025-07-31T12:29:30.918Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/daihoiconggiaojp-dev/services/artifactregistry.googleapis.com [omitted]
+[debug] [2025-07-31T12:29:30.918Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:30.918Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:30.918Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/daihoiconggiaojp-dev/serviceAccounts/firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-07-31T12:29:30.919Z] >>> [apiv2][(partial)header] POST https://iam.googleapis.com/v1/projects/daihoiconggiaojp-dev/serviceAccounts/firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com:testIamPermissions x-goog-quota-user=projects/daihoiconggiaojp-dev
+[debug] [2025-07-31T12:29:30.919Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/daihoiconggiaojp-dev/serviceAccounts/firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-07-31T12:29:31.231Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/daihoiconggiaojp-dev/serviceAccounts/firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-07-31T12:29:31.231Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/daihoiconggiaojp-dev/serviceAccounts/firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-07-31T12:29:31.232Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:31.232Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:31.232Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/daihoiconggiaojp-dev:getIamPolicy [none]
+[debug] [2025-07-31T12:29:31.561Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/daihoiconggiaojp-dev:getIamPolicy 200
+[debug] [2025-07-31T12:29:31.561Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/daihoiconggiaojp-dev:getIamPolicy {"version":1,"etag":"BwY7OL/Oeaw=","bindings":[{"role":"roles/artifactregistry.serviceAgent","members":["serviceAccount:service-205832725042@gcp-sa-artifactregistry.iam.gserviceaccount.com"]},{"role":"roles/cloudbuild.builds.builder","members":["serviceAccount:205832725042@cloudbuild.gserviceaccount.com"]},{"role":"roles/cloudbuild.builds.editor","members":["serviceAccount:github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/cloudbuild.serviceAgent","members":["serviceAccount:service-205832725042@gcp-sa-cloudbuild.iam.gserviceaccount.com"]},{"role":"roles/compute.networkAdmin","members":["serviceAccount:github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/compute.serviceAgent","members":["serviceAccount:service-205832725042@compute-system.iam.gserviceaccount.com"]},{"role":"roles/containerregistry.ServiceAgent","members":["serviceAccount:service-205832725042@containerregistry.iam.gserviceaccount.com"]},{"role":"roles/developerconnect.readTokenAccessor","members":["serviceAccount:firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/developerconnect.serviceAgent","members":["serviceAccount:service-205832725042@gcp-sa-devconnect.iam.gserviceaccount.com"]},{"role":"roles/editor","members":["serviceAccount:205832725042-compute@developer.gserviceaccount.com","serviceAccount:205832725042@cloudservices.gserviceaccount.com"]},{"role":"roles/firebase.admin","members":["serviceAccount:github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com","serviceAccount:github-actions-dhcg@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/firebase.managementServiceAgent","members":["serviceAccount:service-205832725042@gcp-sa-firebase.iam.gserviceaccount.com"]},{"role":"roles/firebase.sdkAdminServiceAgent","members":["serviceAccount:firebase-adminsdk-fbsvc@daihoiconggiaojp-dev.iam.gserviceaccount.com","serviceAccount:firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/firebaseapphosting.computeRunner","members":["serviceAccount:firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/firebaseapphosting.serviceAgent","members":["serviceAccount:service-205832725042@gcp-sa-firebaseapphosting.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountAdmin","members":["serviceAccount:github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com","serviceAccount:github-actions-dhcg@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountTokenCreator","members":["serviceAccount:firebase-adminsdk-fbsvc@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountUser","members":["serviceAccount:github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com","serviceAccount:github-actions-dhcg@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/owner","members":["user:buithu.ktmt05@gmail.com"]},{"role":"roles/resourcemanager.projectIamAdmin","members":["serviceAccount:github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com","serviceAccount:github-actions-dhcg@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/run.admin","members":["serviceAccount:github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/run.serviceAgent","members":["serviceAccount:service-205832725042@serverless-robot-prod.iam.gserviceaccount.com"]},{"role":"roles/secretmanager.admin_withcond_8434c3b84ea33f99e0f8","members":["serviceAccount:service-205832725042@gcp-sa-devconnect.iam.gserviceaccount.com"]},{"role":"roles/secretmanager.secretAccessor","members":["serviceAccount:firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/secretmanager.viewer","members":["serviceAccount:firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/storage.admin","members":["serviceAccount:github-actions-apphosting@daihoiconggiaojp-dev.iam.gserviceaccount.com"]},{"role":"roles/storage.objectViewer","members":["serviceAccount:firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com"]}]}
+[debug] [2025-07-31T12:29:31.562Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:31.562Z] Checked if tokens are valid: true, expires at: 1753968199373
+[debug] [2025-07-31T12:29:31.562Z] >>> [apiv2][query] GET https://firebaseapphosting.googleapis.com/v1beta/projects/daihoiconggiaojp-dev/locations/-/backends 
+[debug] [2025-07-31T12:29:32.823Z] <<< [apiv2][status] GET https://firebaseapphosting.googleapis.com/v1beta/projects/daihoiconggiaojp-dev/locations/-/backends 200
+[debug] [2025-07-31T12:29:32.824Z] <<< [apiv2][body] GET https://firebaseapphosting.googleapis.com/v1beta/projects/daihoiconggiaojp-dev/locations/-/backends {"backends":[{"name":"projects/daihoiconggiaojp-dev/locations/asia-east1/backends/daihoiconggiaojp-dev","createTime":"2025-07-26T14:04:57.498318501Z","updateTime":"2025-07-28T14:54:21.284073Z","labels":{"deployment-tool":"cli-firebase"},"uri":"daihoiconggiaojp-dev--daihoiconggiaojp-dev.asia-east1.hosted.app","managedResources":[{"runService":{"service":"projects/205832725042/locations/asia-east1/services/daihoiconggiaojp-dev"}}],"uid":"0cab8cab-87e7-44d2-a14e-3c8f02cd878b","etag":"j7wxmAQET50xxWMx1nbvrroZ2Hw4Fu9OiG37Cm9eoxU","reconciling":false,"servingLocality":"GLOBAL_ACCESS","serviceAccount":"firebase-app-hosting-compute@daihoiconggiaojp-dev.iam.gserviceaccount.com","appId":"1:205832725042:web:01be3903f89e3aa73f922b","environment":"development"}]}
+[info] i  apphosting: Found backend(s) daihoiconggiaojp-dev 
+[debug] [2025-07-31T12:33:38.548Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (/usr/local/lib/node_modules/firebase-tools/node_modules/@inquirer/core/dist/commonjs/lib/create-prompt.js:101:37)
+    at Interface.emit (node:events:518:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1124:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:263:20)
+    at ReadStream.emit (node:events:530:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:370:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.

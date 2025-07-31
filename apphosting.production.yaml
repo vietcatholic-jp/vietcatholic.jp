@@ -16,4 +16,4 @@ env:
     secret: supabase-service-role-key-prod
   # Production Site URL
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://daihoiconggiaojp-prod--daihoiconggiaojp-prod.asia-east1.hosted.app
+    value: https://pre-dhcg.thubv.com
