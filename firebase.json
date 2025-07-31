@@ -15,6 +15,22 @@
         "*.md",
         ".env*"
       ]
+    },
+    {
+      "backendId": "daihoiconggiaojp-prod",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions",
+        "tests",
+        "docs",
+        "scripts",
+        "*.md",
+        ".env*"
+      ]
     }
   ]
 }
