@@ -9,6 +9,7 @@ import {
   FileText
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 import { vi } from "date-fns/locale";
 
 interface AgendaItem {
@@ -41,9 +42,11 @@ export default async function AgendaPage() {
     `)
     .order('start_time', { ascending: true });
 
-  // Group agenda items by date
+  // Group agenda items by JST date
   const groupedAgenda = agendaItems?.reduce((groups, item) => {
-    const date = format(new Date(item.start_time), 'yyyy-MM-dd');
+    // Convert UTC to JST
+    const zonedDate = toZonedTime(new Date(item.start_time), 'Asia/Tokyo');
+    const date = format(zonedDate, 'yyyy-MM-dd');
     if (!groups[date]) {
       groups[date] = [];
     }
@@ -71,7 +74,7 @@ export default async function AgendaPage() {
   const getSessionTypeName = (sessionType: string) => {
     switch (sessionType?.toLowerCase()) {
       case 'plenary':
-        return 'Phiên toàn thể';
+        return 'Sinh hoạt chung';
       case 'workshop':
         return 'Hội thảo';
       case 'mass':
@@ -153,7 +156,7 @@ export default async function AgendaPage() {
               <div className="flex flex-wrap gap-3">
                 {[
                   { type: 'mass', name: 'Thánh lễ' },
-                  { type: 'plenary', name: 'Phiên toàn thể' },
+                  { type: 'plenary', name: 'Sinh hoạt chung' },
                   { type: 'workshop', name: 'Hội thảo' },
                   { type: 'cultural', name: 'Văn hóa' },
                   { type: 'break', name: 'Nghỉ ngơi' }
@@ -211,23 +214,20 @@ export default async function AgendaPage() {
                               )}
                             </div>
                           </div>
-                          
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-muted-foreground" />
                               <span>
-                                {format(new Date(item.start_time), 'HH:mm')} - {' '}
-                                {item.end_time ? format(new Date(item.end_time), 'HH:mm') : ''}
+                                {formatInTimeZone(item.start_time, 'Asia/Tokyo', 'HH:mm')} - {' '}
+                                {item.end_time ? formatInTimeZone(item.end_time, 'Asia/Tokyo', 'HH:mm') : ''}
                               </span>
                             </div>
-                            
                             {item.venue && (
                               <div className="flex items-center gap-2">
                                 <MapPin className="h-4 w-4 text-muted-foreground" />
                                 <span>{item.venue}</span>
                               </div>
                             )}
-                            
                             <div className="text-muted-foreground">
                               Thời lượng: {' '}
                               {item.end_time ? Math.round(
@@ -236,7 +236,6 @@ export default async function AgendaPage() {
                               ) : 0} phút
                             </div>
                           </div>
-
                           {item.notes && (
                             <div className="mt-3 p-2 bg-muted rounded text-sm">
                               <span className="font-medium">Ghi chú:</span>
