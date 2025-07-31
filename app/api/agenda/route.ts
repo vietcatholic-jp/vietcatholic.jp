@@ -1,14 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { fromZonedTime } from "date-fns-tz";
 
 const AgendaItemSchema = z.object({
   title: z.string().min(1),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   startTime: z.string(),
   endTime: z.string(),
-  location: z.string().optional(),
-  type: z.enum(["session", "break", "meal", "other"]),
+  location: z.string().nullable().optional(),
+  venue: z.string().nullable().optional(),
+  sessionType: z.enum(["session", "break", "meal", "other", "plenary", "workshop", "mass", "cultural"]).optional(),
+  speaker: z.string().nullable().optional(),
+  maxParticipants: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  eventConfigId: z.string().optional(),
   isPublic: z.boolean().default(true),
 });
 
@@ -81,18 +87,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = AgendaItemSchema.parse(body);
 
+    // Convert JST times to UTC for storage
+    const startTimeUtc = fromZonedTime(validated.startTime, 'Asia/Tokyo').toISOString();
+    const endTimeUtc = fromZonedTime(validated.endTime, 'Asia/Tokyo').toISOString();
+
     // Create agenda item
     const { data: agendaItem, error } = await supabase
       .from("agenda_items")
       .insert({
         title: validated.title,
         description: validated.description,
-        start_time: validated.startTime,
-        end_time: validated.endTime,
-        location: validated.location,
-        type: validated.type,
-        is_public: validated.isPublic,
-        created_by: user.id,
+        start_time: startTimeUtc,
+        end_time: endTimeUtc,
+        venue: validated.venue,
+        session_type: validated.sessionType,
+        notes: validated.notes,
+        event_config_id: validated.eventConfigId,
       })
       .select()
       .single();
@@ -150,11 +160,39 @@ export async function PATCH(request: NextRequest) {
     // Validate updates
     const validated = AgendaItemSchema.partial().parse(updates);
 
+    // Convert JST times to UTC if provided and map field names to database columns
+    const updateData: {
+      title?: string;
+      description?: string | null;
+      start_time?: string;
+      end_time?: string;
+      venue?: string | null;
+      session_type?: string;
+      speaker?: string | null;
+      max_participants?: number | null;
+      notes?: string | null;
+    } = {};
+    
+    if (validated.title) updateData.title = validated.title;
+    if (validated.description !== undefined) updateData.description = validated.description;
+    if (validated.venue !== undefined) updateData.venue = validated.venue;
+    if (validated.sessionType !== undefined) updateData.session_type = validated.sessionType;
+    if (validated.speaker !== undefined) updateData.speaker = validated.speaker;
+    if (validated.maxParticipants !== undefined) updateData.max_participants = validated.maxParticipants;
+    if (validated.notes !== undefined) updateData.notes = validated.notes;
+    
+    if (validated.startTime) {
+      updateData.start_time = fromZonedTime(validated.startTime, 'Asia/Tokyo').toISOString();
+    }
+    if (validated.endTime) {
+      updateData.end_time = fromZonedTime(validated.endTime, 'Asia/Tokyo').toISOString();
+    }
+
     // Update agenda item
     const { data: agendaItem, error } = await supabase
       .from("agenda_items")
       .update({
-        ...validated,
+        ...updateData,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
