@@ -48,4 +48,6 @@ jobs:
     - name: 🚀 Deploy to Firebase App Hosting (Development)
       run: |
         firebase use daihoiconggiaojp-dev
-        firebase deploy --only apphosting
+        firebase deploy --only apphosting --token "$FIREBASE_TOKEN"
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
