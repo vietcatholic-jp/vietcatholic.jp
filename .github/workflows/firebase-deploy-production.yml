@@ -45,6 +45,31 @@ jobs:
     - name: 🔧 Setup Firebase CLI
       run: npm install -g firebase-tools
 
+    - name: 📝 Create production firebase.json
+      run: |
+        cat > firebase.json << 'EOF'
+        {
+          "apphosting": [
+            {
+              "backendId": "daihoiconggiaojp-prod",
+              "rootDir": "/",
+              "ignore": [
+                "node_modules",
+                ".git",
+                "firebase-debug.log",
+                "firebase-debug.*.log",
+                "functions",
+                "tests",
+                "docs",
+                "scripts",
+                "*.md",
+                ".env*"
+              ]
+            }
+          ]
+        }
+        EOF
+
     - name: 🚀 Deploy to Firebase App Hosting (Production)
       run: |
         firebase use daihoiconggiaojp-prod
