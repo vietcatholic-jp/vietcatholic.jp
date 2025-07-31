@@ -13,7 +13,7 @@ env:
   - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
     value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sbmhoaWFzdGVrbnJmY2ZuenhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwNzI3MTgsImV4cCI6MjA2NzY0ODcxOH0.XJwplXGzxW0Wa_nw3WaHYggCiRXqJK5RKgOINvfpxBM
   - variable: SUPABASE_SERVICE_ROLE_KEY
-    secret: supabase-service-role-key-dev
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sbmhoaWFzdGVrbnJmY2ZuenhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjA3MjcxOCwiZXhwIjoyMDY3NjQ4NzE4fQ.VDE0LbxoGRoF7ygC3CRDMVPw2v1xvs1CM6h6ZvHO1sg
   # Production Site URL
   - variable: NEXT_PUBLIC_SITE_URL
     value: https://daihoiconggiaojp-dev--daihoiconggiaojp-dev.asia-east1.hosted.app
