@@ -7,7 +7,7 @@ runConfig:
   minInstances: 0
 
 env:
-  # Supabase Configuration
+  # Supabase Configuration - Using Google Secret Manager
   - variable: NEXT_PUBLIC_SUPABASE_URL
     secret: supabase-url-dev
   - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
