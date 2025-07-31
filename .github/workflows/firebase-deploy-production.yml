@@ -86,7 +86,7 @@ jobs:
       if: steps.check_backend.outputs.backend_exists == 'true'
       run: |
         firebase use daihoiconggiaojp-prod
-        firebase deploy --only apphosting --token "$FIREBASE_TOKEN" --non-interactive
+        firebase deploy --only apphosting --token "$FIREBASE_TOKEN" --non-interactive --force
       env:
         FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
