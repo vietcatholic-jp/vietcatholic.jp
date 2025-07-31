@@ -48,4 +48,4 @@ jobs:
     - name: 🚀 Deploy to Firebase App Hosting (Production)
       run: |
         firebase use daihoiconggiaojp-prod
-        firebase apphosting:backends:deploy daihoiconggiaojp-prod
+        firebase deploy --only apphosting
