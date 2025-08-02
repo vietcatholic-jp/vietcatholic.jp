@@ -9,11 +9,11 @@ runConfig:
 env:
   # Supabase Configuration - Using Google Secret Manager
   - variable: NEXT_PUBLIC_SUPABASE_URL
-    secret: supabase-url-dev
+    secret: supabase-url-prod
   - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
-    secret: supabase-anon-key-dev
+    secret: supabase-anon-key-prod
   - variable: SUPABASE_SERVICE_ROLE_KEY
-    secret: supabase-service-role-key-dev
+    secret: supabase-service-role-key-prod
   # Production Site URL
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://dev-dhcg.thubv.com/
+    value: https://pre-dhcg.thubv.com
