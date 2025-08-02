@@ -40,6 +40,7 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
       saint_name: r.saint_name || "",
       phone: r.phone || "",
       facebook_link: r.facebook_link || "",
+      notes: r.notes || "",
       is_primary: r.is_primary,
       event_role_id: r.event_role_id || null
     })) || [],
@@ -311,6 +312,18 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                         </p>
                       </div>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="notes" className="text-sm">Ghi chú</Label>
+                    <Textarea
+                      id={`registrant_${index}_notes`}
+                      value={registrant.notes}
+                      disabled={true}
+                      onChange={(e) => handleRegistrantChange(index, 'notes', e.target.value)}
+                      placeholder="Không có ghi chú nào cho người này"
+                      className="text-sm"
+                    />
                   </div>
                 </div>
               ))}
