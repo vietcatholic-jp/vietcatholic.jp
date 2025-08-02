@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Registration, RegistrationStatus } from "@/lib/types";
+import { Registration, RegistrationStatus, EventRole } from "@/lib/types";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Save, 
   X,
   Edit,
   Loader2,
-  Users
+  Users,
+  UserCog
 } from "lucide-react";
 
 interface RegistrationEditModalProps {
@@ -25,6 +27,10 @@ interface RegistrationEditModalProps {
 
 export function RegistrationEditModal({ registration, onClose, onSave }: RegistrationEditModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [eventRoles, setEventRoles] = useState<EventRole[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true);
+  const supabase = createClient();
+  
   const [formData, setFormData] = useState({
     status: registration.status,
     notes: registration.notes || "",
@@ -34,9 +40,49 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
       saint_name: r.saint_name || "",
       phone: r.phone || "",
       facebook_link: r.facebook_link || "",
-      is_primary: r.is_primary
+      is_primary: r.is_primary,
+      event_role_id: r.event_role_id || null
     })) || [],
   });
+
+  // Fetch available event roles
+  useEffect(() => {
+    const fetchEventRoles = async () => {
+      try {
+        // First, get the active event
+        const { data: activeEvent, error: eventError } = await supabase
+          .from('event_configs')
+          .select('id')
+          .eq('is_active', true)
+          .single();
+
+        if (eventError) {
+          console.error('Error fetching active event:', eventError);
+          setIsLoadingRoles(false);
+          return;
+        }
+
+        // Then fetch roles for this event
+        const { data: roles, error: rolesError } = await supabase
+          .from('event_roles')
+          .select('*')
+          .eq('event_config_id', activeEvent.id)
+          .order('name');
+
+        if (rolesError) {
+          console.error('Error fetching event roles:', rolesError);
+        } else {
+          setEventRoles(roles || []);
+        }
+      } catch (error) {
+        console.error('Error in fetchEventRoles:', error);
+      } finally {
+        setIsLoadingRoles(false);
+      }
+    };
+
+    fetchEventRoles();
+  }, [supabase]);
 
   const statusOptions: { value: RegistrationStatus; label: string; description: string }[] = [
     { value: 'pending', label: 'Chờ đóng phí tham dự', description: 'Đang chờ người dùng đóng phí tham dự' },
@@ -111,13 +157,20 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
     }));
   };
 
-  const handleRegistrantChange = (index: number, field: string, value: string) => {
+  const handleRegistrantChange = (index: number, field: string, value: string | null) => {
     setFormData(prev => ({
       ...prev,
       registrants: prev.registrants.map((r, i) => 
         i === index ? { ...r, [field]: value } : r
       )
     }));
+  };
+
+  // Get role display name
+  const getRoleDisplayName = (roleId: string | null) => {
+    if (!roleId) return 'Tham dự viên';
+    const role = eventRoles.find(r => r.id === roleId);
+    return role ? role.name : 'Tham dự viên';
   };
 
   return (
@@ -225,6 +278,39 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                         className="text-sm"
                       />
                     </div>
+                  </div>
+                  
+                  {/* Role Selection */}
+                  <div>
+                    <Label htmlFor={`registrant_${index}_role`} className="text-sm">
+                      <UserCog className="h-4 w-4 inline mr-1" />
+                      Vai trò
+                    </Label>
+                    {isLoadingRoles ? (
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Đang tải vai trò...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <select
+                          id={`registrant_${index}_role`}
+                          value={registrant.event_role_id || ""}
+                          onChange={(e) => handleRegistrantChange(index, 'event_role_id', e.target.value || null)}
+                          className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                        >
+                          <option value="">Tham dự viên</option>
+                          {eventRoles.map((role) => (
+                            <option key={role.id} value={role.id}>
+                              {role.name}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-muted-foreground">
+                          Hiện tại: <span className="font-medium">{getRoleDisplayName(registrant.event_role_id)}</span>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
