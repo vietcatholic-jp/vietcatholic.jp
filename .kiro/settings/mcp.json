@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "gcp": {
+      "command": "npm",
+      "args": [
+        "--silent",
+        "--prefix",
+        "~/mcp/gcp-mcp",
+        "start"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "select-project",
+        "run-gcp-code",
+        "list-projects"
+      ]
+    },
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firebase-tools@latest",
+        "experimental:mcp"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "firebase_get_environment",
+        "firebase_update_environment",
+        "apphosting_list_backends",
+        "apphosting_fetch_logs"
+      ]
+    }
+  }
+}
