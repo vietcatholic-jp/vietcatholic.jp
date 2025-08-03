@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, UserPlus, UserCheck, TrendingUp, Users } from "lucide-react";
 import { formatAgeGroup } from "@/lib/utils";
+import { StatsOverviewSkeleton } from "./team-skeleton";
 
 interface TeamStats {
   overview: {
@@ -31,7 +32,7 @@ interface TeamStats {
   }>;
 }
 
-export function TeamStatsOverview() {
+function TeamStatsOverviewComponent() {
   const [stats, setStats] = useState<TeamStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -54,15 +55,19 @@ export function TeamStatsOverview() {
     }
   };
 
+  // Memoize expensive calculations - moved before early returns
+  const { totalParticipants, assignmentRate } = useMemo(() => {
+    if (!stats) return { totalParticipants: 0, assignmentRate: 0 };
+
+    const total = stats.overview.total_assigned + stats.overview.total_unassigned;
+    const rate = total > 0
+      ? Math.round((stats.overview.total_assigned / total) * 100)
+      : 0;
+    return { totalParticipants: total, assignmentRate: rate };
+  }, [stats]);
+
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Đang tải thống kê...</p>
-        </div>
-      </div>
-    );
+    return <StatsOverviewSkeleton />;
   }
 
   if (!stats) {
@@ -72,11 +77,6 @@ export function TeamStatsOverview() {
       </div>
     );
   }
-
-  const totalParticipants = stats.overview.total_assigned + stats.overview.total_unassigned;
-  const assignmentRate = totalParticipants > 0 
-    ? Math.round((stats.overview.total_assigned / totalParticipants) * 100) 
-    : 0;
 
   return (
     <div className="space-y-6">
@@ -407,3 +407,5 @@ export function TeamStatsOverview() {
     </div>
   );
 }
+
+export const TeamStatsOverview = memo(TeamStatsOverviewComponent);

@@ -61,10 +61,27 @@ export interface EventTeam {
   event_config_id: string;
   name: string;
   description?: string;
+  capacity?: number;
   leader_id?: string;
   sub_leader_id?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface EventTeamWithDetails extends EventTeam {
+  member_count: number;
+  leader?: {
+    id: string;
+    full_name: string;
+    email?: string;
+  };
+  sub_leader?: {
+    id: string;
+    full_name: string;
+    email?: string;
+  };
+  age_breakdown?: Record<string, number>;
+  gender_breakdown?: Record<string, number>;
 }
 
 export interface EventRole {

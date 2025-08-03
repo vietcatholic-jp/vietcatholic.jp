@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { EventTeamWithDetails } from "@/lib/types";
 
 const CreateTeamSchema = z.object({
   name: z.string().min(1, "Tên đội là bắt buộc"),
@@ -56,7 +57,7 @@ interface User {
 interface CreateTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (newTeam: EventTeamWithDetails) => void;
 }
 
 export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalProps) {
@@ -144,9 +145,10 @@ export function CreateTeamModal({ isOpen, onClose, onSuccess }: CreateTeamModalP
         throw new Error(error.error || "Không thể tạo đội");
       }
 
+      const result = await response.json();
       toast.success("Tạo đội thành công!");
       reset();
-      onSuccess();
+      onSuccess(result.team); // Pass the new team data
       onClose();
     } catch (error) {
       console.error("Error creating team:", error);

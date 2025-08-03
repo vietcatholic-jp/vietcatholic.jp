@@ -10,6 +10,7 @@ import { CreateTeamModal } from "./create-team-modal";
 import { EditTeamModal } from "./edit-team-modal";
 import { ManageTeamMembersModal } from "./manage-team-members-modal";
 import { TeamDetailModal } from "./team-detail-modal";
+import { TeamListSkeleton } from "./team-skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,33 +26,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-
-interface Team {
-  id: string;
-  name: string;
-  description?: string;
-  capacity?: number;
-  member_count: number;
-  leader?: {
-    id: string;
-    full_name: string;
-  };
-  sub_leader?: {
-    id: string;
-    full_name: string;
-  };
-  age_breakdown?: Record<string, number>;
-  gender_breakdown?: Record<string, number>;
-}
+import { EventTeamWithDetails } from "@/lib/types";
 
 export function TeamManagementTab() {
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useState<EventTeamWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteTeamId, setDeleteTeamId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [editTeam, setEditTeam] = useState<Team | null>(null);
-  const [manageTeam, setManageTeam] = useState<Team | null>(null);
+  const [editTeam, setEditTeam] = useState<EventTeamWithDetails | null>(null);
+  const [manageTeam, setManageTeam] = useState<EventTeamWithDetails | null>(null);
   const [detailTeamId, setDetailTeamId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -73,8 +57,9 @@ export function TeamManagementTab() {
     }
   };
 
-  const handleCreateTeamSuccess = () => {
-    fetchTeams(); // Refresh teams list
+  const handleCreateTeamSuccess = (newTeam: EventTeamWithDetails) => {
+    // Add new team to local state instead of refetching
+    setTeams(prevTeams => [...prevTeams, { ...newTeam, member_count: newTeam.member_count || 0 }]);
   };
 
   const handleDeleteTeam = async () => {
@@ -92,7 +77,8 @@ export function TeamManagementTab() {
       }
 
       toast.success("Xóa đội thành công!");
-      fetchTeams(); // Refresh teams list
+      // Remove team from local state instead of refetching
+      setTeams(prevTeams => prevTeams.filter(team => team.id !== deleteTeamId));
       setDeleteTeamId(null);
     } catch (error) {
       console.error("Error deleting team:", error);
@@ -104,11 +90,20 @@ export function TeamManagementTab() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Đang tải danh sách đội...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Quản lý đội</h2>
+            <p className="text-muted-foreground">
+              Quản lý thông tin và thành viên của các đội
+            </p>
+          </div>
+          <Button disabled>
+            <Users className="h-4 w-4 mr-2" />
+            Tạo đội mới
+          </Button>
         </div>
+        <TeamListSkeleton />
       </div>
     );
   }
@@ -290,9 +285,15 @@ export function TeamManagementTab() {
       <EditTeamModal
         isOpen={!!editTeam}
         onClose={() => setEditTeam(null)}
-        onDataChange={() => {
-          // Refresh teams data without closing dialog
-          fetchTeams();
+        onDataChange={(updatedTeam: EventTeamWithDetails) => {
+          // Update team in local state instead of refetching
+          setTeams(prevTeams =>
+            prevTeams.map(team =>
+              team.id === updatedTeam.id
+                ? { ...team, ...updatedTeam, member_count: updatedTeam.member_count || team.member_count }
+                : team
+            )
+          );
         }}
         team={editTeam}
       />
