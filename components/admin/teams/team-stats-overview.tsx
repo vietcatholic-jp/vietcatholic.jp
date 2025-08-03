@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, UserPlus, UserCheck, TrendingUp } from "lucide-react";
+import { BarChart3, UserPlus, UserCheck, TrendingUp, Users } from "lucide-react";
 import { formatAgeGroup } from "@/lib/utils";
+import { getRoleCategoryColor } from "@/lib/role-utils";
 
 interface TeamStats {
   overview: {
@@ -22,6 +23,11 @@ interface TeamStats {
   }>;
   age_distribution: Array<{
     age_group: string;
+    count: number;
+  }>;
+  role_distribution: Array<{
+    role_name: string;
+    role_category: string;
     count: number;
   }>;
 }
@@ -119,7 +125,8 @@ export function TeamStatsOverview() {
       </div>
 
       {/* Distribution Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="w-full overflow-x-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-w-max md:min-w-0">
         {/* Team Distribution */}
         <Card>
           <CardHeader>
@@ -191,6 +198,38 @@ export function TeamStatsOverview() {
             )}
           </CardContent>
         </Card>
+
+        {/* Role Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Phân bố theo vai trò
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.role_distribution && stats.role_distribution.length > 0 ? (
+              <div className="space-y-2">
+                {stats.role_distribution.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{item.role_name}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {item.role_category}
+                      </Badge>
+                    </div>
+                    <Badge variant="secondary">{item.count} người</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Chưa có dữ liệu
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        </div>
       </div>
 
       {/* Summary */}
