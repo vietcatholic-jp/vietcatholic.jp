@@ -119,6 +119,59 @@ export async function GET() {
       .map(([age_group, count]) => ({ age_group, count }))
       .sort((a, b) => b.count - a.count);
 
+    // Get role distribution for assigned registrants
+    const { data: roleData, error: roleError } = await supabase
+      .from("registrants")
+      .select(`
+        event_roles:event_role_id(id, name, description),
+        id
+      `)
+      .not("event_team_id", "is", null);
+
+    if (roleError) {
+      console.error("Role distribution error:", roleError);
+      return NextResponse.json({ error: "Failed to get role distribution" }, { status: 500 });
+    }
+
+    // Process role distribution
+    const roleCounts = (roleData || []).reduce((acc: Record<string, { count: number; role_info: { id: string; name: string; description: string } | null }>, item) => {
+      const role = Array.isArray(item.event_roles) ? item.event_roles[0] : item.event_roles;
+      const roleKey = role?.id || 'unassigned';
+
+      if (!acc[roleKey]) {
+        acc[roleKey] = {
+          count: 0,
+          role_info: role
+        };
+      }
+      acc[roleKey].count += 1;
+      return acc;
+    }, {});
+
+    const roleDistribution = Object.entries(roleCounts)
+      .map(([, data]) => {
+        const roleName = data.role_info?.name || 'Chưa phân vai trò';
+        // Import and use role categorization utility
+        let roleCategory = 'Tham gia';
+        if (data.role_info?.name) {
+          const lowerName = data.role_info.name.toLowerCase();
+          if (lowerName.includes('ban tổ chức') || lowerName.includes('organizer') || lowerName.includes('cốt cán')) {
+            roleCategory = 'Tổ chức';
+          } else if (lowerName.includes('ban ') || lowerName.includes('volunteer') || lowerName.includes('tình nguyện')) {
+            roleCategory = 'Tình nguyện';
+          } else if (lowerName.includes('diễn giả') || lowerName.includes('speaker') || lowerName.includes('nghệ sĩ')) {
+            roleCategory = 'Đặc biệt';
+          }
+        }
+
+        return {
+          role_name: roleName,
+          role_category: roleCategory,
+          count: data.count
+        };
+      })
+      .sort((a, b) => b.count - a.count);
+
     return NextResponse.json({
       overview: {
         total_teams: totalTeams || 0,
@@ -127,7 +180,8 @@ export async function GET() {
       },
       team_distribution: teamDistribution,
       gender_distribution: genderDistribution,
-      age_distribution: ageDistribution
+      age_distribution: ageDistribution,
+      role_distribution: roleDistribution
     });
 
   } catch (error) {
