@@ -163,8 +163,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="hidden md:flex space-x-1 bg-muted p-1 rounded-lg">
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href || 
-                (item.href !== '/admin' && pathname.startsWith(item.href));
+              const isActive = pathname === item.href ||
+                (item.href !== '/admin' && pathname?.startsWith(item.href));
               
               return (
                 <Link
@@ -189,8 +189,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex overflow-x-auto space-x-1 bg-muted p-1 rounded-lg">
               {visibleNavItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href || 
-                  (item.href !== '/admin' && pathname.startsWith(item.href));
+                const isActive = pathname === item.href ||
+                  (item.href !== '/admin' && pathname?.startsWith(item.href));
                 
                 return (
                   <Link

@@ -118,7 +118,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // If authenticated user tries to access auth pages, redirect to dashboard
-  if (user && pathname.startsWith('/auth') && pathname !== '/auth/callback') {
+  // Exception: allow access to /auth/update-password for password reset flow
+  if (user && pathname.startsWith('/auth') && pathname !== '/auth/callback' && pathname !== '/auth/update-password') {
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
