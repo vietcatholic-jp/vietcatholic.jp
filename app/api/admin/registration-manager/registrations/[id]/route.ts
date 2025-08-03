@@ -93,6 +93,7 @@ export async function PATCH(
             phone: registrant.phone,
             facebook_link: registrant.facebook_link,
             event_role_id: registrant.event_role_id,
+            shirt_size: registrant.shirt_size || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', registrant.id);
