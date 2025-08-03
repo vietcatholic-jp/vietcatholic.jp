@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Registration, RegistrationStatus, EventRole } from "@/lib/types";
+import { Registration, RegistrationStatus, EventRole, SHIRT_SIZES_PARTICIPANT, SHIRT_SIZES_ORGANIZER } from "@/lib/types";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { 
@@ -40,6 +40,7 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
       saint_name: r.saint_name || "",
       phone: r.phone || "",
       facebook_link: r.facebook_link || "",
+      shirt_size: r.shirt_size || null,
       notes: r.notes || "",
       is_primary: r.is_primary,
       event_role_id: r.event_role_id || null
@@ -280,6 +281,34 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                       />
                     </div>
                   </div>
+                  <div className="space-y-2">
+                      <Label htmlFor={`registrant_${index}_shirt_size`}>Size áo *</Label>
+                      <select
+                        id={`registrant_${index}_shirt_size`}
+                        value={registrant.shirt_size || ""}
+                        onChange={(e) => handleRegistrantChange(index, 'shirt_size', e.target.value || null)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Chọn size</option>
+                        {
+                        (registrant.event_role_id === null) ? (
+                          SHIRT_SIZES_PARTICIPANT.map((size) => (
+                            <option key={size.value} value={size.value}>
+                              {size.label}
+                            </option>
+                          ))
+                        ) : (
+                          SHIRT_SIZES_ORGANIZER.map((size) => (
+                            <option key={size.value} value={size.value}>
+                              {size.label}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                      <p className="text-xs text-muted-foreground">
+                          {registrant.event_role_id === null ? "Chọn size áo không phân biệt giới tính.": "Chọn size áo theo cân nặng và giới tính."}
+                      </p>
+                    </div>
                   
                   {/* Role Selection */}
                   <div>

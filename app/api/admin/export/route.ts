@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
           event_roles:event_role_id(
             id,
             name,
+            team_name,
             description
           )
         `)
@@ -62,7 +63,6 @@ export async function GET(request: NextRequest) {
       }
 
       const { data: registrants, error: registrantsError } = await query;
-
       if (registrantsError) {
         console.error('Error fetching registrants:', registrantsError);
         throw registrantsError;
@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
           event_roles:event_role_id(
             id,
             name,
+            team_name,
             description
           )
         ),

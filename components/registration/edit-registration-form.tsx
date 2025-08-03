@@ -443,7 +443,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                       >
                         <option value="">Chọn size</option>
                         {
-                        (registrants[index]?.event_role === '') ? (
+                        (registrants[index]?.event_role === null ) ? (
                           SHIRT_SIZES_PARTICIPANT.map((size) => (
                             <option key={size.value} value={size.value}>
                               {size.label}
@@ -458,8 +458,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                         )}
                       </select>
                       <p className="text-xs text-muted-foreground">
-                          Chọn size áo theo cân nặng và giới tính.
-                          Áo dành cho trẻ em dưới 12 tuổi sẽ không phân biệt giới tính.
+                          {registrants[index]?.event_role === null ? "Chọn size áo không phân biệt giới tính.": "Chọn size áo theo cân nặng và giới tính."}
                       </p>
                       {errors.registrants?.[index]?.shirt_size && (
                         <p className="text-sm text-destructive">
