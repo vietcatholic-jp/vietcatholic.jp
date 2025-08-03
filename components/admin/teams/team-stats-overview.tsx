@@ -81,7 +81,7 @@ function TeamStatsOverviewComponent() {
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="flex items-center p-6">
             <BarChart3 className="h-8 w-8 text-blue-600" />
@@ -128,7 +128,7 @@ function TeamStatsOverviewComponent() {
         {/* Desktop: 2x2 Grid layout */}
         <div className="hidden md:block">
           {/* Hàng trên: Team và Role Distribution (nhiều thông tin) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
             {/* Team Distribution */}
             <Card>
               <CardHeader>
@@ -188,7 +188,7 @@ function TeamStatsOverviewComponent() {
           </div>
 
           {/* Hàng dưới: Gender và Age Distribution (thông tin ngắn gọn) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Gender Distribution */}
             <Card>
               <CardHeader>
@@ -237,11 +237,11 @@ function TeamStatsOverviewComponent() {
           </div>
         </div>
 
-        {/* Mobile: Horizontal scroll */}
+        {/* Mobile: Vertical stack */}
         <div className="md:hidden">
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="space-y-4">
             {/* Team Distribution */}
-            <Card className="flex-shrink-0 w-80">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
@@ -267,7 +267,7 @@ function TeamStatsOverviewComponent() {
             </Card>
 
             {/* Role Distribution */}
-            <Card className="flex-shrink-0 w-80">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
@@ -298,7 +298,7 @@ function TeamStatsOverviewComponent() {
             </Card>
 
             {/* Gender Distribution */}
-            <Card className="flex-shrink-0 w-80">
+            <Card>
               <CardHeader>
                 <CardTitle>Phân bố theo giới tính</CardTitle>
               </CardHeader>
@@ -321,7 +321,7 @@ function TeamStatsOverviewComponent() {
             </Card>
 
             {/* Age Distribution */}
-            <Card className="flex-shrink-0 w-80">
+            <Card>
               <CardHeader>
                 <CardTitle>Phân bố theo độ tuổi</CardTitle>
               </CardHeader>
@@ -347,7 +347,7 @@ function TeamStatsOverviewComponent() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Tóm tắt</CardTitle>
