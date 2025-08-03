@@ -255,8 +255,8 @@ export default function ExportPage() {
         // Extract unique team names for filtering
         const teams = new Set<string>();
         registrantsData.registrants?.forEach((r: RegistrantWithRoleAndRegistration) => {
-          if (r.event_role?.team_name) {
-            teams.add(r.event_role.team_name);
+          if (r.event_roles?.team_name) {
+            teams.add(r.event_roles.team_name);
           }
         });
         
@@ -349,7 +349,7 @@ export default function ExportPage() {
     // Team filter for registrants
     if (state.filters.teamName && state.filters.teamName !== 'all') {
       filteredRegsts = filteredRegsts.filter(reg => 
-        reg.event_role?.team_name === state.filters.teamName
+        reg.event_roles?.team_name === state.filters.teamName
       );
     }
 
@@ -670,8 +670,8 @@ export default function ExportPage() {
                             const primaryRegistrant = registration.registrants?.find(r => r.is_primary);
                             const roleName = primaryRegistrant?.event_roles?.name;
                             // Nếu là participant hoặc không có role thì để trống
-                            if (!roleName || roleName.toLowerCase().includes('participant') || roleName.toLowerCase().includes('tham dự')) {
-                              return '';
+                            if (!roleName) {
+                              return 'Tham dự viên';
                             }
                             return roleName;
                           })()}
@@ -854,6 +854,7 @@ export default function ExportPage() {
                     <th className="border border-gray-300 p-2 text-left">Giáo phận</th>
                     <th className="border border-gray-300 p-2 text-left">Size áo</th>
                     <th className="border border-gray-300 p-2 text-left">Vai trò</th>
+                    <th className="border border-gray-300 p-2 text-left">Nhóm</th>
                     <th className="border border-gray-300 p-2 text-left">Trạng thái đăng ký</th>
                   </tr>
                 </thead>
@@ -878,11 +879,20 @@ export default function ExportPage() {
                       </td>
                       <td className="border border-gray-300 p-2">
                         {(() => {
-                          const roleName = registrant.event_role?.name;
-                          if (!roleName || roleName.toLowerCase().includes('participant') || roleName.toLowerCase().includes('tham dự')) {
+                          const eventRole = registrant.event_roles?.name;
+                          if (!eventRole) {
                             return 'Tham dự viên';
                           }
-                          return roleName;
+                          return eventRole;
+                        })()}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {(() => {
+                          const teamName = registrant.event_roles?.team_name;
+                          if (!teamName) {
+                            return 'Tham dự viên';
+                          }
+                          return teamName;
                         })()}
                       </td>
                       <td className="border border-gray-300 p-2">
@@ -912,7 +922,7 @@ export default function ExportPage() {
                   <span className="font-medium">Người có vai trò:</span> {state.filteredRegistrants.filter(r => r.event_role?.name).length}
                 </div>
                 <div>
-                  <span className="font-medium">Participants:</span> {state.filteredRegistrants.filter(r => !r.event_role?.name && !r.event_role_id).length}
+                  <span className="font-medium">Tham dự viên:</span> {state.filteredRegistrants.filter(r => !r.event_role?.name && !r.event_role_id).length}
                 </div>
                 <div>
                   <span className="font-medium">Người chính:</span> {state.filteredRegistrants.filter(r => r.is_primary).length}
