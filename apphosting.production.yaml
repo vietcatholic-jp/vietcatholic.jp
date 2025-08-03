@@ -9,9 +9,9 @@ runConfig:
 env:
   # Supabase Configuration - Using Google Secret Manager
   - variable: NEXT_PUBLIC_SUPABASE_URL
-    secret: supabase-url-prod
+    value: https://huwfbdggnbzklajkwcop.supabase.co
   - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
-    secret: supabase-anon-key-prod
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1d2ZiZGdnbmJ6a2xhamt3Y29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzMDM0MTksImV4cCI6MjA2Nzg3OTQxOX0.OgyRAPPg6hoEzx2CWVIhkV07rxoYrJTIwoZ9LanXOJ0
   - variable: SUPABASE_SERVICE_ROLE_KEY
     secret: supabase-service-role-key-prod
   # Production Site URL
