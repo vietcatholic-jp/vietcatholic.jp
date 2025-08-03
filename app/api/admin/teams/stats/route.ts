@@ -134,9 +134,8 @@ export async function GET() {
     }
 
     // Process role distribution
-    const roleCounts = (roleData || []).reduce((acc: Record<string, { count: number; role_info: any }>, item) => {
-      const role = item.event_roles;
-      const roleName = role?.name || 'Chưa phân vai trò';
+    const roleCounts = (roleData || []).reduce((acc: Record<string, { count: number; role_info: { id: string; name: string; description: string } | null }>, item) => {
+      const role = Array.isArray(item.event_roles) ? item.event_roles[0] : item.event_roles;
       const roleKey = role?.id || 'unassigned';
 
       if (!acc[roleKey]) {
@@ -150,7 +149,7 @@ export async function GET() {
     }, {});
 
     const roleDistribution = Object.entries(roleCounts)
-      .map(([roleKey, data]) => {
+      .map(([, data]) => {
         const roleName = data.role_info?.name || 'Chưa phân vai trò';
         // Import and use role categorization utility
         let roleCategory = 'Tham gia';

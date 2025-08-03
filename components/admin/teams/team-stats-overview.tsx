@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, UserPlus, UserCheck, TrendingUp, Users } from "lucide-react";
 import { formatAgeGroup } from "@/lib/utils";
-import { getRoleCategoryColor } from "@/lib/role-utils";
 
 interface TeamStats {
   overview: {
@@ -125,111 +124,117 @@ export function TeamStatsOverview() {
       </div>
 
       {/* Distribution Charts */}
-      <div className="w-full">
-        {/* Desktop: Grid layout */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Team Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Phân bố theo đội
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.team_distribution.length > 0 ? (
-              <div className="space-y-2">
-                {stats.team_distribution.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="font-medium">{item.team_name}</span>
-                    <Badge variant="secondary">{item.count} người</Badge>
+      <div className="w-full space-y-6">
+        {/* Desktop: 2x2 Grid layout */}
+        <div className="hidden md:block">
+          {/* Hàng trên: Team và Role Distribution (nhiều thông tin) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Team Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Phân bố theo đội
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats.team_distribution.length > 0 ? (
+                  <div className="space-y-2">
+                    {stats.team_distribution.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="font-medium">{item.team_name}</span>
+                        <Badge variant="secondary">{item.count} người</Badge>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Chưa có dữ liệu
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Chưa có dữ liệu
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* Gender Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Phân bố theo giới tính</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.gender_distribution.length > 0 ? (
-              <div className="space-y-2">
-                {stats.gender_distribution.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="font-medium">{item.gender}</span>
-                    <Badge variant="secondary">{item.count} người</Badge>
+            {/* Role Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Phân bố theo vai trò
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats.role_distribution && stats.role_distribution.length > 0 ? (
+                  <div className="space-y-2">
+                    {stats.role_distribution.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{item.role_name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {item.role_category}
+                          </Badge>
+                        </div>
+                        <Badge variant="secondary">{item.count} người</Badge>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Chưa có dữ liệu
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Chưa có dữ liệu
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Age Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Phân bố theo độ tuổi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.age_distribution.length > 0 ? (
-              <div className="space-y-2">
-                {stats.age_distribution.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="font-medium">{formatAgeGroup(item.age_group)}</span>
-                    <Badge variant="secondary">{item.count} người</Badge>
+          {/* Hàng dưới: Gender và Age Distribution (thông tin ngắn gọn) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gender Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Phân bố theo giới tính</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats.gender_distribution.length > 0 ? (
+                  <div className="space-y-2">
+                    {stats.gender_distribution.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="font-medium">{item.gender}</span>
+                        <Badge variant="secondary">{item.count} người</Badge>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Chưa có dữ liệu
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Chưa có dữ liệu
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* Role Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Phân bố theo vai trò
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.role_distribution && stats.role_distribution.length > 0 ? (
-              <div className="space-y-2">
-                {stats.role_distribution.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{item.role_name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {item.role_category}
-                      </Badge>
-                    </div>
-                    <Badge variant="secondary">{item.count} người</Badge>
+            {/* Age Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Phân bố theo độ tuổi</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats.age_distribution.length > 0 ? (
+                  <div className="space-y-2">
+                    {stats.age_distribution.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="font-medium">{formatAgeGroup(item.age_group)}</span>
+                        <Badge variant="secondary">{item.count} người</Badge>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Chưa có dữ liệu
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Chưa có dữ liệu
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Mobile: Horizontal scroll */}
@@ -249,6 +254,37 @@ export function TeamStatsOverview() {
                     {stats.team_distribution.map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                         <span className="font-medium">{item.team_name}</span>
+                        <Badge variant="secondary">{item.count} người</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Chưa có dữ liệu
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Role Distribution */}
+            <Card className="flex-shrink-0 w-80">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Phân bố theo vai trò
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats.role_distribution && stats.role_distribution.length > 0 ? (
+                  <div className="space-y-2">
+                    {stats.role_distribution.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{item.role_name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {item.role_category}
+                          </Badge>
+                        </div>
                         <Badge variant="secondary">{item.count} người</Badge>
                       </div>
                     ))}
@@ -295,37 +331,6 @@ export function TeamStatsOverview() {
                     {stats.age_distribution.map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                         <span className="font-medium">{formatAgeGroup(item.age_group)}</span>
-                        <Badge variant="secondary">{item.count} người</Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Chưa có dữ liệu
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Role Distribution */}
-            <Card className="flex-shrink-0 w-80">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Phân bố theo vai trò
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {stats.role_distribution && stats.role_distribution.length > 0 ? (
-                  <div className="space-y-2">
-                    {stats.role_distribution.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{item.role_name}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {item.role_category}
-                          </Badge>
-                        </div>
                         <Badge variant="secondary">{item.count} người</Badge>
                       </div>
                     ))}
