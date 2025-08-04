@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, UserPlus, UserCheck, TrendingUp, Users } from "lucide-react";
 import { formatAgeGroup } from "@/lib/utils";
+import { StatsOverviewSkeleton } from "./team-skeleton";
 
 interface TeamStats {
   overview: {
@@ -31,7 +32,7 @@ interface TeamStats {
   }>;
 }
 
-export function TeamStatsOverview() {
+function TeamStatsOverviewComponent() {
   const [stats, setStats] = useState<TeamStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -54,15 +55,19 @@ export function TeamStatsOverview() {
     }
   };
 
+  // Memoize expensive calculations - moved before early returns
+  const { totalParticipants, assignmentRate } = useMemo(() => {
+    if (!stats) return { totalParticipants: 0, assignmentRate: 0 };
+
+    const total = stats.overview.total_assigned + stats.overview.total_unassigned;
+    const rate = total > 0
+      ? Math.round((stats.overview.total_assigned / total) * 100)
+      : 0;
+    return { totalParticipants: total, assignmentRate: rate };
+  }, [stats]);
+
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Đang tải thống kê...</p>
-        </div>
-      </div>
-    );
+    return <StatsOverviewSkeleton />;
   }
 
   if (!stats) {
@@ -73,15 +78,10 @@ export function TeamStatsOverview() {
     );
   }
 
-  const totalParticipants = stats.overview.total_assigned + stats.overview.total_unassigned;
-  const assignmentRate = totalParticipants > 0 
-    ? Math.round((stats.overview.total_assigned / totalParticipants) * 100) 
-    : 0;
-
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="flex items-center p-6">
             <BarChart3 className="h-8 w-8 text-blue-600" />
@@ -128,7 +128,7 @@ export function TeamStatsOverview() {
         {/* Desktop: 2x2 Grid layout */}
         <div className="hidden md:block">
           {/* Hàng trên: Team và Role Distribution (nhiều thông tin) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
             {/* Team Distribution */}
             <Card>
               <CardHeader>
@@ -188,7 +188,7 @@ export function TeamStatsOverview() {
           </div>
 
           {/* Hàng dưới: Gender và Age Distribution (thông tin ngắn gọn) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Gender Distribution */}
             <Card>
               <CardHeader>
@@ -237,11 +237,11 @@ export function TeamStatsOverview() {
           </div>
         </div>
 
-        {/* Mobile: Horizontal scroll */}
+        {/* Mobile: Vertical stack */}
         <div className="md:hidden">
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="space-y-4">
             {/* Team Distribution */}
-            <Card className="flex-shrink-0 w-80">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
@@ -267,7 +267,7 @@ export function TeamStatsOverview() {
             </Card>
 
             {/* Role Distribution */}
-            <Card className="flex-shrink-0 w-80">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
@@ -298,7 +298,7 @@ export function TeamStatsOverview() {
             </Card>
 
             {/* Gender Distribution */}
-            <Card className="flex-shrink-0 w-80">
+            <Card>
               <CardHeader>
                 <CardTitle>Phân bố theo giới tính</CardTitle>
               </CardHeader>
@@ -321,7 +321,7 @@ export function TeamStatsOverview() {
             </Card>
 
             {/* Age Distribution */}
-            <Card className="flex-shrink-0 w-80">
+            <Card>
               <CardHeader>
                 <CardTitle>Phân bố theo độ tuổi</CardTitle>
               </CardHeader>
@@ -347,7 +347,7 @@ export function TeamStatsOverview() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Tóm tắt</CardTitle>
@@ -407,3 +407,5 @@ export function TeamStatsOverview() {
     </div>
   );
 }
+
+export const TeamStatsOverview = memo(TeamStatsOverviewComponent);

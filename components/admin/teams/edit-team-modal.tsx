@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { EventTeamWithDetails } from "@/lib/types";
 
 const EditTeamSchema = z.object({
   name: z.string().min(1, "Tên đội là bắt buộc"),
@@ -47,21 +48,6 @@ type EditTeamFormData = {
   capacity?: string;
 };
 
-interface Team {
-  id: string;
-  name: string;
-  description?: string;
-  capacity?: number | null;
-  leader?: {
-    id: string;
-    full_name: string;
-  };
-  sub_leader?: {
-    id: string;
-    full_name: string;
-  };
-}
-
 interface User {
   id: string;
   full_name: string;
@@ -71,8 +57,8 @@ interface User {
 interface EditTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onDataChange?: () => void; // New callback for data changes without closing dialog
-  team: Team | null;
+  onDataChange?: (updatedTeam: EventTeamWithDetails) => void; // Pass updated team data
+  team: EventTeamWithDetails | null;
 }
 
 export function EditTeamModal({ isOpen, onClose, onDataChange, team }: EditTeamModalProps) {
@@ -153,10 +139,11 @@ export function EditTeamModal({ isOpen, onClose, onDataChange, team }: EditTeamM
         throw new Error(error.error || "Không thể cập nhật đội");
       }
 
+      const result = await response.json();
       toast.success("Cập nhật đội thành công!");
 
-      // Notify parent component about data change without closing dialog
-      onDataChange?.();
+      // Pass updated team data to parent component
+      onDataChange?.(result.team || { ...team, ...data });
 
       // Note: Removed onSuccess() and onClose() calls to keep dialog open
     } catch (error) {
