@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Search, 
-  Filter, 
-  UserPlus, 
+import {
+  Search,
+  Filter,
+  UserPlus,
   Users,
   ChevronLeft,
-  ChevronRight,
-  Loader2
+  ChevronRight
 } from "lucide-react";
 import { AssignTeamDialog } from "./assign-team-dialog";
 import { BulkAssignmentDialog } from "./bulk-assignment-dialog";
@@ -23,6 +22,7 @@ import { formatAgeGroup, formatGender } from "@/lib/utils";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
 import { RoleHelp } from "@/components/admin/role-help";
 import { EventRole } from "@/lib/role-utils";
+import { RegistrantListSkeleton } from "./team-skeleton";
 
 interface Registrant {
   id: string;
@@ -63,7 +63,19 @@ export function UnassignedRegistrantsList() {
 
   const { isLoading: isAssigning } = useTeamAssignment();
 
-  const fetchRegistrants = async () => {
+  // Memoize expensive grouping calculation
+  const groupedRegistrants = useMemo(() => {
+    return registrants.reduce((acc, registrant) => {
+      const code = registrant.registration?.invoice_code || 'N/A';
+      if (!acc[code]) {
+        acc[code] = [];
+      }
+      acc[code].push(registrant);
+      return acc;
+    }, {} as Record<string, Registrant[]>);
+  }, [registrants]);
+
+  const fetchRegistrants = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
@@ -98,15 +110,32 @@ export function UnassignedRegistrantsList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, genderFilter, ageGroupFilter, provinceFilter]);
 
+  // Effect for initial load and non-search filters (immediate fetch)
   useEffect(() => {
     fetchRegistrants();
-  }, [currentPage, searchTerm, genderFilter, ageGroupFilter, provinceFilter]);
+  }, [currentPage, genderFilter, ageGroupFilter, provinceFilter, fetchRegistrants]);
+
+  // Effect for search term (debounced fetch) - separate to avoid duplicate calls
+  useEffect(() => {
+    if (searchTerm === "") {
+      // If search is cleared, fetch immediately
+      fetchRegistrants();
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetchRegistrants();
+    }, 500); // 500ms delay for search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
+    // Force immediate search on form submit
     fetchRegistrants();
   };
 
@@ -228,28 +257,14 @@ export function UnassignedRegistrantsList() {
 
           {/* Registrants List */}
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Đang tải...</span>
-            </div>
+            <RegistrantListSkeleton />
           ) : registrants.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Không có người tham dự nào chưa được phân đội
             </div>
           ) : (
             <div className="space-y-4">
-              {(() => {
-                // Group registrants by registration code
-                const groups = registrants.reduce((acc, registrant) => {
-                  const code = registrant.registration?.invoice_code || 'N/A';
-                  if (!acc[code]) {
-                    acc[code] = [];
-                  }
-                  acc[code].push(registrant);
-                  return acc;
-                }, {} as Record<string, Registrant[]>);
-
-                return Object.entries(groups).map(([code, groupRegistrants]) => (
+              {Object.entries(groupedRegistrants).map(([code, groupRegistrants]) => (
                   <div key={code} className="space-y-2">
                     {/* Group Header */}
                     {groupRegistrants.length > 1 && (
@@ -320,8 +335,7 @@ export function UnassignedRegistrantsList() {
                     </div>
                     ))}
                   </div>
-                ));
-              })()}
+                ))}
             </div>
           )}
 
