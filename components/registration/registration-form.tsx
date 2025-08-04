@@ -46,8 +46,8 @@ const primaryRegistrantSchema = z.object({
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
-  go_with: z.boolean(),
-  second_day_only: z.boolean(),
+  go_with: z.boolean().optional(),
+  second_day_only: z.boolean().optional(),
   notes: z.string().optional(),
   // Facebook link is required for primary registrant
   facebook_link: z.string().url("Link Facebook không hợp lệ").min(1, "Link Facebook là bắt buộc cho người đăng ký chính").refine((val) => val && val.trim() !== '', {
@@ -79,8 +79,8 @@ const additionalRegistrantSchema = z.object({
   }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
-  go_with: z.boolean(),
-  second_day_only: z.boolean(),
+  go_with: z.boolean().optional(),
+  second_day_only: z.boolean().optional(),
   notes: z.string().optional(),
   // Optional contact fields
   email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
@@ -681,8 +681,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           )}
                       </select>
                       <p className="text-xs text-muted-foreground">
-                          Chọn size áo theo cân nặng và giới tính.
-                          Áo dành cho trẻ em dưới 12 tuổi sẽ không phân biệt giới tính.
+                          {selectedRole === 'participant' ? "Chọn size áo không phân biệt giới tính.": "Chọn size áo theo cân nặng và giới tính."}
                       </p>
                       {errors.registrants?.[index]?.shirt_size && (
                         <p className="text-sm text-destructive">
@@ -724,7 +723,6 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                         <input
                           type="checkbox"
                           id={`registrants.${index}.second_day_only`}
-                          {...register(`registrants.${index}.second_day_only`)}
                           checked={registrants[index]?.second_day_only || false}
                           onChange={(e) => onRegistrationDayChange(index, e.target.checked)}
                           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -835,7 +833,6 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                     {/* Hidden fields */}
                     <input type="hidden" {...register(`registrants.${index}.event_role`)} />
                     <input type="hidden" {...register(`registrants.${index}.is_primary`)} />
-                    <input type="hidden" {...register(`registrants.${index}.second_day_only`)} />
                   </div>
                   
                   {/* Add person button after each registrant (except the last one) */}
