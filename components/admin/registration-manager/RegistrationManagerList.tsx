@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -47,15 +47,15 @@ export function RegistrationManagerList({
   const [viewingRegistration, setViewingRegistration] = useState<Registration | null>(null);
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
 
-  // Debounced search - only trigger when search term actually changes
-  useEffect(() => {
-    if (localSearchTerm !== searchTerm) {
-      const timer = setTimeout(() => {
-        onSearch(localSearchTerm);
-      }, 500);
-      return () => clearTimeout(timer);
+  const handleSearch = () => {
+    onSearch(localSearchTerm);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
-  }, [localSearchTerm, searchTerm, onSearch]);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -110,14 +110,25 @@ export function RegistrationManagerList({
           <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
             <CardTitle>Danh sách đăng ký</CardTitle>
             <div className="flex flex-col space-y-2 md:flex-row md:items-center md:space-y-0 md:space-x-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Tìm kiếm theo mã đăng ký..."
-                  value={localSearchTerm}
-                  onChange={(e) => setLocalSearchTerm(e.target.value)}
-                  className="pl-10 w-full md:w-64"
-                />
+              <div className="flex gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Tìm kiếm theo mã đăng ký..."
+                    value={localSearchTerm}
+                    onChange={(e) => setLocalSearchTerm(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="pl-10 w-full md:w-64"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSearch}
+                  className="px-3"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
               </div>
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />

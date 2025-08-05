@@ -54,13 +54,19 @@ export async function GET(request: Request) {
       `, { count: 'exact' });
 
     if (searchTerm) {
-      // Enhanced search across multiple fields
-      query = query.or(`
-        invoice_code.ilike.%${searchTerm}%,
-        user.full_name.ilike.%${searchTerm}%,
-        user.email.ilike.%${searchTerm}%,
-        user.phone.ilike.%${searchTerm}%
-      `);
+      // Search by invoice code first, then get users that match and search by their IDs
+      const { data: matchingUsers } = await supabase
+        .from('users')
+        .select('id')
+        .or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
+      
+      const userIds = matchingUsers?.map(user => user.id) || [];
+      
+      if (userIds.length > 0) {
+        query = query.or(`invoice_code.ilike.%${searchTerm}%,user_id.in.(${userIds.join(',')})`);
+      } else {
+        query = query.ilike('invoice_code', `%${searchTerm}%`);
+      }
     }
 
     if (statusFilter !== 'all') {
