@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
     const gender = searchParams.get("gender") || "";
     const ageGroup = searchParams.get("age_group") || "";
     const province = searchParams.get("province") || "";
+    const diocese = searchParams.get("diocese") || "";
+    const roleId = searchParams.get("role_id") || "";
 
     const offset = (page - 1) * limit;
 
@@ -78,6 +80,12 @@ export async function GET(request: NextRequest) {
     }
     if (province) {
       query = query.ilike("province", `%${province}%`);
+    }
+    if (diocese) {
+      query = query.ilike("diocese", `%${diocese}%`);
+    }
+    if (roleId) {
+      query = query.eq("event_role_id", roleId);
     }
 
     // Regional admin can only see registrants from their region

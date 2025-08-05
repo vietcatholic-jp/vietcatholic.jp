@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Search,
   Filter,
   UserPlus,
@@ -46,6 +53,12 @@ interface Registrant {
   };
 }
 
+interface FilterOptions {
+  provinces: { value: string; label: string }[];
+  dioceses: { value: string; label: string }[];
+  roles: { value: string; label: string; description?: string }[];
+}
+
 export function UnassignedRegistrantsList() {
   const [registrants, setRegistrants] = useState<Registrant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,6 +66,8 @@ export function UnassignedRegistrantsList() {
   const [genderFilter, setGenderFilter] = useState("");
   const [ageGroupFilter, setAgeGroupFilter] = useState("");
   const [provinceFilter, setProvinceFilter] = useState("");
+  const [dioceseFilter, setDioceseFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
   const [selectedRegistrants, setSelectedRegistrants] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -60,8 +75,28 @@ export function UnassignedRegistrantsList() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [selectedRegistrant, setSelectedRegistrant] = useState<Registrant | null>(null);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    provinces: [],
+    dioceses: [],
+    roles: []
+  });
+  const [filterKey, setFilterKey] = useState(0);
 
   const { isLoading: isAssigning } = useTeamAssignment();
+
+  // Fetch filter options
+  const fetchFilterOptions = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin/filter-options");
+      if (!response.ok) {
+        throw new Error("Failed to fetch filter options");
+      }
+      const data = await response.json();
+      setFilterOptions(data);
+    } catch (error) {
+      console.error("Error fetching filter options:", error);
+    }
+  }, []);
 
   // Memoize expensive grouping calculation
   const groupedRegistrants = useMemo(() => {
@@ -85,6 +120,8 @@ export function UnassignedRegistrantsList() {
         gender: genderFilter,
         age_group: ageGroupFilter,
         province: provinceFilter,
+        diocese: dioceseFilter,
+        role_id: roleFilter,
       });
 
       const response = await fetch(`/api/admin/registrants/unassigned?${params}`);
@@ -110,12 +147,17 @@ export function UnassignedRegistrantsList() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, searchTerm, genderFilter, ageGroupFilter, provinceFilter]);
+  }, [currentPage, searchTerm, genderFilter, ageGroupFilter, provinceFilter, dioceseFilter, roleFilter]);
 
-  // Effect for initial load and non-search filters (immediate fetch)
+  // Effect for initial load and fetch filter options
+  useEffect(() => {
+    fetchFilterOptions();
+  }, [fetchFilterOptions]);
+
+  // Effect for non-search filters (immediate fetch)
   useEffect(() => {
     fetchRegistrants();
-  }, [currentPage, genderFilter, ageGroupFilter, provinceFilter, fetchRegistrants]);
+  }, [currentPage, genderFilter, ageGroupFilter, provinceFilter, dioceseFilter, roleFilter, fetchRegistrants]);
 
   // Effect for search term (debounced fetch) - separate to avoid duplicate calls
   useEffect(() => {
@@ -130,7 +172,7 @@ export function UnassignedRegistrantsList() {
     }, 500); // 500ms delay for search
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [searchTerm, fetchRegistrants]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,37 +244,91 @@ export function UnassignedRegistrantsList() {
               </Button>
             </form>
 
-            <div className="flex flex-wrap gap-2">
-              <select
-                value={genderFilter}
-                onChange={(e) => setGenderFilter(e.target.value)}
-                className="px-3 py-2 border border-input bg-background rounded-md text-sm"
-              >
-                <option value="">Tất cả giới tính</option>
-                <option value="male">Nam</option>
-                <option value="female">Nữ</option>
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
+              <Select key={`gender-${filterKey}`} value={genderFilter || ""} onValueChange={(value) => setGenderFilter(value === "all" ? "" : value || "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Tất cả giới tính" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả giới tính</SelectItem>
+                  <SelectItem value="male">Nam</SelectItem>
+                  <SelectItem value="female">Nữ</SelectItem>
+                </SelectContent>
+              </Select>
 
-              <select
-                value={ageGroupFilter}
-                onChange={(e) => setAgeGroupFilter(e.target.value)}
-                className="px-3 py-2 border border-input bg-background rounded-md text-sm"
-              >
-                <option value="">Tất cả độ tuổi</option>
-                <option value="under_12">Dưới 12 tuổi</option>
-                <option value="12_17">12-17 tuổi</option>
-                <option value="18_25">18-25 tuổi</option>
-                <option value="26_35">26-35 tuổi</option>
-                <option value="36_50">36-50 tuổi</option>
-                <option value="over_50">Trên 50 tuổi</option>
-              </select>
+              <Select key={`age-${filterKey}`} value={ageGroupFilter || ""} onValueChange={(value) => setAgeGroupFilter(value === "all" ? "" : value || "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Tất cả độ tuổi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả độ tuổi</SelectItem>
+                  <SelectItem value="under_12">Dưới 12 tuổi</SelectItem>
+                  <SelectItem value="12_17">12-17 tuổi</SelectItem>
+                  <SelectItem value="18_25">18-25 tuổi</SelectItem>
+                  <SelectItem value="26_35">26-35 tuổi</SelectItem>
+                  <SelectItem value="36_50">36-50 tuổi</SelectItem>
+                  <SelectItem value="over_50">Trên 50 tuổi</SelectItem>
+                </SelectContent>
+              </Select>
 
-              <Input
-                placeholder="Tỉnh/Thành phố"
-                value={provinceFilter}
-                onChange={(e) => setProvinceFilter(e.target.value)}
-                className="w-48"
-              />
+              <Select key={`province-${filterKey}`} value={provinceFilter || ""} onValueChange={(value) => setProvinceFilter(value === "all" ? "" : value || "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Tỉnh/Thành phố" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả tỉnh/thành phố</SelectItem>
+                  {filterOptions.provinces.map((province) => (
+                    <SelectItem key={province.value} value={province.value}>
+                      {province.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select key={`role-${filterKey}`} value={roleFilter || ""} onValueChange={(value) => setRoleFilter(value === "all" ? "" : value || "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Vai trò" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả vai trò</SelectItem>
+                  {filterOptions.roles.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select key={`diocese-${filterKey}`} value={dioceseFilter || ""} onValueChange={(value) => setDioceseFilter(value === "all" ? "" : value || "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Giáo phận" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả giáo phận</SelectItem>
+                  {filterOptions.dioceses.map((diocese) => (
+                    <SelectItem key={diocese.value} value={diocese.value}>
+                      {diocese.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setGenderFilter("");
+                  setAgeGroupFilter("");
+                  setProvinceFilter("");
+                  setRoleFilter("");
+                  setDioceseFilter("");
+                  setSearchTerm("");
+                  setCurrentPage(1);
+                  setFilterKey(prev => prev + 1);
+                }}
+                className="w-full"
+              >
+                Xóa bộ lọc
+              </Button>
             </div>
           </div>
 
