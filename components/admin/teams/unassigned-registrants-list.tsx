@@ -80,6 +80,7 @@ export function UnassignedRegistrantsList() {
     dioceses: [],
     roles: []
   });
+  const [filterKey, setFilterKey] = useState(0);
 
   const { isLoading: isAssigning } = useTeamAssignment();
 
@@ -244,7 +245,7 @@ export function UnassignedRegistrantsList() {
             </form>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
-              <Select value={genderFilter || undefined} onValueChange={(value) => setGenderFilter(value === "all" ? "" : value || "")}>
+              <Select key={`gender-${filterKey}`} value={genderFilter || ""} onValueChange={(value) => setGenderFilter(value === "all" ? "" : value || "")}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tất cả giới tính" />
                 </SelectTrigger>
@@ -255,7 +256,7 @@ export function UnassignedRegistrantsList() {
                 </SelectContent>
               </Select>
 
-              <Select value={ageGroupFilter || undefined} onValueChange={(value) => setAgeGroupFilter(value === "all" ? "" : value || "")}>
+              <Select key={`age-${filterKey}`} value={ageGroupFilter || ""} onValueChange={(value) => setAgeGroupFilter(value === "all" ? "" : value || "")}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tất cả độ tuổi" />
                 </SelectTrigger>
@@ -270,7 +271,7 @@ export function UnassignedRegistrantsList() {
                 </SelectContent>
               </Select>
 
-              <Select value={provinceFilter || undefined} onValueChange={(value) => setProvinceFilter(value === "all" ? "" : value || "")}>
+              <Select key={`province-${filterKey}`} value={provinceFilter || ""} onValueChange={(value) => setProvinceFilter(value === "all" ? "" : value || "")}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tỉnh/Thành phố" />
                 </SelectTrigger>
@@ -284,7 +285,7 @@ export function UnassignedRegistrantsList() {
                 </SelectContent>
               </Select>
 
-              <Select value={roleFilter || undefined} onValueChange={(value) => setRoleFilter(value === "all" ? "" : value || "")}>
+              <Select key={`role-${filterKey}`} value={roleFilter || ""} onValueChange={(value) => setRoleFilter(value === "all" ? "" : value || "")}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Vai trò" />
                 </SelectTrigger>
@@ -298,7 +299,7 @@ export function UnassignedRegistrantsList() {
                 </SelectContent>
               </Select>
 
-              <Select value={dioceseFilter || undefined} onValueChange={(value) => setDioceseFilter(value === "all" ? "" : value || "")}>
+              <Select key={`diocese-${filterKey}`} value={dioceseFilter || ""} onValueChange={(value) => setDioceseFilter(value === "all" ? "" : value || "")}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Giáo phận" />
                 </SelectTrigger>
@@ -322,6 +323,7 @@ export function UnassignedRegistrantsList() {
                   setDioceseFilter("");
                   setSearchTerm("");
                   setCurrentPage(1);
+                  setFilterKey(prev => prev + 1);
                 }}
                 className="w-full"
               >
