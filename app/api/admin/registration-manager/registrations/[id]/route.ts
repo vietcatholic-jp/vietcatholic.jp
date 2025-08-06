@@ -94,6 +94,7 @@ export async function PATCH(
             facebook_link: registrant.facebook_link,
             event_role_id: registrant.event_role_id,
             shirt_size: registrant.shirt_size || null,
+            selected_attendance_day: registrant.selected_attendance_day || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', registrant.id);

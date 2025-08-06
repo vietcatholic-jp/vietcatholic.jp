@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,10 +20,12 @@ import {
   GenderType,
   AgeGroupType,
   SHIRT_SIZES_PARTICIPANT,
-  SHIRT_SIZES_ORGANIZER
+  SHIRT_SIZES_ORGANIZER,
+  EventConfig
 } from "@/lib/types";
 import { toast } from "sonner";
 import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
+import { createClient } from "@/lib/supabase/client";
 
 const RegistrantSchema = z.object({
   id: z.string().optional(),
@@ -45,6 +47,8 @@ const RegistrantSchema = z.object({
   shirt_size: z.enum(['1','2','3','4','5','XS','S','M','L','XL','XXL','3XL','4XL','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   go_with: z.boolean(),
+  second_day_only: z.boolean().optional(),
+  selected_attendance_day: z.string().optional(),
   is_primary: z.boolean(),
   notes: z.string().optional(),
 });
@@ -102,6 +106,8 @@ interface EditRegistrationFormProps {
 
 export function EditRegistrationForm({ registration, onSave, onCancel }: EditRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
+  const supabase = createClient();
 
   const {
     register,
@@ -129,11 +135,35 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
         event_role: r.event_role || "participant",
         is_primary: r.is_primary || false,
         go_with: r.go_with || false,
+        second_day_only: r.second_day_only || false,
+        selected_attendance_day: r.selected_attendance_day || "",
         notes: r.notes || "",
       })) || [],
       notes: registration.notes || "",
     },
   });
+
+  // Fetch active event config and roles
+    useEffect(() => {
+      const fetchEventData = async () => {
+        //setIsLoadingRoles(true);
+        try {
+          // Fetch event config
+          const response = await fetch('/api/admin/events');
+          if (response.ok) {
+            const { events } = await response.json();
+            const activeEvent = events?.find((event: EventConfig) => event.is_active);
+            setEventConfig(activeEvent || null);
+          }
+        } catch (error) {
+          console.error('Failed to fetch event data:', error);
+        } finally {
+         // setIsLoadingRoles(false);
+        }
+      };
+  
+      fetchEventData();
+    }, [supabase]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -218,6 +248,10 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
       setIsSubmitting(false);
     }
   };
+
+  const onAttendanceDayChange = (index: number, selectedDay: string) => {
+    setValue(`registrants.${index}.selected_attendance_day` as const, selectedDay);
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -502,6 +536,60 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                           Bấm vào dấu ... bên cạnh nút chỉnh sửa trang cá nhân → Kéo xuống phía dưới cùng, bạn sẽ thấy chữ copy link, bấm vào đó để sao chép → dán vào đây.
                         </div>
                       )}
+                    </div>
+
+                    <div className="space-y-2">
+                      {/* Day selection when one day only is checked */}
+                      {registrants[index]?.second_day_only && eventConfig?.start_date && eventConfig?.end_date && (
+                        <div className="mt-3 ml-6 space-y-2">
+                          <Label className="text-sm font-medium">Chọn ngày tham gia:</Label>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`registrants.${index}.first_day`}
+                                name={`registrants.${index}.attendance_day`}
+                                value={eventConfig.start_date}
+                                checked={eventConfig.start_date.includes(registrants[index]?.selected_attendance_day || 'NONE')}
+                                onChange={(e) => onAttendanceDayChange(index, e.target.value)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`registrants.${index}.first_day`} className="text-sm font-normal">
+                                Ngày đầu: {new Date(eventConfig.start_date).toLocaleDateString('vi-VN', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`registrants.${index}.second_day`}
+                                name={`registrants.${index}.attendance_day`}
+                                value={eventConfig.end_date}
+                                checked={eventConfig.end_date.includes(registrants[index]?.selected_attendance_day || 'NONE')}
+                                onChange={(e) => onAttendanceDayChange(index, e.target.value)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`registrants.${index}.second_day`} className="text-sm font-normal">
+                                Ngày cuối: {new Date(eventConfig.end_date).toLocaleDateString('vi-VN', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <p className="text-xs text-muted-foreground">
+                        Nếu bạn chỉ có thể tham gia một ngày, chọn tùy chọn này sẽ đóng 50% giá tiền.
+                        Trẻ em dưới 12 tuổi: 25% giá tiền.
+                      </p>
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
