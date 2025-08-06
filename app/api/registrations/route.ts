@@ -27,6 +27,7 @@ const RegistrantSchema = z.object({
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
   second_day_only: z.boolean(),
+  selected_attendance_day: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -180,6 +181,7 @@ export async function POST(request: NextRequest) {
         shirt_size: string;
         is_primary: boolean;
         second_day_only?: boolean;
+        selected_attendance_day?: string;
         notes?: string;
         event_team_id?: string | null;
         event_role_id?: string | null;
@@ -198,6 +200,7 @@ export async function POST(request: NextRequest) {
         shirt_size: registrant.shirt_size,
         is_primary: registrant.is_primary,
         second_day_only: registrant.second_day_only,
+        selected_attendance_day: registrant.selected_attendance_day,
         notes: registrant.notes,
       };
       if (registrant.event_role === 'participant') {

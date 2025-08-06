@@ -141,6 +141,7 @@ export interface Registrant {
   is_primary?: boolean;  // Marks the main registrant
   go_with?: boolean; // Indicates if this registrant is going with the primary registrant
   second_day_only?: boolean; // Indicates if registrant will only attend 15/09
+  selected_attendance_day?: string; // Specific day the registrant chooses to attend (when second_day_only is true)
   notes?: string;
   portrait_url?: string;
   group_id?: string;

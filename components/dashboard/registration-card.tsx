@@ -361,7 +361,12 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                               {registrant.second_day_only && (
                                 <span className="flex items-center gap-1 text-orange-600 font-medium">
                                   <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                                  Chỉ ngày 15/09
+                                  Chỉ tham dự :
+                                  {new Date(registrant.selected_attendance_day || '2025-09-15').toLocaleDateString('vi-VN', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
                                 </span>
                               )}
                             </div>

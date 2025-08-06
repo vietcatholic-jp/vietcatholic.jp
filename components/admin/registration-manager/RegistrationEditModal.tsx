@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Registration, RegistrationStatus, EventRole, SHIRT_SIZES_PARTICIPANT, SHIRT_SIZES_ORGANIZER } from "@/lib/types";
+import { Registration, RegistrationStatus, EventRole, SHIRT_SIZES_PARTICIPANT, SHIRT_SIZES_ORGANIZER, EventConfig } from "@/lib/types";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { 
@@ -28,6 +28,7 @@ interface RegistrationEditModalProps {
 export function RegistrationEditModal({ registration, onClose, onSave }: RegistrationEditModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [eventRoles, setEventRoles] = useState<EventRole[]>([]);
+  const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
   const supabase = createClient();
   
@@ -43,47 +44,47 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
       shirt_size: r.shirt_size || null,
       notes: r.notes || "",
       is_primary: r.is_primary,
+      second_day_only: r.second_day_only || false,
+      selected_attendance_day: r.selected_attendance_day || "",
       event_role_id: r.event_role_id || null
     })) || [],
   });
 
-  // Fetch available event roles
+  // Fetch active event config and roles
   useEffect(() => {
-    const fetchEventRoles = async () => {
+    const fetchEventData = async () => {
+      setIsLoadingRoles(true);
       try {
-        // First, get the active event
-        const { data: activeEvent, error: eventError } = await supabase
-          .from('event_configs')
-          .select('id')
-          .eq('is_active', true)
-          .single();
+        // Fetch event config
+        const response = await fetch('/api/admin/events');
+        if (response.ok) {
+          const { events } = await response.json();
+          const activeEvent = events?.find((event: EventConfig) => event.is_active);
+          setEventConfig(activeEvent || null);
+          
+          // Fetch event roles if we have an active event
+          if (activeEvent) {
+            const { data: roles, error: rolesError } = await supabase
+              .from('event_roles')
+              .select('*')
+              .eq('event_config_id', activeEvent.id)
+              .order('name');
 
-        if (eventError) {
-          console.error('Error fetching active event:', eventError);
-          setIsLoadingRoles(false);
-          return;
-        }
-
-        // Then fetch roles for this event
-        const { data: roles, error: rolesError } = await supabase
-          .from('event_roles')
-          .select('*')
-          .eq('event_config_id', activeEvent.id)
-          .order('name');
-
-        if (rolesError) {
-          console.error('Error fetching event roles:', rolesError);
-        } else {
-          setEventRoles(roles || []);
+            if (rolesError) {
+              console.error('Error fetching event roles:', rolesError);
+            } else {
+              setEventRoles(roles || []);
+            }
+          }
         }
       } catch (error) {
-        console.error('Error in fetchEventRoles:', error);
+        console.error('Failed to fetch event data:', error);
       } finally {
         setIsLoadingRoles(false);
       }
     };
 
-    fetchEventRoles();
+    fetchEventData();
   }, [supabase]);
 
   const statusOptions: { value: RegistrationStatus; label: string; description: string }[] = [
@@ -342,6 +343,53 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                       </div>
                     )}
                   </div>
+
+                  {registrant.second_day_only && eventConfig?.start_date && eventConfig?.end_date && (
+                        <div className="mt-3 ml-6 space-y-2">
+                          <Label className="text-sm font-medium">Chọn ngày tham gia:</Label>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`registrants.${index}.first_day`}
+                                name={`registrants.${index}.attendance_day`}
+                                value={eventConfig.start_date}
+                                checked={eventConfig.start_date.includes(registrant.selected_attendance_day || 'NONE')}
+                                onChange={(e) => handleRegistrantChange(index, 'selected_attendance_day', e.target.value)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`registrants.${index}.first_day`} className="text-sm font-normal">
+                                Ngày đầu: {new Date(eventConfig.start_date).toLocaleDateString('vi-VN', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`registrants.${index}.second_day`}
+                                name={`registrants.${index}.attendance_day`}
+                                value={eventConfig.end_date}
+                                checked={eventConfig.end_date.includes(registrant.selected_attendance_day || 'NONE')}
+                                onChange={(e) => handleRegistrantChange(index, 'selected_attendance_day', e.target.value)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`registrants.${index}.second_day`} className="text-sm font-normal">
+                                Ngày cuối: {new Date(eventConfig.end_date).toLocaleDateString('vi-VN', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
 
                   <div className="space-y-2">
                     <Label htmlFor="notes" className="text-sm">Ghi chú</Label>

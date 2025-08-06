@@ -22,10 +22,11 @@ const UpdateRegistrationSchema = z.object({
       .refine((val) => !val || isValidJapanesePhoneNumber(val), {
         message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
       }),
-    shirt_size: z.enum(['1','2','3','4','5','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL']),
+    shirt_size: z.enum(['1','2','3','4','5','XS','S','M','L','XL','XXL','3XL','4XL','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL']),
     event_role: z.string() as z.ZodType<EventParticipationRole>,
     is_primary: z.boolean(),
     second_day_only: z.boolean().optional(),
+    selected_attendance_day: z.string().optional(),
     notes: z.string().optional(),
   })).min(1),
   notes: z.string().optional(),
@@ -104,12 +105,32 @@ export async function PUT(
       .single();
 
     const basePrice = eventConfig?.base_price || 6000;
+    // Generate invoice code using the existing function
+    const totalAmount = validated.registrants.reduce((total, registrant) => {
+      let price = basePrice;
+      
+      // Children under 12 pricing
+      if (registrant.age_group === 'under_12') {
+        if (registrant.second_day_only) {
+          price = basePrice * 0.25; // 1/4 price for children second day only
+        } else {
+          price = basePrice * 0.5; // Half price for children full event
+        }
+      }
+      // Adults pricing
+      else if (registrant.second_day_only) {
+        price = basePrice * 0.5; // Half price for adults second day only
+      }
+      // Full price for adults full event (no change needed)
+      
+      return total + price;
+    }, 0);
 
     // Update registration record
     const { error: updateRegError } = await supabase
       .from("registrations")
       .update({
-        total_amount: validated.registrants.length * basePrice,
+        total_amount: totalAmount,
         participant_count: validated.registrants.length,
         notes: validated.notes,
         updated_at: new Date().toISOString(),
@@ -148,6 +169,8 @@ export async function PUT(
         phone?: string;
         shirt_size: string;
         is_primary: boolean;
+        second_day_only?: boolean;
+        selected_attendance_day?: string;
         notes?: string;
         event_team_id?: string | null;
         event_role_id?: string | null;
@@ -165,6 +188,8 @@ export async function PUT(
         phone: registrant.phone,
         shirt_size: registrant.shirt_size,
         is_primary: registrant.is_primary,
+        second_day_only: registrant.second_day_only,
+        selected_attendance_day: registrant.selected_attendance_day,
         notes: registrant.notes,
       };
       if (registrant.event_role === 'participant') {
