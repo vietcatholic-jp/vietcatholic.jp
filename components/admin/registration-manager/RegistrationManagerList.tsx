@@ -228,7 +228,7 @@ export function RegistrationManagerList({
                             <div className="space-y-1">
                               {registration.registrants?.some(r => r.second_day_only) && (
                                 <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
-                                  Chỉ tham gia ngày 2
+                                  Chỉ tham gia một ngày
                                 </Badge>
                               )}
                               <div className="text-xs text-muted-foreground">
