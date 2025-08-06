@@ -28,6 +28,27 @@ export const DEFAULT_RECEIPT_COMPRESSION: CompressionOptions = {
 };
 
 /**
+ * Default compression settings for avatar images
+ */
+export const DEFAULT_AVATAR_COMPRESSION: CompressionOptions = {
+  maxWidth: 400,
+  maxHeight: 400,
+  quality: 0.9,
+  maxSizeKB: 200, // 200KB max for avatars
+};
+
+/**
+ * Crop data interface for image cropping
+ */
+export interface CropData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scale: number;
+}
+
+/**
  * Compresses an image file using HTML5 Canvas
  */
 export async function compressImage(
@@ -215,6 +236,79 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+/**
+ * Compress avatar image with optional crop data
+ */
+export async function compressAvatarImage(
+  file: File,
+  cropData?: CropData,
+  options: CompressionOptions = DEFAULT_AVATAR_COMPRESSION
+): Promise<CompressionResult> {
+  if (cropData) {
+    // Apply crop first, then compress
+    const croppedFile = await cropImage(file, cropData);
+    return compressImage(croppedFile, options);
+  }
+
+  return compressImage(file, options);
+}
+
+/**
+ * Crop image based on crop data
+ */
+async function cropImage(file: File, cropData: CropData): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    img.onload = () => {
+      try {
+        // Set canvas size to crop dimensions
+        canvas.width = cropData.width;
+        canvas.height = cropData.height;
+
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+
+        // Apply scale and draw cropped portion
+        ctx.drawImage(
+          img,
+          cropData.x,
+          cropData.y,
+          cropData.width,
+          cropData.height,
+          0,
+          0,
+          cropData.width,
+          cropData.height
+        );
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create cropped image'));
+            return;
+          }
+
+          const croppedFile = new File([blob], file.name, { type: file.type });
+          resolve(croppedFile);
+        }, file.type);
+
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    img.onerror = () => {
+      reject(new Error('Failed to load image for cropping'));
+    };
+
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 /**

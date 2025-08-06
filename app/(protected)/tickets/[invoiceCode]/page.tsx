@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TicketGenerator } from "@/components/tickets/ticket-generator";
-import { PortraitUpload } from "@/components/tickets/portrait-upload";
+import { AvatarPortraitUpload } from "@/components/tickets/avatar-portrait-upload";
 import { Registrant } from "@/lib/types";
 import { 
   QrCode, 
@@ -167,8 +167,10 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
 
                         {/* Portrait Upload */}
                         {!registrant.portrait_url && (
-                          <PortraitUpload
+                          <AvatarPortraitUpload
                             registrantId={registrant.id}
+                            registrantName={registrant.full_name}
+                            currentAvatarUrl={registrant.portrait_url}
                           />
                         )}
                       </div>
