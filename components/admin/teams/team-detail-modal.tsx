@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -117,18 +117,12 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && teamId) {
-      fetchTeamData();
-    }
-  }, [isOpen, teamId]);
-
-  const fetchTeamData = async () => {
+  const fetchTeamData = useCallback(async () => {
     if (!teamId) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Fetch team members and basic info
       const membersResponse = await fetch(`/api/admin/teams/${teamId}/members`);
@@ -136,14 +130,14 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
         throw new Error("Không thể tải thông tin đội");
       }
       const membersData = await membersResponse.json();
-      
+
       // Fetch team statistics
       const statsResponse = await fetch(`/api/admin/teams/${teamId}/stats`);
       if (!statsResponse.ok) {
         throw new Error("Không thể tải thống kê đội");
       }
       const statsData = await statsResponse.json();
-      
+
       setTeamInfo(membersData.team);
       setMembers(membersData.members || []);
       setStats(statsData.statistics);
@@ -153,7 +147,13 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [teamId]);
+
+  useEffect(() => {
+    if (isOpen && teamId) {
+      fetchTeamData();
+    }
+  }, [isOpen, teamId, fetchTeamData]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RegistrationActions } from "@/components/dashboard/registration-actions";
-import { 
-  Users, 
+import {
+  Users,
   CreditCard,
   QrCode,
   ChevronDown,
@@ -13,11 +13,15 @@ import {
   Receipt,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  Camera,
+  Edit3
 } from "lucide-react";
 import Link from "next/link";
 import { Registrant, SHIRT_SIZES } from "@/lib/types";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
+import { AvatarManager } from "@/components/avatar/avatar-manager";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RegistrationCardProps {
   registration: {
@@ -130,7 +134,33 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
             <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-full">
               <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="font-medium text-gray-700 dark:text-gray-200">{registration.participant_count} người</span>
+            <div className="flex flex-col">
+              <span className="font-medium text-gray-700 dark:text-gray-200">{registration.participant_count} người</span>
+              {/* Avatar completion indicator */}
+              {registration.registrants && (
+                <div className="flex items-center gap-1 mt-1">
+                  {(() => {
+                    const withAvatars = registration.registrants.filter(r => r.portrait_url).length;
+                    const total = registration.registrants.length;
+                    const isComplete = withAvatars === total;
+
+                    return (
+                      <div className={`flex items-center gap-1 text-xs ${
+                        isComplete ? 'text-green-600' : 'text-amber-600'
+                      }`}>
+                        <Camera className="h-3 w-3" />
+                        <span>{withAvatars}/{total} ảnh</span>
+                        {!isComplete && (
+                          <span className="text-xs text-amber-600 font-medium">
+                            • Cần thêm ảnh
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2 p-3 bg-white/60 dark:bg-black/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50">
             <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-full">
@@ -286,6 +316,26 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                   <Users className="h-4 w-4" />
                   Danh sách tham gia ({registration.registrants.length} người)
                 </div>
+
+                {/* Avatar upload hint for users without photos */}
+                {registration.registrants.some(r => !r.portrait_url) && (
+                  <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-800/50 rounded-full shrink-0">
+                        <Camera className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">
+                          💡 Thêm ảnh đại diện cho vé tham dự
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
+                          Nhấp vào vòng tròn ảnh đại diện bên dưới để tải lên ảnh của bạn.
+                          Ảnh sẽ được hiển thị trên vé tham dự và giúp ban tổ chức dễ dàng nhận diện.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="grid gap-2">
                   {registration.registrants.map((registrant, idx) => {
                     const isPrimary = registrant.is_primary;
@@ -306,13 +356,44 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                         )}
                         
                         <div className="flex items-start gap-3">
-                          {/* Avatar with index */}
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-md ${
-                            isPrimary 
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
-                              : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200'
-                          }`}>
-                            {idx + 1}
+                          {/* Enhanced Avatar with editing capability */}
+                          <div className="relative group">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="relative">
+                                    <AvatarManager
+                                      registrantId={registrant.id}
+                                      registrantName={registrant.full_name}
+                                      currentAvatarUrl={registrant.portrait_url}
+                                      size="md"
+                                      editable={true}
+                                      className="w-12 h-12 border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                    />
+                                    {/* Edit indicator overlay */}
+                                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                      <Edit3 className="h-3 w-3 text-white" />
+                                    </div>
+                                    {/* Index number badge */}
+                                    <div className={`absolute -top-1 -left-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shadow-md ${
+                                      isPrimary
+                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                                        : 'bg-gradient-to-r from-gray-500 to-gray-600 text-white'
+                                    }`}>
+                                      {idx + 1}
+                                    </div>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  <div className="text-center">
+                                    <p className="font-medium text-sm">Ảnh đại diện</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Nhấp để tải lên hoặc thay đổi ảnh đại diện cho vé tham dự
+                                    </p>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                           
                           {/* Main content */}

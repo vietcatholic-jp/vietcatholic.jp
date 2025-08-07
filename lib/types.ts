@@ -631,5 +631,36 @@ export const JAPANESE_PROVINCES: { value: string; label: string }[] = [
   { value: 'Okinawa', label: 'Okinawa (沖縄県)' },
 ];
 
+// Avatar Management Types
+export interface AvatarMetadata {
+  url: string;
+  uploadedAt: string;
+  fileSize: number;
+  compressionRatio: number;
+}
+
+export interface AvatarUploadResult {
+  success: boolean;
+  avatarUrl?: string;
+  metadata?: AvatarMetadata;
+  error?: string;
+}
+
+export interface AvatarDeleteResult {
+  success: boolean;
+  error?: string;
+}
+
+// Avatar size types for consistent sizing across components
+export type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
+
+// Avatar manager props interface for component consistency
+export interface AvatarManagerConfig {
+  showUploadHint?: boolean;
+  acceptedFormats?: string[];
+  maxFileSize?: number;
+  compressionQuality?: number;
+}
+
 // Legacy role definitions removed - now using dynamic event_roles from database
 // All role information is fetched from the event_roles table
