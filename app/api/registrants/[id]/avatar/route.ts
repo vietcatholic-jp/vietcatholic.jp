@@ -10,7 +10,7 @@ import {
   checkRateLimit
 } from '@/lib/services/avatar-auth';
 import { uploadAvatarWithRetry } from '@/lib/services/avatar-storage';
-import { CropData } from '@/lib/image-compression';
+
 
 // Validation schema for avatar upload
 const AvatarUploadSchema = z.object({
@@ -71,7 +71,6 @@ export async function POST(
     // Parse multipart form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const cropDataStr = formData.get('cropData') as string;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -85,19 +84,7 @@ export async function POST(
       }, { status: 400 });
     }
 
-    // Parse crop data if provided
-    let cropData: CropData | undefined;
-    if (cropDataStr) {
-      try {
-        cropData = AvatarUploadSchema.parse({ cropData: JSON.parse(cropDataStr) }).cropData;
-      } catch (error) {
-        console.error('Crop data validation error:', error);
-        return NextResponse.json({
-          error: 'Invalid crop data format',
-          details: error instanceof z.ZodError ? error.errors : undefined
-        }, { status: 400 });
-      }
-    }
+    // Note: Crop data is processed on client side, server just handles upload
 
     // Upload to storage (file is already compressed on client side)
     const uploadResult = await uploadAvatarWithRetry(
