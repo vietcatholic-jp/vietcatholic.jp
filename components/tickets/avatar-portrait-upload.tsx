@@ -21,8 +21,7 @@ export function AvatarPortraitUpload({
   currentAvatarUrl,
   onUploadComplete 
 }: AvatarPortraitUploadProps) {
-  const handleAvatarChange = (newUrl: string | null) => {
-    console.debug('Avatar changed:', newUrl);
+  const handleAvatarChange = () => {
     if (onUploadComplete) {
       onUploadComplete();
     } else {

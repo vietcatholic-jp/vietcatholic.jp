@@ -47,9 +47,11 @@ export function AvatarManager({
   maxFileSize = 5 * 1024 * 1024, // 5MB default
   compressionQuality = 0.8,
 }: AvatarManagerProps) {
-  // TODO: Use these props in future enhancements
-  console.debug('Avatar config:', { showUploadHint, acceptedFormats, maxFileSize, compressionQuality });
-
+  // Prevent unused variable warnings for future enhancement props
+  void showUploadHint;
+  void acceptedFormats;
+  void maxFileSize;
+  void compressionQuality;
   // Use cn utility for consistent styling
   const containerClasses = cn(
     "relative inline-block",

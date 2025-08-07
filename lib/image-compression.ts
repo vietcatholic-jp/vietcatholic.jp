@@ -29,11 +29,12 @@ export const DEFAULT_RECEIPT_COMPRESSION: CompressionOptions = {
 
 /**
  * Default compression settings for avatar images
+ * Optimized for 1:1 aspect ratio with high quality
  */
 export const DEFAULT_AVATAR_COMPRESSION: CompressionOptions = {
-  maxWidth: 400,
-  maxHeight: 400,
-  quality: 0.9,
+  maxWidth: 512,
+  maxHeight: 512,
+  quality: 0.85,
   maxSizeKB: 200, // 200KB max for avatars
 };
 
@@ -240,12 +241,32 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Compress avatar image with optional crop data
+ * Optimized for avatar workflow with performance enhancements
  */
 export async function compressAvatarImage(
   file: File,
   cropData?: CropData,
   options: CompressionOptions = DEFAULT_AVATAR_COMPRESSION
 ): Promise<CompressionResult> {
+  // Validate input file
+  if (!file.type.startsWith('image/')) {
+    throw new Error('File must be an image');
+  }
+
+  // Check if file is already small enough
+  if (file.size <= options.maxSizeKB * 1024 && !cropData) {
+    // Still need to ensure dimensions are correct
+    const needsResize = await checkImageDimensions(file, options.maxWidth, options.maxHeight);
+    if (!needsResize) {
+      return {
+        file,
+        originalSize: file.size,
+        compressedSize: file.size,
+        compressionRatio: 0
+      };
+    }
+  }
+
   if (cropData) {
     // Apply crop first, then compress
     const croppedFile = await cropImage(file, cropData);
@@ -316,4 +337,28 @@ async function cropImage(file: File, cropData: CropData): Promise<File> {
  */
 export function shouldCompressFile(file: File, maxSizeKB: number = 500): boolean {
   return file.type.startsWith('image/') && file.size > maxSizeKB * 1024;
+}
+
+/**
+ * Check if image dimensions exceed maximum allowed size
+ */
+async function checkImageDimensions(
+  file: File,
+  maxWidth: number,
+  maxHeight: number
+): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => {
+      const needsResize = img.width > maxWidth || img.height > maxHeight;
+      resolve(needsResize);
+    };
+
+    img.onerror = () => {
+      reject(new Error('Failed to load image for dimension check'));
+    };
+
+    img.src = URL.createObjectURL(file);
+  });
 }

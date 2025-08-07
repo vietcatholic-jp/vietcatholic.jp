@@ -3,8 +3,7 @@
  * Provides lazy loading, caching, and optimization strategies
  */
 
-import React from 'react';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
  * Intersection Observer hook for lazy loading
