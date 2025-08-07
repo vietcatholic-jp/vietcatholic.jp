@@ -12,16 +12,7 @@ import {
 import { uploadAvatarWithRetry } from '@/lib/services/avatar-storage';
 
 
-// Validation schema for avatar upload
-const AvatarUploadSchema = z.object({
-  cropData: z.object({
-    x: z.number(),
-    y: z.number(),
-    width: z.number(),
-    height: z.number(),
-    scale: z.number(),
-  }).optional(),
-});
+
 
 /**
  * POST /api/registrants/[id]/avatar
@@ -195,7 +186,6 @@ export async function PUT(
     // Parse multipart form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const cropDataStr = formData.get('cropData') as string;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -209,28 +199,13 @@ export async function PUT(
       }, { status: 400 });
     }
 
-    // Parse crop data if provided
-    let cropData: CropData | undefined;
-    if (cropDataStr) {
-      try {
-        cropData = AvatarUploadSchema.parse({ cropData: JSON.parse(cropDataStr) }).cropData;
-      } catch (error) {
-        console.error('Crop data validation error:', error);
-        return NextResponse.json({
-          error: 'Invalid crop data format',
-          details: error instanceof z.ZodError ? error.errors : undefined
-        }, { status: 400 });
-      }
-    }
+    // Note: Crop data is processed on client side, server just handles upload
 
-    // Process image (crop and compress)
-    const compressionResult = await compressAvatarImage(file, cropData);
-
-    // Upload to storage (this will replace the existing file)
+    // Upload to storage (file is already compressed on client side)
     const uploadResult = await uploadAvatarWithRetry(
       user.id,
       registrantId,
-      compressionResult.file,
+      file,
       true // server-side
     );
 
@@ -264,23 +239,16 @@ export async function PUT(
       'participant',
       registrantId,
       {
-        file_size: compressionResult.compressedSize,
-        file_type: compressionResult.file.type,
+        file_size: file.size,
+        file_type: file.type,
         admin_action: false,
         registrant_owner: user.id,
-        compression_ratio: compressionResult.compressionRatio,
-        original_size: compressionResult.originalSize,
       }
     );
 
     return NextResponse.json({
       success: true,
       avatarUrl: uploadResult.avatarUrl,
-      metadata: {
-        originalSize: compressionResult.originalSize,
-        compressedSize: compressionResult.compressedSize,
-        compressionRatio: compressionResult.compressionRatio,
-      }
     });
 
   } catch (error) {
