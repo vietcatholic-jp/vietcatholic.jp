@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -62,20 +62,13 @@ export function AvatarCropProcessor({
   const [result, setResult] = useState<CompressionResult | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // Start processing when dialog opens
-  React.useEffect(() => {
-    if (open && !isProcessing && !result) {
-      startProcessing();
-    }
-  }, [open]);
-
   const updateStep = (stepIndex: number, status: ProcessingStep['status'], progress: number = 0) => {
-    setSteps(prev => prev.map((step, index) => 
+    setSteps(prev => prev.map((step, index) =>
       index === stepIndex ? { ...step, status, progress } : step
     ));
   };
 
-  const startProcessing = async () => {
+  const startProcessing = useCallback(async () => {
     setIsProcessing(true);
     setCurrentStep(0);
 
@@ -97,7 +90,7 @@ export function AvatarCropProcessor({
 
       // Perform actual compression with crop data
       const compressionResult = await compressAvatarImage(imageFile, cropData);
-      
+
       updateStep(2, 'processing', 75);
       await new Promise(resolve => setTimeout(resolve, 200));
       updateStep(2, 'completed', 100);
@@ -105,16 +98,16 @@ export function AvatarCropProcessor({
       // Step 4: Validate
       setCurrentStep(3);
       updateStep(3, 'processing', 90);
-      
+
       // Create preview URL
       const url = URL.createObjectURL(compressionResult.file);
       setPreviewUrl(url);
-      
+
       await new Promise(resolve => setTimeout(resolve, 300));
       updateStep(3, 'completed', 100);
 
       setResult(compressionResult);
-      
+
       toast.success(
         `Avatar đã được xử lý thành công! Giảm ${Math.round(compressionResult.compressionRatio * 100)}% dung lượng`
       );
@@ -122,14 +115,21 @@ export function AvatarCropProcessor({
     } catch (error) {
       console.error('Processing error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra khi xử lý ảnh';
-      
+
       updateStep(currentStep, 'error', 0);
       onError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [imageFile, cropData, currentStep, onError]);
+
+  // Start processing when dialog opens
+  React.useEffect(() => {
+    if (open && !isProcessing && !result) {
+      startProcessing();
+    }
+  }, [open, isProcessing, result, startProcessing]);
 
   const handleComplete = () => {
     if (result) {
@@ -214,6 +214,7 @@ export function AvatarCropProcessor({
               {/* Preview Image */}
               <div className="flex justify-center">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewUrl}
                     alt="Processed avatar"

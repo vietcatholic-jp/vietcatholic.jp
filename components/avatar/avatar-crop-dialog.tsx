@@ -170,39 +170,7 @@ export function AvatarCropDialog({
     }
   }, [open, handleWheel, handleMouseMove, handleMouseUp]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    if (!open) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'Escape':
-          handleCancel();
-          break;
-        case 'Enter':
-          handleCropConfirm();
-          break;
-        case '+':
-        case '=':
-          setCropState(prev => ({ ...prev, scale: Math.min(3, prev.scale + 0.1) }));
-          break;
-        case '-':
-          setCropState(prev => ({ ...prev, scale: Math.max(0.1, prev.scale - 0.1) }));
-          break;
-        case 'r':
-        case 'R':
-          handleRotate();
-          break;
-        case 'g':
-        case 'G':
-          setShowGrid(prev => !prev);
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open]);
 
   // Control functions
   const handleZoomIn = () => {
@@ -250,9 +218,9 @@ export function AvatarCropDialog({
     setCropState(prev => ({ ...prev, scale: value[0] }));
   };
 
-  const handleCropConfirm = async () => {
+  const handleCropConfirm = useCallback(async () => {
     setIsProcessing(true);
-    
+
     try {
       const cropData: CropData = {
         x: cropState.x,
@@ -270,12 +238,46 @@ export function AvatarCropDialog({
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [cropState, onCropComplete]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     onCancel?.();
     onOpenChange(false);
-  };
+  }, [onCancel, onOpenChange]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Escape':
+          handleCancel();
+          break;
+        case 'Enter':
+          handleCropConfirm();
+          break;
+        case '+':
+        case '=':
+          setCropState(prev => ({ ...prev, scale: Math.min(3, prev.scale + 0.1) }));
+          break;
+        case '-':
+          setCropState(prev => ({ ...prev, scale: Math.max(0.1, prev.scale - 0.1) }));
+          break;
+        case 'r':
+        case 'R':
+          handleRotate();
+          break;
+        case 'g':
+        case 'G':
+          setShowGrid(prev => !prev);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, handleCancel, handleCropConfirm]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -301,6 +303,7 @@ export function AvatarCropDialog({
             >
               {imageUrl && (
                 <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     ref={imageRef}
                     src={imageUrl}
@@ -446,6 +449,7 @@ export function AvatarCropDialog({
               <label className="text-sm font-medium">Preview</label>
               <div className="w-24 h-24 bg-muted rounded-full overflow-hidden border-2 border-border mx-auto">
                 {imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={imageUrl}
                     alt="Avatar preview"

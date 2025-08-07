@@ -125,31 +125,7 @@ export function MobileAvatarCropSheet({
     };
   };
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    
-    const touches = e.touches;
-    
-    if (touches.length === 1) {
-      // Single touch - check for double tap
-      const now = Date.now();
-      const timeDiff = now - lastTap;
-      
-      if (timeDiff < 300 && timeDiff > 0) {
-        // Double tap - fit to screen
-        handleFitToScreen();
-      }
-      
-      setLastTap(now);
-      setLastTouchCenter(getTouchCenter(touches));
-    } else if (touches.length === 2) {
-      // Pinch start
-      const distance = getTouchDistance(touches);
-      setInitialDistance(distance);
-      setInitialScale(touchState.scale);
-      setLastTouchCenter(getTouchCenter(touches));
-    }
-  }, [lastTap, touchState.scale]);
+
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
@@ -233,19 +209,19 @@ export function MobileAvatarCropSheet({
     });
   };
 
-  const handleFitToScreen = () => {
+  const handleFitToScreen = useCallback(() => {
     if (containerRef.current && imageDimensions.width && imageDimensions.height) {
       const containerRect = containerRef.current.getBoundingClientRect();
       const containerAspect = containerRect.width / containerRect.height;
       const imageAspect = imageDimensions.width / imageDimensions.height;
-      
+
       let scale = 1;
       if (imageAspect > containerAspect) {
         scale = containerRect.width / imageDimensions.width;
       } else {
         scale = containerRect.height / imageDimensions.height;
       }
-      
+
       setTouchState(prev => ({
         ...prev,
         scale: Math.max(0.5, Math.min(3, scale * 0.9)),
@@ -253,7 +229,33 @@ export function MobileAvatarCropSheet({
         y: 0,
       }));
     }
-  };
+  }, [imageDimensions]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+
+    const touches = e.touches;
+
+    if (touches.length === 1) {
+      // Single touch - check for double tap
+      const now = Date.now();
+      const timeDiff = now - lastTap;
+
+      if (timeDiff < 300 && timeDiff > 0) {
+        // Double tap - fit to screen
+        handleFitToScreen();
+      }
+
+      setLastTap(now);
+      setLastTouchCenter(getTouchCenter(touches));
+    } else if (touches.length === 2) {
+      // Pinch start
+      const distance = getTouchDistance(touches);
+      setInitialDistance(distance);
+      setInitialScale(touchState.scale);
+      setLastTouchCenter(getTouchCenter(touches));
+    }
+  }, [lastTap, touchState.scale, handleFitToScreen]);
 
   const handleScaleChange = (value: number[]) => {
     setTouchState(prev => ({ ...prev, scale: value[0] }));
@@ -315,6 +317,7 @@ export function MobileAvatarCropSheet({
           >
             {imageUrl && (
               <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   ref={imageRef}
                   src={imageUrl}

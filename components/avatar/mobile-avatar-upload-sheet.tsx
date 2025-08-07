@@ -161,6 +161,7 @@ export function MobileAvatarUploadSheet({
             <div className="space-y-3">
               <h3 className="font-medium">Avatar hiện tại</h3>
               <div className="flex items-center gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={currentAvatarUrl}
                   alt="Current avatar"
@@ -250,6 +251,7 @@ export function MobileAvatarUploadSheet({
 
               {/* Preview Image */}
               <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={previewUrl}
                   alt="Selected image"

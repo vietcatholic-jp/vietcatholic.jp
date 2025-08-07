@@ -207,6 +207,7 @@ export function AvatarUploadDialog({
           {selectedFile && previewUrl && (
             <div className="space-y-3">
               <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={previewUrl}
                   alt="Avatar preview"
