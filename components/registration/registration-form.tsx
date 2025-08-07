@@ -387,6 +387,27 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
     }
   }, [currentStep]);
 
+  // If no active event is found, show a message
+  if (!eventConfig) {
+    return (
+      <div className="max-w-4xl mx-auto text-center p-8">
+        <Card className="bg-red-50 border-red-200">
+          <CardHeader>
+            <CardTitle className="text-red-600 text-lg font-semibold flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Không tìm thấy sự kiện đang hoạt động
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-500">
+              Hiện tại không có sự kiện nào đang hoạt động. Vui lòng liên hệ với quản trị viên để biết thêm chi tiết.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
   // Step 1: Role Selection
   if (currentStep === 'role-selection') {
     return (
