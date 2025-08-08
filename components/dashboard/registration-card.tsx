@@ -150,7 +150,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                       }`}>
                         <Camera className="h-3 w-3" />
                         <span>{withAvatars}/{total} ảnh</span>
-                        {!isComplete && (
+                        {!isComplete && registration.status === 'confirmed' && (
                           <span className="text-xs text-amber-600 font-medium">
                             • Cần thêm ảnh
                           </span>
@@ -318,7 +318,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                 </div>
 
                 {/* Avatar upload hint for users without photos */}
-                {registration.registrants.some(r => !r.portrait_url) && (
+                {registration.status === 'confirmed' || registration.status === 'temp_confirmed' && registration.registrants.some(r => !r.portrait_url) && (
                   <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-700 rounded-lg">
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-blue-100 dark:bg-blue-800/50 rounded-full shrink-0">
@@ -357,7 +357,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                         
                         <div className="flex items-start gap-3">
                           {/* Enhanced Avatar with editing capability */}
-                          <div className="relative group">
+                          <div className="relative group flex-shrink-0">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -367,15 +367,17 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                                       registrantName={registrant.full_name}
                                       currentAvatarUrl={registrant.portrait_url}
                                       size="md"
-                                      editable={true}
-                                      className="w-12 h-12 border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                      editable={registration.status === 'confirmed' || registration.status === 'temp_confirmed'}
+                                      className="w-10 h-10 border-2 border-white shadow-md hover:shadow-lg transition-all duration-200"
                                     />
-                                    {/* Edit indicator overlay */}
-                                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                      <Edit3 className="h-3 w-3 text-white" />
-                                    </div>
+                                    {/* Edit indicator overlay - only show if editable */}
+                                    {registration.status === 'confirmed' || registration.status === 'temp_confirmed' && (
+                                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        <Edit3 className="h-2.5 w-2.5 text-white" />
+                                      </div>
+                                    )}
                                     {/* Index number badge */}
-                                    <div className={`absolute -top-1 -left-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shadow-md ${
+                                    <div className={`absolute -top-0.5 -left-0.5 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
                                       isPrimary
                                         ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
                                         : 'bg-gradient-to-r from-gray-500 to-gray-600 text-white'
@@ -388,7 +390,10 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                                   <div className="text-center">
                                     <p className="font-medium text-sm">Ảnh đại diện</p>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                      Nhấp để tải lên hoặc thay đổi ảnh đại diện cho vé tham dự
+                                      {registration.status === 'confirmed' || registration.status === 'temp_confirmed'
+                                        ? 'Nhấp để tải lên hoặc thay đổi ảnh đại diện cho vé tham dự'
+                                        : 'Chỉ có thể chỉnh sửa ảnh khi đăng ký đã được xác nhận'
+                                      }
                                     </p>
                                   </div>
                                 </TooltipContent>
@@ -397,7 +402,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                           </div>
                           
                           {/* Main content */}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 ml-4 sm:ml-14">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                               {/* Name section */}
                               <div className="min-w-0">
