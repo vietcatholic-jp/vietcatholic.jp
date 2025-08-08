@@ -149,11 +149,15 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
         //setIsLoadingRoles(true);
         try {
           // Fetch event config
-          const response = await fetch('/api/admin/events');
-          if (response.ok) {
-            const { events } = await response.json();
-            const activeEvent = events?.find((event: EventConfig) => event.is_active);
-            setEventConfig(activeEvent || null);
+          const { data: eventData, error: eventError } = await supabase.from('event_configs')
+          .select('*')
+          .eq('id', registration.event_config_id)
+          .single();
+
+          if (eventError) {
+            console.error('Error fetching event config:', eventError);
+          } else {
+            setEventConfig(eventData || null);
           }
         } catch (error) {
           console.error('Failed to fetch event data:', error);
@@ -163,7 +167,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
       };
   
       fetchEventData();
-    }, [supabase]);
+    }, [supabase, registration]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -477,7 +481,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                       >
                         <option value="">Chọn size</option>
                         {
-                        (registrants[index]?.event_role === null ) ? (
+                        (registrants[index]?.event_role === "participant" ) ? (
                           SHIRT_SIZES_PARTICIPANT.map((size) => (
                             <option key={size.value} value={size.value}>
                               {size.label}
@@ -492,7 +496,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                         )}
                       </select>
                       <p className="text-xs text-muted-foreground">
-                          {registrants[index]?.event_role === null ? "Chọn size áo không phân biệt giới tính.": "Chọn size áo theo cân nặng và giới tính."}
+                          {registrants[index]?.event_role === "participant" ? "Chọn size áo không phân biệt giới tính.": "Chọn size áo theo cân nặng và giới tính."}
                       </p>
                       {errors.registrants?.[index]?.shirt_size && (
                         <p className="text-sm text-destructive">
