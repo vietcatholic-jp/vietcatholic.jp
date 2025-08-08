@@ -228,13 +228,13 @@ export default async function DashboardPage({
                 <div className="text-center py-8 px-6">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2">Chưa có đăng ký nào</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Bạn chưa đăng ký tham gia sự kiện nào
+                  <p className="text-muted-foreground text-3xl mb-4">
+                    Bạn chưa đăng ký tham gia Đại Hội.
                   </p>
                   <Link href="/register">
                     <Button>
                       <Users className="h-4 w-4 mr-2" />
-                      Đăng ký ngay
+                      Bấm vào đây để tạo đăng ký
                     </Button>
                   </Link>
                 </div>
