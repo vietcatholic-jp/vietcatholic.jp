@@ -33,6 +33,7 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
   const supabase = createClient();
   
   const [formData, setFormData] = useState({
+    event_config_id: registration.event_config_id,
     status: registration.status,
     notes: registration.notes || "",
     registrants: registration.registrants?.map(r => ({
@@ -56,26 +57,28 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
       setIsLoadingRoles(true);
       try {
         // Fetch event config
-        const response = await fetch('/api/admin/events');
-        if (response.ok) {
-          const { events } = await response.json();
-          const activeEvent = events?.find((event: EventConfig) => event.is_active);
-          setEventConfig(activeEvent || null);
-          
-          // Fetch event roles if we have an active event
-          if (activeEvent) {
-            const { data: roles, error: rolesError } = await supabase
-              .from('event_roles')
-              .select('*')
-              .eq('event_config_id', activeEvent.id)
-              .order('name');
+        const { data: eventData, error: eventError } = await supabase.from('event_configs')
+          .select('*')
+          .eq('id', registration.event_config_id)
+          .single();
 
-            if (rolesError) {
-              console.error('Error fetching event roles:', rolesError);
-            } else {
-              setEventRoles(roles || []);
-            }
-          }
+        if (eventError) {
+          console.error('Error fetching event config:', eventError);
+        } else {
+          setEventConfig(eventData || null);
+        }
+
+        // Fetch event roles if we have an active event
+        const { data: roles, error: rolesError } = await supabase
+          .from('event_roles')
+          .select('*')
+          .eq('event_config_id', registration.event_config_id)
+          .order('name');
+
+        if (rolesError) {
+          console.error('Error fetching event roles:', rolesError);
+        } else {
+          setEventRoles(roles || []);
         }
       } catch (error) {
         console.error('Failed to fetch event data:', error);
@@ -85,7 +88,7 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
     };
 
     fetchEventData();
-  }, [supabase]);
+  }, [supabase, registration]);
 
   const statusOptions: { value: RegistrationStatus; label: string; description: string }[] = [
     { value: 'pending', label: 'Chờ đóng phí tham dự', description: 'Đang chờ người dùng đóng phí tham dự' },
