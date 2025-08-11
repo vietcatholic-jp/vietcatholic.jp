@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Không có quyền thực hiện thao tác này" }, { status: 403 });
     }
 
@@ -161,7 +161,7 @@ export async function PUT(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Không có quyền thực hiện thao tác này" }, { status: 403 });
     }
 
@@ -235,7 +235,7 @@ export async function DELETE(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Không có quyền thực hiện thao tác này" }, { status: 403 });
     }
 
