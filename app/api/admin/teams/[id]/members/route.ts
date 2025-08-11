@@ -97,7 +97,7 @@ export async function POST(
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -194,7 +194,7 @@ export async function DELETE(
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["event_organizer", "regional_admin", "super_admin"].includes(profile.role)) {
+    if (!profile || !["event_organizer", "registration_manager", "regional_admin", "super_admin"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
