@@ -127,7 +127,7 @@ export function RegistrationActions({
 
   const showDeleteButton = () => {
     // Allow deletion for pending and payment_rejected status only
-    if (status === 'pending' || status === 'payment_rejected') {
+    if (status === 'pending') {
       return !hasTickets;
     }
     return false;
