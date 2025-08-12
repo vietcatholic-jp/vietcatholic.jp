@@ -46,6 +46,7 @@ export interface EventConfig {
   start_date?: string;
   end_date?: string;
   base_price: number;
+  deadline_payment?: number; // from registration date in days
   cancellation_deadline?: string;
   is_active: boolean;
   total_slots?: number;

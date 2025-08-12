@@ -126,6 +126,8 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
       description: '',
       start_date: '',
       end_date: '',
+      deadline_payment: 10, // Default to 10 days
+      cancellation_deadline: '',
       base_price: 0,
       is_active: false,
       created_at: '',
@@ -704,6 +706,32 @@ export function EventConfigManager({ currentUserRole }: EventConfigManagerProps)
                       prev ? {...prev, base_price: parseFloat(e.target.value) || 0} : null
                     )}
                     placeholder="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="deadline_payment">Thời hạn thanh toán (ngày)</Label>
+                  <Input
+                    id="deadline_payment"
+                    type="number"
+                    min="1"
+                    value={editingEvent.deadline_payment || 10}
+                    onChange={(e) => setEditingEvent(prev => 
+                      prev ? {...prev, deadline_payment: parseInt(e.target.value, 10) || 10} : null
+                    )}
+                    placeholder="10"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cancellation_deadline">Thời hạn hủy đăng ký</Label>
+                  <Input
+                    id="cancellation_deadline"
+                    type="datetime-local"
+                    value={editingEvent.cancellation_deadline ? 
+                      new Date(editingEvent.cancellation_deadline).toISOString().slice(0, 16) : ''
+                    }
+                    onChange={(e) => setEditingEvent(prev => 
+                      prev ? {...prev, cancellation_deadline: e.target.value} : null
+                    )}
                   />
                 </div>
 
