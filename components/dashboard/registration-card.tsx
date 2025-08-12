@@ -22,6 +22,8 @@ import { Registrant, SHIRT_SIZES } from "@/lib/types";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
 import { AvatarManager } from "@/components/avatar/avatar-manager";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 interface RegistrationCardProps {
   registration: {
@@ -44,6 +46,29 @@ interface RegistrationCardProps {
 
 export function RegistrationCard({ registration, eventConfig }: RegistrationCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  // Track per-registrant go_with value overrides after inline updates
+  const [goWithOverrides, setGoWithOverrides] = useState<Record<string, boolean | undefined>>({});
+  const [savingGoWith, setSavingGoWith] = useState<Record<string, boolean>>({});
+
+  const handleToggleGoWith = async (registrantId: string, currentValue: boolean | undefined) => {
+    const nextValue = !Boolean(currentValue);
+    setSavingGoWith((s) => ({ ...s, [registrantId]: true }));
+    try {
+      const res = await fetch(`/api/registrants/${registrantId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ go_with: nextValue }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Cập nhật thất bại");
+      setGoWithOverrides((m) => ({ ...m, [registrantId]: data.go_with }));
+      toast.success("Đã cập nhật nhu cầu đi xe chung");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Cập nhật thất bại");
+    } finally {
+      setSavingGoWith((s) => ({ ...s, [registrantId]: false }));
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -340,7 +365,7 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                 <div className="grid gap-2">
                   {registration.registrants.map((registrant, idx) => {
                     const isPrimary = registrant.is_primary;
-                    
+                    const effectiveGoWith = (goWithOverrides[registrant.id] ?? registrant.go_with) || false;
                     return (
                       <div 
                         key={registrant.id} 
@@ -456,6 +481,20 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
                                   })}
                                 </span>
                               )}
+                              {/* Go with - display or inline edit when confirmed */}
+                              <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                                <Checkbox
+                                  id={`go_with_${registrant.id}`}
+                                  checked={effectiveGoWith}
+                                  disabled={!!savingGoWith[registrant.id]}
+                                  onCheckedChange={(checked) => {
+                                    if (typeof checked === 'boolean') {
+                                      handleToggleGoWith(registrant.id, effectiveGoWith);
+                                    }
+                                  }}
+                                />
+                                <span className="text-xs">Đi xe chung</span>
+                              </label>
                             </div>
                           </div>
                         </div>
