@@ -14,9 +14,9 @@ export async function PATCH(
     const { action } = await request.json();
     const { id: requestId } = await params;
     
-    if (!['approve', 'reject'].includes(action)) {
+    if (!['approve', 'reject', 'processed'].includes(action)) {
       return NextResponse.json(
-        { error: 'Invalid action' },
+        { error: `Thao tác không hợp lệ ${action}` },
         { status: 400 }
       );
     }

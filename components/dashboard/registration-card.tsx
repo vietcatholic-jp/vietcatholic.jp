@@ -35,9 +35,10 @@ interface RegistrationCardProps {
     registrants: Registrant[];
     notes?: string;
   };
-  eventConfig?: {
+  eventConfig: {
     cancellation_deadline?: string;
-  } | null;
+    deadline_payment?: number;
+  };
   isLast: boolean;
 }
 
@@ -259,8 +260,8 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
             {registration.status === 'pending' && (
               <div className="p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/30 rounded-lg shadow-sm">
                 <ul className="text-sm">
-                  <li>Hạn chuyển khoản là 10 ngày kể từ ngày đăng ký và trước ngày 10/09/2025</li>
-                  <li>Vui lòng chuyển khoản trước ngày <strong className="text-xl">{new Date(new Date(registration.created_at).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong> </li>
+                  <li>Hạn chuyển khoản: <strong className="text-xl ml-1">{eventConfig.deadline_payment || 10}</strong> ngày kể từ ngày đăng ký.</li>
+                  <li>Vui lòng chuyển khoản trước ngày <strong className="text-xl">{new Date(new Date(registration.created_at).getTime() + (eventConfig.deadline_payment || 10) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong> </li>
                 </ul>
               </div>
             )}
