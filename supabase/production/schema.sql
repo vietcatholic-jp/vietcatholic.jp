@@ -63,6 +63,7 @@ create table public.event_configs (
   start_date timestamp with time zone,
   end_date timestamp with time zone,
   base_price decimal(10,2) default 0,
+  deadline_payment integer default 10, -- Days from registration date to pay
   is_active boolean default false,
   cancellation_deadline timestamptz,
   total_slots integer,
