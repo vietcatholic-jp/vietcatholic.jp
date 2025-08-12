@@ -28,6 +28,7 @@ const RegistrantSchema = z.object({
   is_primary: z.boolean(),
   second_day_only: z.boolean().optional(),
   selected_attendance_day: z.string().optional(),
+  go_with: z.boolean().optional(),
   notes: z.string().optional(),
 });
 
@@ -181,6 +182,7 @@ export async function POST(request: NextRequest) {
         phone?: string;
         shirt_size: string;
         is_primary: boolean;
+        go_with?: boolean;
         second_day_only?: boolean;
         selected_attendance_day?: string;
         notes?: string;
@@ -200,6 +202,7 @@ export async function POST(request: NextRequest) {
         phone: registrant.phone,
         shirt_size: registrant.shirt_size,
         is_primary: registrant.is_primary,
+        go_with: registrant.go_with,
         second_day_only: registrant.second_day_only,
         notes: registrant.notes,
       };
