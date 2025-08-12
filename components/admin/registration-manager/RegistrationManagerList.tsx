@@ -13,7 +13,7 @@ import {
   ChevronRight,
   Loader2
 } from "lucide-react";
-import { Registration } from "@/lib/types";
+import { EventConfig, Registration } from "@/lib/types";
 import { RegistrationDetailModal } from "./RegistrationDetailModal";
 import { RegistrationEditModal } from "./RegistrationEditModal";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ interface RegistrationManagerListProps {
   searchTerm: string;
   statusFilter: string;
   isLoading: boolean;
+  eventConfig: EventConfig | null;
   onDataRefresh: () => void;
   onSearch: (search: string) => void;
   onStatusFilter: (status: string) => void;
@@ -38,6 +39,7 @@ export function RegistrationManagerList({
   searchTerm,
   statusFilter,
   isLoading,
+  eventConfig,
   onDataRefresh,
   onSearch,
   onStatusFilter,
@@ -100,7 +102,7 @@ export function RegistrationManagerList({
     const createdDate = new Date(registration.created_at);
     const now = new Date();
     const daysDiff = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-    return daysDiff > 10;
+    return daysDiff > (eventConfig?.deadline_payment || 10); // Default to 10 days if not set
   };
 
   return (

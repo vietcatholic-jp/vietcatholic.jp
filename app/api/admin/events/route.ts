@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { name, description, start_date, end_date, base_price } = await request.json();
+    const { name, description, start_date, end_date, base_price, cancellation_deadline, deadline_payment } = await request.json();
 
     if (!name) {
       return NextResponse.json({ error: "Event name is required" }, { status: 400 });
@@ -77,6 +77,8 @@ export async function POST(request: NextRequest) {
         start_date: start_date || null,
         end_date: end_date || null,
         base_price: base_price || 0,
+        cancellation_deadline: cancellation_deadline || end_date,
+        deadline_payment: deadline_payment || 10,
         is_active: false
       })
       .select()
@@ -120,7 +122,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { id, name, description, start_date, end_date, base_price } = await request.json();
+    const { id, name, description, start_date, end_date, base_price, cancellation_deadline, deadline_payment } = await request.json();
 
     if (!id || !name) {
       return NextResponse.json({ error: "Event ID and name are required" }, { status: 400 });
@@ -135,6 +137,8 @@ export async function PUT(request: NextRequest) {
         start_date: start_date || null,
         end_date: end_date || null,
         base_price: base_price || 0,
+        cancellation_deadline: cancellation_deadline || end_date,
+        deadline_payment: deadline_payment || 10,
         updated_at: new Date().toISOString()
       })
       .eq("id", id)
