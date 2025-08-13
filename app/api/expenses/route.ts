@@ -14,11 +14,16 @@ const CreateExpenseRequestSchema = z.object({
   bank_name: z.string().optional(),
   bank_branch: z.string().optional(),
   account_number: z.string().optional(),
+  status: z.enum(['pending', 'approved', 'rejected', 'transferred', 'closed']).optional(),
+  catchment: z.string().optional(),
+  team_name: z.string().optional(),
+  category: z.string().optional(),
+  notes: z.string().optional(),
   optional_invoice_url: z.string().url().optional(),
 });
 
 const FilterSchema = z.object({
-  status: z.enum(['submitted', 'approved', 'rejected', 'transferred', 'closed']).optional(),
+  status: z.enum(['submitted', 'pending', 'approved', 'rejected', 'transferred', 'closed']).optional(),
   type: z.enum(['reimbursement', 'advance']).optional(),
   event_config_id: z.string().uuid().optional(),
   user_id: z.string().uuid().optional(),
@@ -36,6 +41,7 @@ export async function POST(request: NextRequest) {
     
     const body = await request.json();
     const validatedData = CreateExpenseRequestSchema.parse(body);
+    console.log('Creating expense request:', validatedData);
 
     // Verify event exists
     const { data: event, error: eventError } = await supabase
@@ -60,8 +66,7 @@ export async function POST(request: NextRequest) {
       })
       .select(`
         *,
-        event_config:event_configs(id, name),
-        user:users(id, full_name, email)
+        event_config:event_configs(id, name)
       `)
       .single();
 
@@ -100,19 +105,19 @@ export async function POST(request: NextRequest) {
 // GET expense requests (user sees own, admins see all)
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireRole(['event_organizer', 'super_admin', 'regional_admin']);
+    const user = await requireRole(['event_organizer', 'super_admin', 'cashier_role']);
     const supabase = await createClient();
     
     const { searchParams } = new URL(request.url);
     const filters = FilterSchema.parse({
-      status: searchParams.get('status'),
-      type: searchParams.get('type'),
-      event_config_id: searchParams.get('event_config_id'),
-      user_id: searchParams.get('user_id'),
-      start_date: searchParams.get('start_date'),
-      end_date: searchParams.get('end_date'),
-      limit: searchParams.get('limit'),
-      offset: searchParams.get('offset'),
+      status: searchParams.get('status') || undefined,
+      type: searchParams.get('type') || undefined,
+      event_config_id: searchParams.get('event_config_id') || undefined,
+      user_id: searchParams.get('user_id') || undefined,
+      start_date: searchParams.get('start_date') || undefined,
+      end_date: searchParams.get('end_date') || undefined,
+      limit: searchParams.get('limit') || undefined,
+      offset: searchParams.get('offset') || undefined,
     });
 
     // Get user profile to check role
@@ -122,7 +127,7 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    const isAdmin = profile && ['super_admin', 'regional_admin'].includes(profile.role);
+    const isAdmin = profile && ['super_admin', 'cashier_role'].includes(profile.role);
 
     let query = supabase
       .from('expense_requests')
@@ -140,8 +145,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply filters
-    if (filters.status) {
-      query = query.eq('status', filters.status);
+    const statusDb = filters.status === 'pending' ? 'submitted' : filters.status;
+    if (statusDb) {
+      query = query.eq('status', statusDb);
     }
 
     if (filters.type) {

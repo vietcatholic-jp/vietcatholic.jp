@@ -21,28 +21,23 @@ import {
   Clock,
   Filter,
   Building,
-  CreditCard
+  CreditCard,
+  Upload,
+  X,
+  User2
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ExpenseRequest } from '@/lib/types';
+import { ExpenseFormData, ExpenseRequest } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
-
-interface ExpenseFormData {
-  type: string;
-  description: string;
-  amount: number;
-  bank_account_holder: string;
-  bank_name: string;
-  bank_account_number: string;
-  note: string;
-  // Legacy fields for compatibility
-  purpose?: string;
-  amount_requested?: number;
-  bank_account_name?: string;
-  account_number?: string;
-  bank_branch?: string;
-  optional_invoice_url?: string;
-}
+import Link from 'next/link';
+import { useDropzone } from 'react-dropzone';
+import { 
+  compressImages,
+  formatFileSize,
+  shouldCompressFile,
+  DEFAULT_RECEIPT_COMPRESSION,
+  type CompressionResult
+} from '@/lib/image-compression';
 
 interface EventConfigLite { id: string; is_active?: boolean }
 interface ExpensesStats { total_requests: number; pending_requests: number; approved_requests: number; transferred_requests: number; closed_requests: number; total_amount: number; approved_amount: number }
@@ -67,23 +62,30 @@ export default function ExpensesManager() {
     type: 'reimbursement',
     description: '',
     amount: 0,
-    bank_account_holder: '',
     bank_name: '',
     bank_account_number: '',
     note: '',
-    // Legacy fields
     purpose: '',
     amount_requested: 0,
     bank_account_name: '',
     account_number: '',
     bank_branch: '',
-    optional_invoice_url: ''
+    optional_invoice_url: '',
+    category: '',
+    team_name: ''
   });
 
   const supabase = createClient();
   const [eventConfig, setEventConfig] = useState<EventConfigLite | null>(null);
   const [stats, setStats] = useState<ExpensesStats | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [teamOptions, setTeamOptions] = useState<string[]>([]);
+
+  // Upload state for invoice
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [compressedFiles, setCompressedFiles] = useState<CompressionResult[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -122,6 +124,7 @@ export default function ExpensesManager() {
       }
       
       const data: { expenses: ExpenseRequest[]; stats: ExpensesStats } = await response.json();
+      //console.log('Fetched expenses:', data.expenses);
       setExpenses(data.expenses || []);
       setStats(data.stats || null);
       setCurrentPage(page);
@@ -152,6 +155,30 @@ export default function ExpensesManager() {
     fetchEventConfig();
   }, []);
 
+  // Load unique team names for current event
+  useEffect(() => {
+    const fetchTeams = async () => {
+      if (!eventConfig) return;
+      try {
+        type TeamRow = { team_name: string | null };
+        const { data, error } = await supabase
+          .from('event_roles')
+          .select('team_name')
+          .eq('event_config_id', eventConfig.id);
+        if (error) {
+          console.error('Failed to fetch team names:', error);
+          return;
+        }
+        const rows = (data || []) as TeamRow[];
+        const uniqueTeams = Array.from(new Set(rows.map((r) => r.team_name).filter((t): t is string => Boolean(t))));
+        setTeamOptions(uniqueTeams);
+      } catch (err) {
+        console.error('Error loading team names:', err);
+      }
+    };
+    fetchTeams();
+  }, [eventConfig, supabase]);
+
   useEffect(() => {
     if (eventConfig) {
       loadExpenses(currentPage);
@@ -161,6 +188,91 @@ export default function ExpensesManager() {
   // Remove client-side filtering since it's now handled by the API
   const filteredExpenses = expenses;
 
+  // File drop handler for invoice
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const validFiles = acceptedFiles.filter(file => {
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      return validTypes.includes(file.type) && file.size <= 10 * 1024 * 1024;
+    });
+
+    if (validFiles.length !== acceptedFiles.length) {
+      toast.error('Một số file không hợp lệ (chỉ JPG, PNG, PDF, tối đa 10MB)');
+    }
+    if (validFiles.length === 0) return;
+
+    setUploadedFiles(validFiles);
+    setIsCompressing(true);
+    try {
+      const needsCompression = validFiles.some(f => shouldCompressFile(f));
+      const results = needsCompression
+        ? await compressImages(validFiles, DEFAULT_RECEIPT_COMPRESSION)
+        : validFiles.map((f) => ({
+            file: f,
+            originalSize: f.size,
+            compressedSize: f.size,
+            compressionRatio: 0,
+          })) as CompressionResult[];
+      setCompressedFiles(results);
+      toast.success('Đã thêm file. Sẵn sàng upload');
+    } catch (e) {
+      console.error('Compression error:', e);
+      toast.error('Không thể nén file');
+    } finally {
+      setIsCompressing(false);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    multiple: false,
+    maxSize: 10 * 1024 * 1024,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png'],
+      'application/pdf': ['.pdf']
+    }
+  });
+
+  const removeSelectedFile = () => {
+    setUploadedFiles([]);
+    setCompressedFiles([]);
+    setFormData(prev => ({ ...prev, optional_invoice_url: '' }));
+  };
+
+  const uploadInvoice = async () => {
+    if (compressedFiles.length === 0) {
+      toast.error('Vui lòng chọn file để upload');
+      return;
+    }
+    setIsUploadingInvoice(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Không thể xác thực người dùng');
+
+      const originalFile = uploadedFiles[0];
+      const fileToUpload = compressedFiles[0].file;
+      const fileExt = originalFile.name.split('.').pop();
+      const fileName = `${user.id}/expenses/${Date.now()}.${fileExt}`;
+
+      // Reuse receipts bucket similar to payment receipt upload
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('receipts')
+        .upload(fileName, fileToUpload);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('receipts')
+        .getPublicUrl(uploadData.path);
+
+      setFormData(prev => ({ ...prev, optional_invoice_url: publicUrl }));
+      toast.success('Upload hóa đơn thành công');
+    } catch (error) {
+      console.error('Invoice upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi upload');
+    } finally {
+      setIsUploadingInvoice(false);
+    }
+  };
+
   const handleCreateExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -169,11 +281,18 @@ export default function ExpensesManager() {
       const requestData = {
         description: formData.description || formData.purpose || '',
         amount: formData.amount || formData.amount_requested || 0,
-        bank_account_holder: formData.bank_account_holder || formData.bank_account_name || '',
+        bank_account_name: formData.bank_account_name ||'',
         bank_name: formData.bank_name || '',
-        bank_account_number: formData.bank_account_number || formData.account_number || '',
+        bank_account_number: formData.bank_account_number || '',
+        bank_branch: formData.bank_branch || '',
         note: formData.note || '',
         event_config_id: eventConfig?.id,
+        status: 'pending', // Default status for new requests
+        // New fields
+        category: formData.category || null,
+        team_name: formData.team_name || null,
+        optional_invoice_url: formData.optional_invoice_url || null,
+        type: formData.type || 'reimbursement'
       };
       
       const response = await fetch('/api/finance/expenses', {
@@ -257,7 +376,6 @@ export default function ExpensesManager() {
       type: 'reimbursement',
       description: '',
       amount: 0,
-      bank_account_holder: '',
       bank_name: '',
       bank_account_number: '',
       note: '',
@@ -267,8 +385,13 @@ export default function ExpensesManager() {
       bank_account_name: '',
       account_number: '',
       bank_branch: '',
-      optional_invoice_url: ''
+      optional_invoice_url: '',
+      // New fields
+      category: '',
+      team_name: ''
     });
+    setUploadedFiles([]);
+    setCompressedFiles([]);
   };
 
   const resetActionForm = () => {
@@ -339,7 +462,7 @@ export default function ExpensesManager() {
     };
   };
 
-  const canCreateExpense = userRole && ['event_organizer', 'super_admin', 'regional_admin'].includes(userRole);
+  const canCreateExpense = userRole && ['cashier_role', 'super_admin', 'regional_admin'].includes(userRole);
   const canApprove = userRole && ['super_admin', 'regional_admin'].includes(userRole);
   const canTransfer = userRole && ['cashier_role', 'super_admin'].includes(userRole);
   const displayStats = getStats();
@@ -416,6 +539,13 @@ export default function ExpensesManager() {
                 <Plus className="h-4 w-4 mr-2" />
                 Tạo yêu cầu mới
               </Button>
+            )}
+            {!canCreateExpense && userRole === 'event_organizer' && (
+              <Link href="/payment-request">
+                <Button variant="outline">
+                  Yêu cầu hoàn tiền
+                </Button>
+              </Link>
             )}
           </div>
         </CardHeader>
@@ -496,6 +626,7 @@ export default function ExpensesManager() {
                         <div className="space-y-2">
                           <div className="flex items-center space-x-2">
                             <h3 className="text-lg font-semibold">{expense.description}</h3>
+                            <Badge>{expense.category}</Badge>
                             {getStatusBadge(expense.status)}
                           </div>
                           
@@ -503,6 +634,10 @@ export default function ExpensesManager() {
                             <div className="flex items-center space-x-1">
                               <Building className="h-4 w-4" />
                               <span>{expense.created_by_user?.full_name || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <User2 className="h-4 w-4" />
+                              <span>{expense.team_name}</span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <Calendar className="h-4 w-4" />
@@ -524,7 +659,7 @@ export default function ExpensesManager() {
                       </div>
 
                       {/* Bank Info */}
-                      {expense.bank_account_holder && (
+                      {expense.bank_account_name && (
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <h4 className="font-medium mb-2 flex items-center">
                             <Building className="h-4 w-4 mr-2" />
@@ -533,7 +668,7 @@ export default function ExpensesManager() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                             <div>
                               <span className="text-muted-foreground">Tên TK:</span>
-                              <span className="ml-2 font-medium">{expense.bank_account_holder}</span>
+                              <span className="ml-2 font-medium">{expense.bank_account_name}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Ngân hàng:</span>
@@ -541,7 +676,7 @@ export default function ExpensesManager() {
                             </div>
                             <div>
                               <span className="text-muted-foreground">Chi nhánh:</span>
-                              <span className="ml-2">N/A</span>
+                              <span className="ml-2">{expense.bank_branch || 'N/A'}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Số TK:</span>
@@ -662,6 +797,37 @@ export default function ExpensesManager() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Danh mục</label>
+                <Input
+                  value={formData.category || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  placeholder="VD: Vận chuyển, Ăn uống, Thiết bị..."
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Tên đội/ban</label>
+                <Select
+                  value={formData.team_name || ''}
+                  onValueChange={(value: string) => setFormData(prev => ({ ...prev, team_name: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn đội/ban" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamOptions.length === 0 ? (
+                      <SelectItem value="">Không có dữ liệu</SelectItem>
+                    ) : (
+                      teamOptions.map((team) => (
+                        <SelectItem key={team} value={team}>{team}</SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             
             <div>
               <label className="text-sm font-medium">Mục đích chi tiêu *</label>
@@ -726,14 +892,47 @@ export default function ExpensesManager() {
               </div>
             </div>
             
-            <div>
-              <label className="text-sm font-medium">Link hóa đơn (tùy chọn)</label>
-              <Input
-                type="url"
-                value={formData.optional_invoice_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, optional_invoice_url: e.target.value }))}
-                placeholder="https://..."
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Hóa đơn/Chứng từ (tùy chọn)</label>
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-md p-4 text-center cursor-pointer ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-muted'}`}
+              >
+                <input {...getInputProps()} />
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  <p className="text-sm text-muted-foreground">
+                    Kéo thả file vào đây, hoặc bấm để chọn (JPG, PNG, PDF, tối đa 10MB)
+                  </p>
+                </div>
+              </div>
+
+              {uploadedFiles.length > 0 && (
+                <div className="flex items-center justify-between p-2 border rounded-md">
+                  <div className="text-sm">
+                    <p className="font-medium">{uploadedFiles[0].name}</p>
+                    {compressedFiles[0] && (
+                      <p className="text-muted-foreground text-xs">
+                        {formatFileSize(compressedFiles[0].originalSize)} → {formatFileSize(compressedFiles[0].compressedSize)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" size="sm" onClick={uploadInvoice} disabled={isUploadingInvoice || isCompressing}>
+                      {isUploadingInvoice ? 'Đang upload...' : 'Upload hóa đơn'}
+                    </Button>
+                    <Button type="button" size="icon" variant="ghost" onClick={removeSelectedFile} aria-label="Xóa file">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {formData.optional_invoice_url && (
+                <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-md p-2">
+                  Đã upload: <a className="underline" href={formData.optional_invoice_url} target="_blank" rel="noreferrer">Xem hóa đơn</a>
+                </div>
+              )}
             </div>
             
             <DialogFooter>

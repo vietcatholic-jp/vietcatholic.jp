@@ -194,6 +194,25 @@ export interface TicketFrame {
   created_at: string;
 }
 
+export interface ExpenseFormData {
+  type: string;
+  description: string;
+  amount: number;
+  bank_account_name: string;
+  bank_name: string;
+  bank_account_number: string;
+  note: string;
+  // Legacy fields for compatibility
+  purpose?: string;
+  amount_requested?: number;
+  account_number?: string;
+  bank_branch?: string;
+  optional_invoice_url?: string;
+  // New fields
+  category?: string;
+  team_name?: string;
+}
+
 export interface AgendaItem {
   id: string;
   event_config_id?: string;
@@ -326,11 +345,14 @@ export interface ExpenseRequest {
   event_config_id: string;
   description: string;
   amount: number;
-  bank_account_holder: string;
+  bank_account_name: string;
   bank_name: string;
+  bank_branch?: string;
   bank_account_number: string;
   note?: string;
   status: 'pending' | 'approved' | 'transferred' | 'closed' | 'rejected';
+  team_name?: string;
+  category?: string;
   approved_amount?: number;
   approved_by?: string;
   approved_at?: string;

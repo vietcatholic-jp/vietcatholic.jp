@@ -17,15 +17,23 @@ type DBExpenseRow = {
   amount_requested: string | number | null;
   bank_account_name: string | null;
   bank_name: string | null;
+  bank_branch: string | null;
   account_number: string | null;
   notes: string | null;
   status: 'submitted' | 'approved' | 'rejected' | 'transferred' | 'closed';
+  team_name: string | null;
+  category: string | null;
   amount_approved: string | number | null;
   approved_by: string | null;
   approved_at: string | null;
   processed_by: string | null;
   processed_at: string | null;
   transfer_fee: string | number | null;
+  user: {
+    id: string;
+    full_name: string;
+    email: string;
+  };
   user_id: string;
   created_at: string;
 };
@@ -35,11 +43,15 @@ const CreateExpenseSchema = z.object({
   type: z.enum(['reimbursement', 'advance']).default('reimbursement'),
   description: z.string().min(1, 'Mô tả là bắt buộc'),
   amount: z.number().min(1, 'Số tiền phải lớn hơn 0'),
-  bank_account_holder: z.string().min(1, 'Tên chủ tài khoản là bắt buộc'),
+  bank_account_name: z.string().min(1, 'Tên chủ tài khoản là bắt buộc'),
   bank_name: z.string().min(1, 'Tên ngân hàng là bắt buộc'),
+  bank_branch: z.string().optional(),
   bank_account_number: z.string().min(1, 'Số tài khoản là bắt buộc'),
   note: z.string().optional(),
-  bank_branch: z.string().optional(),
+  status: z.enum(['pending', 'approved', 'rejected', 'transferred', 'closed']).optional(),
+  catchment: z.string().optional(),
+  team_name: z.string().optional(),
+  category: z.string().optional(),
   optional_invoice_url: z.string().url().optional(),
 });
 
@@ -70,7 +82,7 @@ export async function POST(request: NextRequest) {
       type: parsed.type ?? 'reimbursement',
       amount_requested: parsed.amount,
       purpose: parsed.description,
-      bank_account_name: parsed.bank_account_holder,
+      bank_account_name: parsed.bank_account_name,
       bank_name: parsed.bank_name,
       bank_branch: parsed.bank_branch ?? null,
       account_number: parsed.bank_account_number,
@@ -133,7 +145,11 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('expense_requests')
-      .select('*')
+      .select(`
+        *,
+        event_config:event_configs(id, name),
+        user:users(id, full_name, email)
+      `)
       .order('created_at', { ascending: false });
 
     // Apply filters
@@ -229,11 +245,15 @@ export async function GET(request: NextRequest) {
       event_config_id: e.event_config_id,
       description: e.purpose || '',
       amount: Number(e.amount_requested || 0),
-      bank_account_holder: e.bank_account_name || '',
+      bank_account_name: e.bank_account_name || '',
       bank_name: e.bank_name || '',
+      bank_branch: e.bank_branch || '',
+      account_number: e.account_number || '',
       bank_account_number: e.account_number || '',
       note: e.notes || null,
       status: e.status === 'submitted' ? 'pending' : e.status,
+      team_name: e.team_name || null,
+      category: e.category || null,
       approved_amount: e.amount_approved != null ? Number(e.amount_approved) : undefined,
       approved_by: e.approved_by || undefined,
       approved_at: e.approved_at || undefined,
@@ -241,6 +261,11 @@ export async function GET(request: NextRequest) {
       transferred_at: e.processed_at || undefined,
       transfer_fee: e.transfer_fee != null ? Number(e.transfer_fee) : undefined,
       admin_notes: e.notes || undefined,
+      created_by_user:{
+        id: e.user.id,
+        full_name: e.user.full_name,
+        email: e.user.email,
+      },
       created_by: e.user_id,
       created_at: e.created_at,
       updated_at: e.processed_at || e.approved_at || e.created_at,

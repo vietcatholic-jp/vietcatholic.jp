@@ -42,6 +42,10 @@ ALTER TABLE public.expense_requests
 ADD CONSTRAINT expense_requests_status_check 
 CHECK (status IN ('pending','approved','rejected','transferred','closed'));
 
+ALTER TABLE public.expense_requests
+ADD COLUMN IF NOT EXISTS category text,
+ADD COLUMN IF NOT EXISTS team_name text;
+
 -- ===================================
 -- 2. ADD PUBLIC SELECT POLICY FOR DONATIONS
 -- ===================================
