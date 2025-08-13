@@ -143,6 +143,8 @@ export interface Registrant {
   second_day_only?: boolean; // Indicates if registrant will only attend 15/09
   notes?: string;
   portrait_url?: string;
+  is_checked_in?: boolean;
+  checked_in_at?: string;
   group_id?: string;
   created_at: string;
   updated_at: string;
@@ -188,6 +190,30 @@ export interface TicketFrame {
   is_default: boolean;
   region?: RegionType;
   created_at: string;
+}
+
+export interface CheckInResult {
+  success: boolean;
+  registrant?: {
+    id: string;
+    full_name: string;
+    saint_name?: string;
+    email: string;
+    diocese: string;
+    is_checked_in: boolean;
+    checked_in_at?: string;
+  };
+  message: string;
+}
+
+export interface CheckInStats {
+  totalConfirmed: number;
+  totalCheckedIn: number;
+  checkInRate: string;
+  todayCheckins: number;
+  recentCheckins: Array<{
+    checked_in_at: string;
+  }>;
 }
 
 export interface AgendaItem {

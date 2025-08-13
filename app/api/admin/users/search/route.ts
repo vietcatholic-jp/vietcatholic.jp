@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
 
     // Check user role
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
 
     if (!profile || !['super_admin', 'regional_admin', 'event_organizer'].includes(profile.role)) {
@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
 
     // Search for user by email
     const { data: searchUser, error } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select(`
-        user_id,
+        id,
         full_name,
         email,
         phone
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       user: {
-        id: searchUser.user_id,
+        id: searchUser.id,
         full_name: searchUser.full_name,
         email: searchUser.email,
         phone: searchUser.phone,
