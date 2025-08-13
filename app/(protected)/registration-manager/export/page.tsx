@@ -84,6 +84,7 @@ function getStatusLabel(status: RegistrationStatus): string {
     'cancel_accepted': 'Đã chấp nhận hủy',
     'cancel_rejected': 'Đã từ chối hủy',
     'cancel_processed': 'Đã hoàn tiền',
+    'be_cancelled': 'Đã hủy',
     'cancelled': 'Đã hủy',
     'confirmed': 'Đã xác nhận',
     'checked_in': 'Đã check-in',

@@ -13,7 +13,7 @@ import {
   ChevronRight,
   Loader2
 } from "lucide-react";
-import { EventConfig, Registration } from "@/lib/types";
+import { EventConfig, Registration, RegistrationStatus } from "@/lib/types";
 import { RegistrationDetailModal } from "./RegistrationDetailModal";
 import { RegistrationEditModal } from "./RegistrationEditModal";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,10 @@ interface RegistrationManagerListProps {
   onSearch: (search: string) => void;
   onStatusFilter: (status: string) => void;
   onPageChange: (page: number) => void;
+  // Optional: restrict the editable statuses for the edit modal
+  allowedStatuses?: RegistrationStatus[];
+  // Optional: when true, hide registrant fields and allow only status editing
+  onlyStatusEditing?: boolean;
 }
 
 export function RegistrationManagerList({ 
@@ -43,7 +47,9 @@ export function RegistrationManagerList({
   onDataRefresh,
   onSearch,
   onStatusFilter,
-  onPageChange
+  onPageChange,
+  allowedStatuses,
+  onlyStatusEditing
 }: RegistrationManagerListProps) {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [viewingRegistration, setViewingRegistration] = useState<Registration | null>(null);
@@ -73,6 +79,8 @@ export function RegistrationManagerList({
         return <Badge className="bg-green-500">Đã xác nhận</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Đã hủy</Badge>;
+      case 'be_cancelled':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Đã bị hủy</Badge>;
       case 'cancel_accepted':
         return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Đã chấp nhận huỷ</Badge>;
       case 'cancel_rejected':
@@ -411,6 +419,8 @@ export function RegistrationManagerList({
             setEditingRegistration(null);
             onDataRefresh();
           }}
+          allowedStatuses={allowedStatuses}
+          onlyStatusEditing={onlyStatusEditing}
         />
       )}
     </>
