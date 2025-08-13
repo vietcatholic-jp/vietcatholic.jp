@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (search) {
-      query = query.ilike("full_name", `%${search}%`);
+      query = query.or(`full_name.ilike.%${search}%,registration.invoice_code.ilike.%${search}%`);
     }
     if (gender) {
       query = query.eq("gender", gender);
