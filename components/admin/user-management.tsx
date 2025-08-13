@@ -46,7 +46,8 @@ const roleLabels: Record<UserRole, string> = {
   'event_organizer': 'Tổ chức sự kiện', 
   'group_leader': 'Trưởng nhóm',
   'regional_admin': 'Quản trị viên khu vực',
-  'super_admin': 'Quản trị viên'
+  'super_admin': 'Quản trị viên',
+  'cashier_role': 'Thu ngân',
 };
 
 const regionLabels: Record<RegionType, string> = {
@@ -195,7 +196,7 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
   const getAssignableRoles = (): UserRole[] => {
     switch (currentUserRole) {
       case 'super_admin':
-        return ['participant','registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin'];
+        return ['participant','registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'cashier_role', 'super_admin'];
       case 'event_organizer':
         return ['participant', 'regional_admin', 'group_leader','registration_manager'];
       default:

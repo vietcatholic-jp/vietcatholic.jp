@@ -23,9 +23,13 @@ interface RegistrationEditModalProps {
   registration: Registration;
   onClose: () => void;
   onSave: () => void;
+  // Optional: restrict which statuses can be selected (e.g., for cashier)
+  allowedStatuses?: RegistrationStatus[];
+  // Optional: when true, only allow editing status (hide registrant fields)
+  onlyStatusEditing?: boolean;
 }
 
-export function RegistrationEditModal({ registration, onClose, onSave }: RegistrationEditModalProps) {
+export function RegistrationEditModal({ registration, onClose, onSave, allowedStatuses, onlyStatusEditing }: RegistrationEditModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [eventRoles, setEventRoles] = useState<EventRole[]>([]);
   const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
@@ -93,8 +97,9 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
   const statusOptions: { value: RegistrationStatus; label: string; description: string }[] = [
     { value: 'pending', label: 'Chờ đóng phí tham dự', description: 'Đang chờ người dùng đóng phí tham dự' },
     { value: 'report_paid', label: 'Đã báo đóng phí tham dự', description: 'Người dùng đã gửi biên lai' },
-    { value: 'confirm_paid', label: 'Đã xác nhận đóng phí tham dự', description: 'Admin xác nhận đóng phí tham dự đúng' },
-    { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối', description: 'Admin từ chối đóng phí tham dự' },
+    // Payment confirmation statuses - only for cashiers and super admins
+    { value: 'confirm_paid', label: 'Đã xác nhận đóng phí tham dự', description: 'Thu ngân xác nhận đóng phí tham dự đúng' },
+    { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối', description: 'Thu ngân từ chối đóng phí tham dự' },
     { value: 'confirmed', label: 'Đã xác nhận', description: 'Đăng ký hoàn tất, có thể xuất vé' },
     { value: 'cancel_pending', label: 'Chờ hủy', description: 'Đang chờ xử lý yêu cầu hủy' },
     { value: 'cancel_accepted', label: 'Đã chấp nhận hủy', description: 'Yêu cầu hủy đã được chấp nhận' },
@@ -104,11 +109,17 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
     { value: 'checked_in', label: 'Đã check-in', description: 'Người dùng đã check-in sự kiện' },
     { value: 'checked_out', label: 'Đã check-out', description: 'Người dùng đã check-out sự kiện' },
     { value: 'temp_confirmed', label: 'Đã xác nhận (thanh toán sau)', description: 'Đăng ký tạm thời xác nhận, thanh toán sau' },
-    { value: 'cancelled', label: 'Đã hủy', description: 'Đăng ký đã bị hủy' },
+    { value: 'cancelled', label: 'Đã hủy', description: 'Đăng ký đã hủy' },
+    { value: 'be_cancelled', label: 'Đã bị hủy', description: 'Đăng ký đã bị hủy' }
   ];
 
+  // If allowedStatuses provided, only present those options (but keep current status visible)
+  const filteredStatusOptions = allowedStatuses
+    ? statusOptions.filter((opt) => allowedStatuses.includes(opt.value) || opt.value === registration.status)
+    : statusOptions;
+
   const getStatusBadge = (status: RegistrationStatus) => {
-    const statusConfig = statusOptions.find(s => s.value === status);
+    const statusConfig = filteredStatusOptions.find(s => s.value === status) || statusOptions.find(s => s.value === status);
     return statusConfig ? statusConfig.label : status;
   };
 
@@ -204,7 +215,7 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                   onChange={(e) => handleStatusChange(e.target.value)}
                   className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm"
                 >
-                  {statusOptions.map((option) => (
+                  {filteredStatusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -212,12 +223,13 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                 </select>
               </div>
               <p className="text-xs text-muted-foreground">
-                {statusOptions.find(s => s.value === formData.status)?.description}
+                {filteredStatusOptions.find(s => s.value === formData.status)?.description}
               </p>
             </div>
           </div>
 
           {/* Registrants Information */}
+          {!onlyStatusEditing && (
           <div className="space-y-3">
             <h3 className="text-base font-semibold flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -409,6 +421,7 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
               ))}
             </div>
           </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-2">
