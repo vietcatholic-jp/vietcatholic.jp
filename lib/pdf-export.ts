@@ -20,6 +20,7 @@ function getStatusLabel(status: RegistrationStatus): string {
     'payment_rejected': 'Đóng phí tham dự bị từ chối',
     'donation': 'Đã chuyển thành quyên góp',
     'cancel_pending': 'Chờ xử lý hủy',
+    'be_cancelled': 'Đã yêu cầu hủy',
     'cancel_accepted': 'Đã chấp nhận hủy',
     'cancel_rejected': 'Đã từ chối hủy',
     'cancel_processed': 'Đã hoàn tiền',
