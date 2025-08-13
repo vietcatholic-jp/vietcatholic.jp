@@ -220,6 +220,7 @@ export function RegistrationManagerDashboard() {
               onSearch={handleSearch}
               onStatusFilter={handleStatusFilter}
               onPageChange={handlePageChange}
+              allowedStatuses={['confirmed', 'temp_confirmed', 'be_cancelled']}
               isLoading={isLoading}
             />
           </TabsContent>

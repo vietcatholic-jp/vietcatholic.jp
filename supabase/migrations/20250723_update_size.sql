@@ -27,4 +27,5 @@ ALTER TYPE registration_status ADD VALUE IF NOT EXISTS 'cancel_processed';
 
 ALTER TYPE registration_status ADD VALUE IF NOT EXISTS 'temp_confirmed'; -- for those who want to pay later by cash
 
+ALTER TYPE registration_status ADD VALUE IF NOT EXISTS 'be_cancelled'; -- for those who have been cancelled by admin
 -- Add shirt_size column to registrations table
