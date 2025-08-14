@@ -4,12 +4,11 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RegistrationManagerStats } from "./RegistrationManagerStats";
 import { RegistrationManagerList } from "./RegistrationManagerList";
-import { CancelRequestsManager } from "./CancelRequestsManager";
+//import { CancelRequestsManager } from "./CancelRequestsManager";
 import { QuickActions } from "./QuickActions";
 import { 
   BarChart3, 
   Users, 
-  XCircle,
   Loader2,
   RefreshCw
 } from "lucide-react";
@@ -195,10 +194,10 @@ export function RegistrationManagerDashboard() {
               <Users className="h-4 w-4 hidden sm:flex" />
               Đăng ký
             </TabsTrigger>
-            <TabsTrigger value="cancellations" className="flex items-center gap-2">
+            {/*<TabsTrigger value="cancellations" className="flex items-center gap-2">
               <XCircle className="h-4 w-4 hidden sm:flex" />
               Yêu cầu hủy
-            </TabsTrigger>
+            </TabsTrigger>*/}
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -225,12 +224,12 @@ export function RegistrationManagerDashboard() {
             />
           </TabsContent>
 
-          <TabsContent value="cancellations" className="mt-6">
+          {/*<TabsContent value="cancellations" className="mt-6">
             <CancelRequestsManager 
               cancelRequests={data.cancelRequests}
               onDataRefresh={handleDataRefresh}
             />
-          </TabsContent>
+          </TabsContent>*/}
         </Tabs>
       </div>
     </div>
