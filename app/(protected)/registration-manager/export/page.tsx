@@ -153,19 +153,30 @@ function generateShirtSizeStats(registrations: Registration[]) {
 }
 
 function generateProvinceStats(registrations: Registration[]) {
-  const stats: { [province: string]: number } = {};
+  const stats: { [province: string]: { total: number; goWith: number; individual: number } } = {};
   
   registrations.forEach(reg => {
     reg.registrants?.forEach(registrant => {
       if (registrant.province) {
-        stats[registrant.province] = (stats[registrant.province] || 0) + 1;
+        stats[registrant.province] = stats[registrant.province] || { total: 0, goWith: 0, individual: 0 };
+        stats[registrant.province].total += 1;
+        if (registrant.go_with) {
+          stats[registrant.province].goWith += 1;
+        } else {
+          stats[registrant.province].individual += 1;
+        }
       }
     });
   });
   
   return Object.entries(stats)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([province, count]) => ({ province, count }));
+    .map(([province, { total, goWith, individual }]) => ({
+      province,
+      total,
+      goWith,
+      individual
+    }));
 }
 
 function generateDioceseStats(registrations: Registration[]) {
@@ -764,18 +775,22 @@ export default function ExportPage() {
                   <tr className="bg-gray-50">
                     <th className="border border-gray-300 p-2 text-left">Tỉnh thành</th>
                     <th className="border border-gray-300 p-2 text-left">Số lượng</th>
+                    <th className="border border-gray-300 p-2 text-left">Đăng ký riêng</th>
+                    <th className="border border-gray-300 p-2 text-left">Đi cùng</th>
                     <th className="border border-gray-300 p-2 text-left">Tỷ lệ %</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {generateProvinceStats(state.filteredRegistrations).map(({ province, count }) => {
-                    const total = state.filteredRegistrations.reduce((sum, reg) => sum + (reg.registrants?.length || 0), 0);
-                    const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0';
+                  {generateProvinceStats(state.filteredRegistrations).map(({ province, total, individual, goWith }) => {
+                    const overallTotal = state.filteredRegistrations.reduce((sum, reg) => sum + (reg.registrants?.length || 0), 0);
+                    const percentage = overallTotal > 0 ? ((total / overallTotal) * 100).toFixed(1) : '0';
                     const provinceLabel = JAPANESE_PROVINCES.find(p => p.value === province)?.label || province;
                     return (
                       <tr key={province} className="hover:bg-gray-50">
                         <td className="border border-gray-300 p-2 font-medium">{provinceLabel}</td>
-                        <td className="border border-gray-300 p-2 text-center">{count}</td>
+                        <td className="border border-gray-300 p-2 text-center">{total}</td>
+                        <td className="border border-gray-300 p-2 text-center">{individual}</td>
+                        <td className="border border-gray-300 p-2 text-center">{goWith}</td>
                         <td className="border border-gray-300 p-2 text-center">{percentage}%</td>
                       </tr>
                     );
