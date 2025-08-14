@@ -30,6 +30,9 @@ create type registration_status as enum (
   'cancel_pending',   -- Cancellation request pending admin review
   'cancel_accepted',  -- Admin accepted cancellation
   'cancel_rejected',  -- Admin rejected cancellation
+  'cancel_processed', -- Cancellation processed (refund done)
+  'temp_confirmed',   -- Temporary confirmation, user will pay later
+  'be_cancelled',     -- Registration cancelled by admin
   'confirmed',        -- Fully confirmed, tickets can be generated
   'checked_in',       -- Participant checked in at event
   'checked_out'       -- Participant checked out from event
