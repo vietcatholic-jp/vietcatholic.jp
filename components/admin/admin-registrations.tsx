@@ -36,12 +36,12 @@ export function AdminRegistrations() {
         <div className="flex items-center gap-3">
           {hasRegistrationManagerAccess && (
             <Button
-              onClick={() => router.push('/registration-manager')}
+              onClick={() => router.push('/registration-manager/export')}
               variant="outline"
               className="flex items-center gap-2"
             >
               <Users className="h-4 w-4" />
-              Quản lý đăng ký chi tiết
+              Xuất báo cáo đăng ký
             </Button>
           )}
           <Button
