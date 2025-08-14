@@ -94,6 +94,15 @@ interface UnassignedRegistrant {
   diocese: string;
   email?: string;
   phone?: string;
+  registration: {
+    id: string;
+    invoice_code?: string;
+    status?: string;
+    user: {
+      full_name: string;
+      email: string;
+    };
+  };
 }
 
 interface ManageTeamMembersModalProps {
@@ -276,6 +285,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
       diocese: memberToRemove.diocese,
       email: memberToRemove.email,
       phone: memberToRemove.phone,
+      registration: memberToRemove.registration,
     };
 
     // Update UI optimistically
@@ -491,6 +501,11 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
                           <span className="text-xs text-muted-foreground">
                             {registrant.gender === "male" ? "Nam" : "Nữ"} • {formatAgeGroup(registrant.age_group)} • {registrant.province}
                           </span>
+                          {registrant.registration?.invoice_code && (
+                            <span className="text-xs text-blue-600 font-mono">
+                              Mã: {registrant.registration.invoice_code}
+                            </span>
+                          )}
                         </div>
                       </SelectItem>
                     ))
