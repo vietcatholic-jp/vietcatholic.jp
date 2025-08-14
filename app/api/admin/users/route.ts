@@ -158,8 +158,8 @@ export async function PUT(request: NextRequest) {
 
     // Check permissions for role assignment
     const assignableRoles = profile.role === 'super_admin' 
-      ? ['participant', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin','cashier_role']
-      : ['participant', 'event_organizer', 'group_leader'];
+      ? ['participant', 'event_organizer', 'group_leader', 'registration_manager', 'regional_admin', 'super_admin','cashier_role']
+      : ['participant', 'event_organizer', 'group_leader', 'regional_admin'];
 
     if (!assignableRoles.includes(role)) {
       return NextResponse.json({ error: "Cannot assign this role" }, { status: 403 });
