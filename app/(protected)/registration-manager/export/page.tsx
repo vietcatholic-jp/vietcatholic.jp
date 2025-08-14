@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import {Registrant,Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES } from "@/lib/types";
+import {Registrant,Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES, AGE_GROUPS } from "@/lib/types";
 import { format } from "date-fns";
 
 import { exportRegistrantsWithRolesCSV, RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
@@ -35,6 +35,7 @@ interface ExportFilters {
   includeRegistrants: boolean;
   reportType: string;
   teamName: string;
+  ageGroup: string; // added age group filter
 }
 
 interface ExportPageState {
@@ -221,7 +222,8 @@ export default function ExportPage() {
       includePaymentInfo: true,
       includeRegistrants: true,
       reportType: 'detailed',
-      teamName: 'all'
+      teamName: 'all',
+      ageGroup: 'all'
     }
   });
 
@@ -365,6 +367,14 @@ export default function ExportPage() {
       );
     }
 
+    // Age group filter (applies to both registrations and registrants)
+    if (state.filters.ageGroup && state.filters.ageGroup !== 'all') {
+      filteredRegs = filteredRegs.filter(reg => 
+        reg.registrants?.some(r => r.age_group === state.filters.ageGroup)
+      );
+      filteredRegsts = filteredRegsts.filter(reg => reg.age_group === state.filters.ageGroup);
+    }
+
     setState(prev => ({ 
       ...prev, 
       filteredRegistrations: filteredRegs,
@@ -405,7 +415,8 @@ export default function ExportPage() {
         includePaymentInfo: true,
         includeRegistrants: true,
         reportType: 'detailed',
-        teamName: 'all'
+        teamName: 'all',
+        ageGroup: 'all'
       }
     }));
   };
@@ -526,7 +537,7 @@ export default function ExportPage() {
           </div>
 
           {/* Team filter for registrants report */}
-          {state.filters.reportType === 'registrants' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="teamName">Lọc theo nhóm</Label>
               <Select value={state.filters.teamName} onValueChange={(value) => updateFilter('teamName', value)}>
@@ -543,7 +554,21 @@ export default function ExportPage() {
                 </SelectContent>
               </Select>
             </div>
-          )}
+            <div>
+              <Label htmlFor="ageGroup">Nhóm tuổi</Label>
+              <Select value={state.filters.ageGroup} onValueChange={(value) => updateFilter('ageGroup', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả nhóm tuổi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả nhóm tuổi</SelectItem>
+                  {AGE_GROUPS.map(ag => (
+                    <SelectItem key={ag.value} value={ag.value}>{ag.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           {state.filters.reportType === 'detailed' && (
             <div className="flex flex-wrap gap-4">
