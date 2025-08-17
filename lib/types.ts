@@ -218,6 +218,7 @@ export interface CheckInStats {
   recentCheckins: Array<{
     checked_in_at: string;
   }>;
+}
 
 export interface ExpenseFormData {
   type: string;
