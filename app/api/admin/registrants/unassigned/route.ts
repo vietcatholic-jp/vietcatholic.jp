@@ -70,7 +70,43 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,registration.invoice_code.ilike.%${search}%`);
+      // Enhanced search: support both name and invoice code
+      // Use separate queries to avoid nested field OR parsing issues
+
+      // First, get registrants matching by name
+      const nameQuery = supabase
+        .from("registrants")
+        .select("id")
+        .is("event_team_id", null)
+        .ilike("full_name", `%${search}%`);
+
+      // Then, get registrants matching by invoice code
+      const invoiceQuery = supabase
+        .from("registrants")
+        .select(`
+          id,
+          registration:registrations!inner(invoice_code, status)
+        `)
+        .is("event_team_id", null)
+        .eq("registration.status", "confirmed")
+        .ilike("registration.invoice_code", `%${search}%`);
+
+      const [nameResults, invoiceResults] = await Promise.all([
+        nameQuery,
+        invoiceQuery
+      ]);
+
+      // Combine IDs from both searches
+      const nameIds = nameResults.data?.map(r => r.id) || [];
+      const invoiceIds = invoiceResults.data?.map(r => r.id) || [];
+      const combinedIds = [...new Set([...nameIds, ...invoiceIds])];
+
+      if (combinedIds.length > 0) {
+        query = query.in("id", combinedIds);
+      } else {
+        // No matches found, return empty result
+        query = query.eq("id", "00000000-0000-0000-0000-000000000000"); // Non-existent ID
+      }
     }
     if (gender) {
       query = query.eq("gender", gender);
@@ -93,12 +129,67 @@ export async function GET(request: NextRequest) {
       query = query.eq("registration.user.region", profile.region);
     }
 
-    // Get total count for pagination
-    const { count } = await supabase
+    // Build count query with same filters for accurate pagination
+    let countQuery = supabase
       .from("registrants")
-      .select("id, registrations!inner(status)", { count: "exact", head: true })
+      .select("id, registration:registrations!inner(status, invoice_code, users!registrations_user_id_fkey(region))", { count: "exact", head: true })
       .is("event_team_id", null)
-      .eq("registrations.status", "confirmed");
+      .eq("registration.status", "confirmed");
+
+    // Apply same filters to count query
+    if (search) {
+      // Use the same combined IDs approach for count query
+      const nameQuery = supabase
+        .from("registrants")
+        .select("id")
+        .is("event_team_id", null)
+        .ilike("full_name", `%${search}%`);
+
+      const invoiceQuery = supabase
+        .from("registrants")
+        .select(`
+          id,
+          registration:registrations!inner(invoice_code, status)
+        `)
+        .is("event_team_id", null)
+        .eq("registration.status", "confirmed")
+        .ilike("registration.invoice_code", `%${search}%`);
+
+      const [nameResults, invoiceResults] = await Promise.all([
+        nameQuery,
+        invoiceQuery
+      ]);
+
+      const nameIds = nameResults.data?.map(r => r.id) || [];
+      const invoiceIds = invoiceResults.data?.map(r => r.id) || [];
+      const combinedIds = [...new Set([...nameIds, ...invoiceIds])];
+
+      if (combinedIds.length > 0) {
+        countQuery = countQuery.in("id", combinedIds);
+      } else {
+        countQuery = countQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+      }
+    }
+    if (gender) {
+      countQuery = countQuery.eq("gender", gender);
+    }
+    if (ageGroup) {
+      countQuery = countQuery.eq("age_group", ageGroup);
+    }
+    if (province) {
+      countQuery = countQuery.ilike("province", `%${province}%`);
+    }
+    if (diocese) {
+      countQuery = countQuery.ilike("diocese", `%${diocese}%`);
+    }
+    if (roleId) {
+      countQuery = countQuery.eq("event_role_id", roleId);
+    }
+    if (profile.role === "regional_admin" && profile.region) {
+      countQuery = countQuery.eq("registration.user.region", profile.region);
+    }
+
+    const { count } = await countQuery;
 
     // Get paginated results
     const { data: registrants, error } = await query
