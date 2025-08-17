@@ -70,15 +70,11 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (search) {
-      // Enhanced search: Check if search looks like invoice code (starts with # or contains INV/DH)
-      const isInvoiceSearch = search.startsWith('#') || search.includes('INV') || search.includes('DH');
-
+      // Smart detection: if search contains any digit, search by invoice code, otherwise by name
+      const isInvoiceSearch = /\d/.test(search);
       if (isInvoiceSearch) {
-        // Clean the search term (remove # if present)
-        const cleanSearch = search.replace(/^#/, '');
-        query = query.ilike("registration.invoice_code", `%${cleanSearch}%`);
+        query = query.ilike("registration.invoice_code", `%${search}%`);
       } else {
-        // Search by name
         query = query.ilike("full_name", `%${search}%`);
       }
     }
@@ -112,11 +108,9 @@ export async function GET(request: NextRequest) {
 
     // Apply same filters to count query
     if (search) {
-      const isInvoiceSearch = search.startsWith('#') || search.includes('INV') || search.includes('DH');
-
+      const isInvoiceSearch = /\d/.test(search);
       if (isInvoiceSearch) {
-        const cleanSearch = search.replace(/^#/, '');
-        countQuery = countQuery.ilike("registration.invoice_code", `%${cleanSearch}%`);
+        countQuery = countQuery.ilike("registration.invoice_code", `%${search}%`);
       } else {
         countQuery = countQuery.ilike("full_name", `%${search}%`);
       }
