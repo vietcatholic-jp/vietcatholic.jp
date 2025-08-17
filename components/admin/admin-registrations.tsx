@@ -4,7 +4,7 @@ import { AnalyticsDashboard } from "@/components/admin/analytics/AnalyticsDashbo
 import { GroupLeaderRegistrations } from "@/components/admin/group-leader-registrations";
 import { useAdminData } from "@/components/admin/admin-context";
 import { Button } from "@/components/ui/button";
-import { FileText, Filter } from "lucide-react";
+import { FileText, Filter, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function AdminRegistrations() {
@@ -16,6 +16,9 @@ export function AdminRegistrations() {
   }
 
   const userRole = data.userProfile?.role || 'participant';
+
+  // Check if user has access to Registration Manager
+  const hasRegistrationManagerAccess = ['registration_manager', 'super_admin'].includes(userRole);
 
   // Group leaders get a specialized view
   if (userRole === 'group_leader') {
@@ -30,13 +33,25 @@ export function AdminRegistrations() {
           <h1 className="text-2xl font-bold">Quản lý đăng ký</h1>
           <p className="text-muted-foreground">Phân tích chi tiết và báo cáo đăng ký với bộ lọc</p>
         </div>
-        <Button
-          onClick={() => router.push('/registration-manager/export')}
-          className="flex items-center gap-2"
-        >
-          <FileText className="h-4 w-4" />
-          Xuất báo cáo
-        </Button>
+        <div className="flex items-center gap-3">
+          {hasRegistrationManagerAccess && (
+            <Button
+              onClick={() => router.push('/registration-manager/export')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Xuất báo cáo đăng ký
+            </Button>
+          )}
+          <Button
+            onClick={() => router.push('/registration-manager/export')}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Xuất báo cáo
+          </Button>
+        </div>
       </div>
       
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

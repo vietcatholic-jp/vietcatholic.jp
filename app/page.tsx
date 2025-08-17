@@ -66,7 +66,7 @@ export default async function Home() {
                 <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all">
                   <Link href="/auth/sign-up">
                     <Heart className="mr-2 h-5 w-5" />
-                    Bắt Đầu Hành Trình
+                    Tạo tài khoản mới để đăng ký
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-full">
@@ -124,7 +124,7 @@ export default async function Home() {
                 <p className="text-gray-700 mb-4">Điền thông tin chi tiết, số người tham gia</p>
                 <Button asChild variant="outline" size="sm" className="border-green-600 text-green-600 hover:bg-green-50">
                   <Link href="/register">
-                    Đăng Ký Sự Kiện
+                    Đăng Ký Đại Hội
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -190,7 +190,7 @@ export default async function Home() {
               <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all">
                 <Link href="/dashboard">
                   <ArrowRight className="mr-2 h-5 w-5" />
-                  Vào Dashboard
+                  Xem đăng ký của bạn
                 </Link>
               </Button>
             ) : (

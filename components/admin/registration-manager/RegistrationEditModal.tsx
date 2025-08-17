@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Registration, RegistrationStatus, EventRole, SHIRT_SIZES_PARTICIPANT, SHIRT_SIZES_ORGANIZER } from "@/lib/types";
+import { Registration, RegistrationStatus, EventRole, SHIRT_SIZES_PARTICIPANT, SHIRT_SIZES_ORGANIZER, EventConfig } from "@/lib/types";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { 
@@ -23,15 +23,21 @@ interface RegistrationEditModalProps {
   registration: Registration;
   onClose: () => void;
   onSave: () => void;
+  // Optional: restrict which statuses can be selected (e.g., for cashier)
+  allowedStatuses?: RegistrationStatus[];
+  // Optional: when true, only allow editing status (hide registrant fields)
+  onlyStatusEditing?: boolean;
 }
 
-export function RegistrationEditModal({ registration, onClose, onSave }: RegistrationEditModalProps) {
+export function RegistrationEditModal({ registration, onClose, onSave, allowedStatuses, onlyStatusEditing }: RegistrationEditModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [eventRoles, setEventRoles] = useState<EventRole[]>([]);
+  const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
   const supabase = createClient();
   
   const [formData, setFormData] = useState({
+    event_config_id: registration.event_config_id,
     status: registration.status,
     notes: registration.notes || "",
     registrants: registration.registrants?.map(r => ({
@@ -43,32 +49,34 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
       shirt_size: r.shirt_size || null,
       notes: r.notes || "",
       is_primary: r.is_primary,
+      second_day_only: r.second_day_only || false,
+      selected_attendance_day: r.selected_attendance_day || "",
       event_role_id: r.event_role_id || null
     })) || [],
   });
 
-  // Fetch available event roles
+  // Fetch active event config and roles
   useEffect(() => {
-    const fetchEventRoles = async () => {
+    const fetchEventData = async () => {
+      setIsLoadingRoles(true);
       try {
-        // First, get the active event
-        const { data: activeEvent, error: eventError } = await supabase
-          .from('event_configs')
-          .select('id')
-          .eq('is_active', true)
+        // Fetch event config
+        const { data: eventData, error: eventError } = await supabase.from('event_configs')
+          .select('*')
+          .eq('id', registration.event_config_id)
           .single();
 
         if (eventError) {
-          console.error('Error fetching active event:', eventError);
-          setIsLoadingRoles(false);
-          return;
+          console.error('Error fetching event config:', eventError);
+        } else {
+          setEventConfig(eventData || null);
         }
 
-        // Then fetch roles for this event
+        // Fetch event roles if we have an active event
         const { data: roles, error: rolesError } = await supabase
           .from('event_roles')
           .select('*')
-          .eq('event_config_id', activeEvent.id)
+          .eq('event_config_id', registration.event_config_id)
           .order('name');
 
         if (rolesError) {
@@ -77,20 +85,21 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
           setEventRoles(roles || []);
         }
       } catch (error) {
-        console.error('Error in fetchEventRoles:', error);
+        console.error('Failed to fetch event data:', error);
       } finally {
         setIsLoadingRoles(false);
       }
     };
 
-    fetchEventRoles();
-  }, [supabase]);
+    fetchEventData();
+  }, [supabase, registration]);
 
   const statusOptions: { value: RegistrationStatus; label: string; description: string }[] = [
     { value: 'pending', label: 'Chờ đóng phí tham dự', description: 'Đang chờ người dùng đóng phí tham dự' },
     { value: 'report_paid', label: 'Đã báo đóng phí tham dự', description: 'Người dùng đã gửi biên lai' },
-    { value: 'confirm_paid', label: 'Đã xác nhận đóng phí tham dự', description: 'Admin xác nhận đóng phí tham dự đúng' },
-    { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối', description: 'Admin từ chối đóng phí tham dự' },
+    // Payment confirmation statuses - only for cashiers and super admins
+    { value: 'confirm_paid', label: 'Đã xác nhận đóng phí tham dự', description: 'Thu ngân xác nhận đóng phí tham dự đúng' },
+    { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối', description: 'Thu ngân từ chối đóng phí tham dự' },
     { value: 'confirmed', label: 'Đã xác nhận', description: 'Đăng ký hoàn tất, có thể xuất vé' },
     { value: 'cancel_pending', label: 'Chờ hủy', description: 'Đang chờ xử lý yêu cầu hủy' },
     { value: 'cancel_accepted', label: 'Đã chấp nhận hủy', description: 'Yêu cầu hủy đã được chấp nhận' },
@@ -100,11 +109,17 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
     { value: 'checked_in', label: 'Đã check-in', description: 'Người dùng đã check-in sự kiện' },
     { value: 'checked_out', label: 'Đã check-out', description: 'Người dùng đã check-out sự kiện' },
     { value: 'temp_confirmed', label: 'Đã xác nhận (thanh toán sau)', description: 'Đăng ký tạm thời xác nhận, thanh toán sau' },
-    { value: 'cancelled', label: 'Đã hủy', description: 'Đăng ký đã bị hủy' },
+    { value: 'cancelled', label: 'Đã hủy', description: 'Đăng ký đã hủy' },
+    { value: 'be_cancelled', label: 'Đã bị hủy', description: 'Đăng ký đã bị hủy' }
   ];
 
+  // If allowedStatuses provided, only present those options (but keep current status visible)
+  const filteredStatusOptions = allowedStatuses
+    ? statusOptions.filter((opt) => allowedStatuses.includes(opt.value) || opt.value === registration.status)
+    : statusOptions;
+
   const getStatusBadge = (status: RegistrationStatus) => {
-    const statusConfig = statusOptions.find(s => s.value === status);
+    const statusConfig = filteredStatusOptions.find(s => s.value === status) || statusOptions.find(s => s.value === status);
     return statusConfig ? statusConfig.label : status;
   };
 
@@ -200,7 +215,7 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                   onChange={(e) => handleStatusChange(e.target.value)}
                   className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm"
                 >
-                  {statusOptions.map((option) => (
+                  {filteredStatusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -208,12 +223,13 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                 </select>
               </div>
               <p className="text-xs text-muted-foreground">
-                {statusOptions.find(s => s.value === formData.status)?.description}
+                {filteredStatusOptions.find(s => s.value === formData.status)?.description}
               </p>
             </div>
           </div>
 
           {/* Registrants Information */}
+          {!onlyStatusEditing && (
           <div className="space-y-3">
             <h3 className="text-base font-semibold flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -343,6 +359,53 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
                     )}
                   </div>
 
+                  {registrant.second_day_only && eventConfig?.start_date && eventConfig?.end_date && (
+                        <div className="mt-3 ml-6 space-y-2">
+                          <Label className="text-sm font-medium">Chọn ngày tham gia:</Label>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`registrants.${index}.first_day`}
+                                name={`registrants.${index}.attendance_day`}
+                                value={eventConfig.start_date}
+                                checked={eventConfig.start_date.includes(registrant.selected_attendance_day || 'NONE')}
+                                onChange={(e) => handleRegistrantChange(index, 'selected_attendance_day', e.target.value)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`registrants.${index}.first_day`} className="text-sm font-normal">
+                                Ngày đầu: {new Date(eventConfig.start_date).toLocaleDateString('vi-VN', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`registrants.${index}.second_day`}
+                                name={`registrants.${index}.attendance_day`}
+                                value={eventConfig.end_date}
+                                checked={eventConfig.end_date.includes(registrant.selected_attendance_day || 'NONE')}
+                                onChange={(e) => handleRegistrantChange(index, 'selected_attendance_day', e.target.value)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`registrants.${index}.second_day`} className="text-sm font-normal">
+                                Ngày cuối: {new Date(eventConfig.end_date).toLocaleDateString('vi-VN', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+
                   <div className="space-y-2">
                     <Label htmlFor="notes" className="text-sm">Ghi chú</Label>
                     <Textarea
@@ -358,6 +421,7 @@ export function RegistrationEditModal({ registration, onClose, onSave }: Registr
               ))}
             </div>
           </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-2">

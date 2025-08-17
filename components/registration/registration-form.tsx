@@ -48,6 +48,7 @@ const primaryRegistrantSchema = z.object({
   is_primary: z.boolean(),
   go_with: z.boolean().optional(),
   second_day_only: z.boolean().optional(),
+  selected_attendance_day: z.string().optional(),
   notes: z.string().optional(),
   // Facebook link is required for primary registrant
   facebook_link: z.string().url("Link Facebook không hợp lệ").min(1, "Link Facebook là bắt buộc cho người đăng ký chính").refine((val) => val && val.trim() !== '', {
@@ -81,6 +82,7 @@ const additionalRegistrantSchema = z.object({
   is_primary: z.boolean(),
   go_with: z.boolean().optional(),
   second_day_only: z.boolean().optional(),
+  selected_attendance_day: z.string().optional(),
   notes: z.string().optional(),
   // Optional contact fields
   email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
@@ -196,6 +198,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
           is_primary: true,
           go_with: false,
           second_day_only: false,
+          selected_attendance_day: "",
           notes: "",
           // Optional fields
           email: userEmail || "",
@@ -262,6 +265,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
       is_primary: false,
       go_with: false,
       second_day_only: false,
+      selected_attendance_day: "",
       notes: "",
       // Optional fields
       email: "",
@@ -305,6 +309,14 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
 
   const onRegistrationDayChange = (index: number, isSecondDayOnly: boolean) => {
     setValue(`registrants.${index}.second_day_only` as const, isSecondDayOnly);
+    // Reset selected day when unchecking
+    if (!isSecondDayOnly) {
+      setValue(`registrants.${index}.selected_attendance_day` as const, "");
+    }
+  }
+
+  const onAttendanceDayChange = (index: number, selectedDay: string) => {
+    setValue(`registrants.${index}.selected_attendance_day` as const, selectedDay);
   }
 
   const handleAgeGroupChange = (index: number, selectedAgeGroup: string) => {
@@ -375,6 +387,27 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
     }
   }, [currentStep]);
 
+  // If no active event is found, show a message
+  if (!eventConfig) {
+    return (
+      <div className="max-w-4xl mx-auto text-center p-8">
+        <Card className="bg-red-50 border-red-200">
+          <CardHeader>
+            <CardTitle className="text-red-600 text-lg font-semibold flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Không tìm thấy sự kiện đang hoạt động
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-500">
+              Hiện tại không có sự kiện nào đang hoạt động. Vui lòng liên hệ với quản trị viên để biết thêm chi tiết.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
   // Step 1: Role Selection
   if (currentStep === 'role-selection') {
     return (
@@ -728,12 +761,60 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <Label htmlFor={`registrants.${index}.second_day_only`} className="text-sm font-normal">
-                          Chỉ tham gia ngày 15/09
+                          Chỉ tham gia một ngày
                         </Label>
                       </div>
+                      
+                      {/* Day selection when one day only is checked */}
+                      {registrants[index]?.second_day_only && eventConfig?.start_date && eventConfig?.end_date && (
+                        <div className="mt-3 ml-6 space-y-2">
+                          <Label className="text-sm font-medium">Chọn ngày tham gia:</Label>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`registrants.${index}.first_day`}
+                                name={`registrants.${index}.attendance_day`}
+                                value={eventConfig.start_date}
+                                checked={registrants[index]?.selected_attendance_day === eventConfig.start_date}
+                                onChange={(e) => onAttendanceDayChange(index, e.target.value)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`registrants.${index}.first_day`} className="text-sm font-normal">
+                                Ngày đầu: {new Date(eventConfig.start_date).toLocaleDateString('vi-VN', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`registrants.${index}.second_day`}
+                                name={`registrants.${index}.attendance_day`}
+                                value={eventConfig.end_date}
+                                checked={registrants[index]?.selected_attendance_day === eventConfig.end_date}
+                                onChange={(e) => onAttendanceDayChange(index, e.target.value)}
+                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`registrants.${index}.second_day`} className="text-sm font-normal">
+                                Ngày cuối: {new Date(eventConfig.end_date).toLocaleDateString('vi-VN', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
                       <p className="text-xs text-muted-foreground">
-                        Nếu bạn chỉ có thể tham gia ngày 15/09, chọn tùy chọn này để được giảm giá 50%. 
-                        Trẻ em dưới 12 tuổi: giá ¥3,000 (tham gia đầy đủ) hoặc ¥1,500 (chỉ ngày 15/09).
+                        Nếu bạn chỉ có thể tham gia một ngày, chọn tùy chọn này sẽ đóng 50% giá tiền.
+                        Trẻ em dưới 12 tuổi: 25% giá tiền.
                       </p>
                     </div>
 
@@ -930,7 +1011,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                 {/* Adults second day only */}
                 {registrants.filter(r => r.second_day_only && r.age_group !== 'under_12').length > 0 && (
                   <div className="flex justify-between">
-                    <span>Người lớn - Chỉ ngày 15/09 ({registrants.filter(r => r.second_day_only && r.age_group !== 'under_12').length} người):</span>
+                    <span>Người lớn - Chỉ tham gia một ngày ({registrants.filter(r => r.second_day_only && r.age_group !== 'under_12').length} người):</span>
                     <span>¥{(basePrice * 0.5).toLocaleString()}/người</span>
                   </div>
                 )}
@@ -946,7 +1027,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
                 {/* Children second day only */}
                 {registrants.filter(r => r.second_day_only && r.age_group === 'under_12').length > 0 && (
                   <div className="flex justify-between">
-                    <span>Trẻ em dưới 12 tuổi - Chỉ ngày 15/09 ({registrants.filter(r => r.second_day_only && r.age_group === 'under_12').length} người):</span>
+                    <span>Trẻ em dưới 12 tuổi - Chỉ tham gia một ngày ({registrants.filter(r => r.second_day_only && r.age_group === 'under_12').length} người):</span>
                     <span>¥{(basePrice * 0.25).toLocaleString()}/người</span>
                   </div>
                 )}

@@ -4,16 +4,15 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RegistrationManagerStats } from "./RegistrationManagerStats";
 import { RegistrationManagerList } from "./RegistrationManagerList";
-import { CancelRequestsManager } from "./CancelRequestsManager";
+//import { CancelRequestsManager } from "./CancelRequestsManager";
 import { QuickActions } from "./QuickActions";
 import { 
   BarChart3, 
   Users, 
-  XCircle,
   Loader2,
   RefreshCw
 } from "lucide-react";
-import { Registration, CancelRequest } from "@/lib/types";
+import { Registration, CancelRequest, EventConfig } from "@/lib/types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -41,6 +40,29 @@ export function RegistrationManagerDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
+
+  // Fetch active event config and roles
+    useEffect(() => {
+      const fetchEventData = async () => {
+        //setIsLoadingRoles(true);
+        try {
+          //TODO: Should get the event that belongs to the current registration manager
+          const response = await fetch('/api/admin/events');
+          if (response.ok) {
+            const { events } = await response.json();
+            const activeEvent = events?.find((event: EventConfig) => event.is_active);
+            setEventConfig(activeEvent || null);
+          }
+        } catch (error) {
+          console.error('Failed to fetch event data:', error);
+        } finally {
+         // setIsLoadingRoles(false);
+        }
+      };
+  
+      fetchEventData();
+    }, []);
 
   const fetchData = async (page = 1, search = "", status = "all", showLoading = true) => {
     try {
@@ -52,7 +74,7 @@ export function RegistrationManagerDashboard() {
       
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "10",
+        limit: "20",
         search,
         status,
       });
@@ -172,10 +194,10 @@ export function RegistrationManagerDashboard() {
               <Users className="h-4 w-4 hidden sm:flex" />
               Đăng ký
             </TabsTrigger>
-            <TabsTrigger value="cancellations" className="flex items-center gap-2">
+            {/*<TabsTrigger value="cancellations" className="flex items-center gap-2">
               <XCircle className="h-4 w-4 hidden sm:flex" />
               Yêu cầu hủy
-            </TabsTrigger>
+            </TabsTrigger>*/}
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -192,20 +214,22 @@ export function RegistrationManagerDashboard() {
               totalPages={data.totalPages}
               searchTerm={searchTerm}
               statusFilter={statusFilter}
+              eventConfig={eventConfig}
               onDataRefresh={handleDataRefresh}
               onSearch={handleSearch}
               onStatusFilter={handleStatusFilter}
               onPageChange={handlePageChange}
+              allowedStatuses={['confirmed', 'temp_confirmed', 'be_cancelled']}
               isLoading={isLoading}
             />
           </TabsContent>
 
-          <TabsContent value="cancellations" className="mt-6">
+          {/*<TabsContent value="cancellations" className="mt-6">
             <CancelRequestsManager 
               cancelRequests={data.cancelRequests}
               onDataRefresh={handleDataRefresh}
             />
-          </TabsContent>
+          </TabsContent>*/}
         </Tabs>
       </div>
     </div>

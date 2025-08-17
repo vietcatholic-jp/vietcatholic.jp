@@ -66,7 +66,7 @@ export function CancelRequestsManager({ cancelRequests, onDataRefresh }: CancelR
     }
   };
 
-  const handleProcessRequest = async (requestId: string, action: 'approve' | 'reject' | 'processed', adminNotes?: string) => {
+  const handleProcessRequest = async (requestId: string, action: 'approved' | 'rejected' | 'processed', adminNotes?: string) => {
     setProcessingId(requestId);
 
     try {
@@ -87,7 +87,7 @@ export function CancelRequestsManager({ cancelRequests, onDataRefresh }: CancelR
         throw new Error(result.error || 'Process failed');
       }
 
-      toast.success(action === 'approve' ? "Đã duyệt yêu cầu hủy" : "Đã từ chối yêu cầu hủy");
+      toast.success(action === 'approved' ? "Đã duyệt yêu cầu hủy" : "Đã từ chối yêu cầu hủy");
       onDataRefresh();
       
     } catch (error) {
@@ -224,7 +224,7 @@ export function CancelRequestsManager({ cancelRequests, onDataRefresh }: CancelR
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleProcessRequest(request.id, 'approve')}
+                        onClick={() => handleProcessRequest(request.id, 'approved')}
                         disabled={processingId === request.id}
                         className="text-green-600 hover:text-green-700 hover:bg-green-50"
                       >
@@ -234,7 +234,7 @@ export function CancelRequestsManager({ cancelRequests, onDataRefresh }: CancelR
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleProcessRequest(request.id, 'reject')}
+                        onClick={() => handleProcessRequest(request.id, 'rejected')}
                         disabled={processingId === request.id}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >

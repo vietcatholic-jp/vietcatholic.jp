@@ -43,6 +43,14 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
     notFound();
   }
 
+ const { data: eventData, error: eventError } = await supabase.from('event_configs')
+    .select('*')
+    .eq('id', registration.event_config_id)
+    .single();
+  
+  if (eventError || !eventData) {
+    notFound();
+  }
   // If already paid, redirect to tickets page
   if (registration.status === 'confirmed' || registration.status === 'checked_in') {
     redirect(`/tickets/${invoiceCode}`);
@@ -61,11 +69,11 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
             <div className="bg-amber-50 dark:bg-amber-900/40 rounded-lg p-4 mb-3 inline-block text-left shadow">
               <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1 ml-6 list-disc">
               <li>
-                <strong>Hạn chuyển khoản:</strong> 10 ngày kể từ ngày đăng ký và trước ngày <span className="font-semibold">10/09/2025</span>
+                Hạn chuyển khoản: <strong className="text-xl ml-1">{eventData?.deadline_payment || 10}</strong> ngày kể từ ngày đăng ký.
               </li>
               <li>
                 Vui lòng chuyển khoản trước ngày 
-                <strong className="text-xl ml-1">{new Date(new Date(registration.created_at).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong>
+                <strong className="text-xl ml-1">{new Date(new Date(registration.created_at).getTime() + (eventData?.deadline_payment || 10) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong>
               </li>
               </ul>
             </div>

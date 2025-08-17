@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +46,8 @@ const roleLabels: Record<UserRole, string> = {
   'event_organizer': 'Tổ chức sự kiện', 
   'group_leader': 'Trưởng nhóm',
   'regional_admin': 'Quản trị viên khu vực',
-  'super_admin': 'Quản trị viên'
+  'super_admin': 'Quản trị viên',
+  'cashier_role': 'Thu ngân',
 };
 
 const regionLabels: Record<RegionType, string> = {
@@ -195,7 +196,7 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
   const getAssignableRoles = (): UserRole[] => {
     switch (currentUserRole) {
       case 'super_admin':
-        return ['participant','registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin'];
+        return ['participant','registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'cashier_role', 'super_admin'];
       case 'event_organizer':
         return ['participant', 'regional_admin', 'group_leader','registration_manager'];
       default:
@@ -213,19 +214,7 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
     return [];
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, searchTerm, roleFilter, regionFilter]);
-
-  // Reset to page 1 when filters change (except searchTerm)
-  // Fixed: Removed currentPage from dependency array to prevent infinite loop
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
-  }, [roleFilter, regionFilter]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
@@ -263,7 +252,18 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, roleFilter, regionFilter, pageSize]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // Reset to page 1 when filters change (except searchTerm)
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [roleFilter, regionFilter, currentPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

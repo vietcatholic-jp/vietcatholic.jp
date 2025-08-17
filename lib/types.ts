@@ -1,4 +1,4 @@
-export type UserRole = 'participant' | 'registration_manager' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin';
+export type UserRole = 'participant' | 'registration_manager' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin' | 'cashier_role';
 export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | 'shikoku' | 'tohoku' | 'hokkaido';
 export type GenderType = 'male' | 'female' | 'other';
 export type AgeGroupType = 'under_12' | '12_17' | '18_25' | '26_35' | '36_50' | 'over_50';
@@ -20,6 +20,7 @@ export type RegistrationStatus =
   | 'cancel_rejected'  // Admin rejected cancellation
   | 'cancel_processed' // Admin processed cancellation and refunded
   | 'cancelled'        // Registration cancelled
+  | 'be_cancelled'     // Registration has been cancelled
   | 'confirmed'        // Fully confirmed, tickets can be generated
   | 'temp_confirmed'   // Temporarily confirmed, payment to be made later
   | 'checked_in'       // Participant checked in at event
@@ -46,6 +47,7 @@ export interface EventConfig {
   start_date?: string;
   end_date?: string;
   base_price: number;
+  deadline_payment?: number; // from registration date in days
   cancellation_deadline?: string;
   is_active: boolean;
   total_slots?: number;
@@ -141,6 +143,7 @@ export interface Registrant {
   is_primary?: boolean;  // Marks the main registrant
   go_with?: boolean; // Indicates if this registrant is going with the primary registrant
   second_day_only?: boolean; // Indicates if registrant will only attend 15/09
+  selected_attendance_day?: string; // Specific day the registrant chooses to attend (when second_day_only is true)
   notes?: string;
   portrait_url?: string;
   is_checked_in?: boolean;
@@ -166,6 +169,7 @@ export interface Group {
 export interface Receipt {
   id: string;
   registration_id: string;
+  event_config_id?: string;
   file_path: string;
   file_name: string;
   file_size?: number;
@@ -214,6 +218,24 @@ export interface CheckInStats {
   recentCheckins: Array<{
     checked_in_at: string;
   }>;
+
+export interface ExpenseFormData {
+  type: string;
+  description: string;
+  amount: number;
+  bank_account_name: string;
+  bank_name: string;
+  bank_account_number: string;
+  note: string;
+  // Legacy fields for compatibility
+  purpose?: string;
+  amount_requested?: number;
+  account_number?: string;
+  bank_branch?: string;
+  optional_invoice_url?: string;
+  // New fields
+  category?: string;
+  team_name?: string;
 }
 
 export interface AgendaItem {
@@ -324,10 +346,69 @@ export interface Database {
   };
 }
 
+// Finance Management Types
+export type DonationStatus = 'pledged' | 'received';
+export type ExpenseRequestStatus = 'submitted' | 'approved' | 'rejected' | 'transferred' | 'closed';
+export type ExpenseRequestType = 'reimbursement' | 'advance';
+
+export interface Donation {
+  id: string;
+  event_config_id: string;
+  donor_name: string;
+  contact?: string;
+  amount: number;
+  public_identity: boolean;
+  note?: string;
+  status: DonationStatus;
+  received_at?: string;
+  created_by?: string;
+  created_at: string;
+}
+
+export interface ExpenseRequest {
+  id: string;
+  event_config_id: string;
+  description: string;
+  amount: number;
+  bank_account_name: string;
+  bank_name: string;
+  bank_branch?: string;
+  bank_account_number: string;
+  note?: string;
+  status: 'pending' | 'approved' | 'transferred' | 'closed' | 'rejected';
+  team_name?: string;
+  category?: string;
+  approved_amount?: number;
+  approved_by?: string;
+  approved_at?: string;
+  transferred_by?: string;
+  transferred_at?: string;
+  closed_by?: string;
+  closed_at?: string;
+  transfer_fee?: number;
+  admin_notes?: string;
+  created_by: string;
+  created_at: string;
+  updated_at?: string;
+  created_by_user?: User;
+  attachments?: ExpenseAttachment[];
+}
+
+export interface ExpenseAttachment {
+  id: string;
+  expense_request_id: string;
+  event_config_id: string;
+  file_url: string;
+  file_name?: string;
+  uploaded_at: string;
+  uploaded_by?: string;
+}
+
 export interface CancelRequest {
   id: string;
   registration_id: string;
   user_id: string;
+  event_config_id?: string;
   reason: string;
   bank_account_number: string;
   bank_name: string;
@@ -405,6 +486,7 @@ export const ROLES: { value: UserRole; label: string }[] = [
   { value: 'group_leader', label: 'Group Leader' },
   { value: 'regional_admin', label: 'Regional Admin' },
   { value: 'super_admin', label: 'Super Admin' },
+  { value: 'cashier_role', label: 'Cashier' },
 ];
 
 export const GENDERS: { value: GenderType; label: string }[] = [
@@ -655,6 +737,37 @@ export const JAPANESE_PROVINCES: { value: string; label: string }[] = [
   { value: 'Kagoshima', label: 'Kagoshima (鹿児島県)' },
   { value: 'Okinawa', label: 'Okinawa (沖縄県)' },
 ];
+
+// Avatar Management Types
+export interface AvatarMetadata {
+  url: string;
+  uploadedAt: string;
+  fileSize: number;
+  compressionRatio: number;
+}
+
+export interface AvatarUploadResult {
+  success: boolean;
+  avatarUrl?: string;
+  metadata?: AvatarMetadata;
+  error?: string;
+}
+
+export interface AvatarDeleteResult {
+  success: boolean;
+  error?: string;
+}
+
+// Avatar size types for consistent sizing across components
+export type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
+
+// Avatar manager props interface for component consistency
+export interface AvatarManagerConfig {
+  showUploadHint?: boolean;
+  acceptedFormats?: string[];
+  maxFileSize?: number;
+  compressionQuality?: number;
+}
 
 // Legacy role definitions removed - now using dynamic event_roles from database
 // All role information is fetched from the event_roles table

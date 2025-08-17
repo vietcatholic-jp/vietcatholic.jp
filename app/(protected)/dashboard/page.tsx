@@ -10,6 +10,8 @@ import {
   Calendar, 
   Settings, 
   AlertTriangle,
+  DollarSign,
+  Users2Icon,
   QrCode
 } from "lucide-react";
 import Link from "next/link";
@@ -94,6 +96,7 @@ export default async function DashboardPage({
                   <Badge variant={profile.role === 'super_admin' ? 'default' : 'secondary'} className="text-xs">
                     {profile.role === 'event_organizer' && 'Tổ chức sự kiện'}
                     {profile.role === 'registration_manager' && 'Quản lý đăng ký'}
+                    {profile.role === 'cashier_role' && 'Kế toán'}
                     {profile.role === 'super_admin' && 'Quản trị tổng'}
                   </Badge>
                 )}
@@ -144,6 +147,33 @@ export default async function DashboardPage({
                     </Button>
                   </Link>
                 </>
+              )}
+
+              {(profile.role === 'cashier_role' || profile.role === 'event_organizer' || profile.role === 'super_admin' || profile.role === 'registration_manager') && (
+                <Link href="/payment-request">
+                  <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="text-center leading-tight">Yêu cầu thanh toán</span>
+                  </Button>
+                </Link>
+              )}
+
+              {(profile.role === 'cashier_role' || profile.role === 'super_admin') && (
+                <Link href="/finance">
+                  <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="text-center leading-tight">Quản trị tài chính</span>
+                  </Button>
+                </Link>
+              )}
+
+              {(profile.role === 'registration_manager') && (
+                <Link href="/registration-manager">
+                  <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
+                    <Users2Icon className="h-4 w-4" />
+                    <span className="text-center leading-tight">Quản lý đăng ký</span>
+                  </Button>
+                </Link>
               )}
 
               <Link href="/profile">
@@ -223,6 +253,59 @@ export default async function DashboardPage({
                   </CardContent>
                 </Card>
               )}
+              {(profile.role === 'cashier_role' || profile.role === 'super_admin' || profile.role === 'event_organizer' || profile.role === 'registration_manager') && (
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Yêu cầu thanh toán
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Link href="/payment-request">
+                      <Button variant="outline" className="w-full" size="sm">
+                        Tạo yêu cầu thanh toán
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {(profile.role === 'cashier_role' || profile.role === 'super_admin') && (
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Quản trị tài chính
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Link href="/finance">
+                      <Button variant="outline" className="w-full" size="sm">
+                        Quản lý tài chính
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
+
+              {(profile.role === 'registration_manager') && (
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Users2Icon className="h-4 w-4" />
+                      Quản lý đăng ký
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Link href="/registration-manager">
+                      <Button variant="outline" className="w-full" size="sm">
+                        Xem đăng ký
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
@@ -255,13 +338,13 @@ export default async function DashboardPage({
                 <div className="text-center py-8 px-6">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2">Chưa có đăng ký nào</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Bạn chưa đăng ký tham gia sự kiện nào
+                  <p className="text-muted-foreground text-3xl mb-4">
+                    Bạn chưa đăng ký tham gia Đại Hội.
                   </p>
                   <Link href="/register">
                     <Button>
                       <Users className="h-4 w-4 mr-2" />
-                      Đăng ký ngay
+                      Bấm vào đây để tạo đăng ký
                     </Button>
                   </Link>
                 </div>

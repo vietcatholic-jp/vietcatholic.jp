@@ -30,6 +30,9 @@ create type registration_status as enum (
   'cancel_pending',   -- Cancellation request pending admin review
   'cancel_accepted',  -- Admin accepted cancellation
   'cancel_rejected',  -- Admin rejected cancellation
+  'cancel_processed', -- Cancellation processed (refund done)
+  'temp_confirmed',   -- Temporary confirmation, user will pay later
+  'be_cancelled',     -- Registration cancelled by admin
   'confirmed',        -- Fully confirmed, tickets can be generated
   'checked_in',       -- Participant checked in at event
   'checked_out'       -- Participant checked out from event
@@ -63,6 +66,7 @@ create table public.event_configs (
   start_date timestamp with time zone,
   end_date timestamp with time zone,
   base_price decimal(10,2) default 0,
+  deadline_payment integer default 10, -- Days from registration date to pay
   is_active boolean default false,
   cancellation_deadline timestamptz,
   total_slots integer,

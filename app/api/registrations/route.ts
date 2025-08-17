@@ -26,7 +26,9 @@ const RegistrantSchema = z.object({
   shirt_size: z.enum(['1','2','3','4','5','XS','S','M','L','XL','XXL','3XL','4XL','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
   is_primary: z.boolean(),
-  second_day_only: z.boolean(),
+  second_day_only: z.boolean().optional(),
+  selected_attendance_day: z.string().optional(),
+  go_with: z.boolean().optional(),
   notes: z.string().optional(),
 });
 
@@ -73,6 +75,7 @@ export async function POST(request: NextRequest) {
     try {
       validated = RegistrationSchema.parse(body);
     } catch (error) {
+      console.error("Validation error:", error);
       await logger.logError(
         REGISTRATION_EVENT_TYPES.REGISTRANT_VALIDATION_ERROR,
         EVENT_CATEGORIES.REGISTRATION,
@@ -160,7 +163,7 @@ export async function POST(request: NextRequest) {
           tags: ['database_error'],
         }
       );
-      return NextResponse.json({ error: "Failed to create registration" }, { status: 500 });
+      return NextResponse.json({ error: "Lỗi khi tạo đăng ký" }, { status: 500 });
     }
 
     // Create registrant records
@@ -179,7 +182,9 @@ export async function POST(request: NextRequest) {
         phone?: string;
         shirt_size: string;
         is_primary: boolean;
+        go_with?: boolean;
         second_day_only?: boolean;
+        selected_attendance_day?: string;
         notes?: string;
         event_team_id?: string | null;
         event_role_id?: string | null;
@@ -197,9 +202,13 @@ export async function POST(request: NextRequest) {
         phone: registrant.phone,
         shirt_size: registrant.shirt_size,
         is_primary: registrant.is_primary,
+        go_with: registrant.go_with,
         second_day_only: registrant.second_day_only,
         notes: registrant.notes,
       };
+      if (registrant.second_day_only) {
+        data.selected_attendance_day = registrant.selected_attendance_day;
+      }
       if (registrant.event_role === 'participant') {
         data.event_team_id = null;
         data.event_role_id = null;
@@ -230,9 +239,10 @@ export async function POST(request: NextRequest) {
           tags: ['database_error'],
         }
       );
+      console.error("Failed to create registrants:", registrantsError);
       // Try to clean up the registration record
       await supabase.from("registrations").delete().eq("id", registration.id);
-      return NextResponse.json({ error: "Failed to create registrants" }, { status: 500 });
+      return NextResponse.json({ error: "Lỗi khi tạo người đăng ký" }, { status: 500 });
     }
 
     // Update user profile with primary registrant information if fields are empty

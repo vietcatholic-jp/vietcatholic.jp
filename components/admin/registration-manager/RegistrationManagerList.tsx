@@ -13,7 +13,7 @@ import {
   ChevronRight,
   Loader2
 } from "lucide-react";
-import { Registration } from "@/lib/types";
+import { EventConfig, Registration, RegistrationStatus } from "@/lib/types";
 import { RegistrationDetailModal } from "./RegistrationDetailModal";
 import { RegistrationEditModal } from "./RegistrationEditModal";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,15 @@ interface RegistrationManagerListProps {
   searchTerm: string;
   statusFilter: string;
   isLoading: boolean;
+  eventConfig: EventConfig | null;
   onDataRefresh: () => void;
   onSearch: (search: string) => void;
   onStatusFilter: (status: string) => void;
   onPageChange: (page: number) => void;
+  // Optional: restrict the editable statuses for the edit modal
+  allowedStatuses?: RegistrationStatus[];
+  // Optional: when true, hide registrant fields and allow only status editing
+  onlyStatusEditing?: boolean;
 }
 
 export function RegistrationManagerList({ 
@@ -38,10 +43,13 @@ export function RegistrationManagerList({
   searchTerm,
   statusFilter,
   isLoading,
+  eventConfig,
   onDataRefresh,
   onSearch,
   onStatusFilter,
-  onPageChange
+  onPageChange,
+  allowedStatuses,
+  onlyStatusEditing
 }: RegistrationManagerListProps) {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [viewingRegistration, setViewingRegistration] = useState<Registration | null>(null);
@@ -71,6 +79,8 @@ export function RegistrationManagerList({
         return <Badge className="bg-green-500">Đã xác nhận</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Đã hủy</Badge>;
+      case 'be_cancelled':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Đã bị hủy</Badge>;
       case 'cancel_accepted':
         return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Đã chấp nhận huỷ</Badge>;
       case 'cancel_rejected':
@@ -100,7 +110,7 @@ export function RegistrationManagerList({
     const createdDate = new Date(registration.created_at);
     const now = new Date();
     const daysDiff = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-    return daysDiff > 10;
+    return daysDiff > (eventConfig?.deadline_payment || 10); // Default to 10 days if not set
   };
 
   return (
@@ -228,7 +238,7 @@ export function RegistrationManagerList({
                             <div className="space-y-1">
                               {registration.registrants?.some(r => r.second_day_only) && (
                                 <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
-                                  Chỉ tham gia ngày 2
+                                  Chỉ tham gia một ngày
                                 </Badge>
                               )}
                               <div className="text-xs text-muted-foreground">
@@ -409,6 +419,8 @@ export function RegistrationManagerList({
             setEditingRegistration(null);
             onDataRefresh();
           }}
+          allowedStatuses={allowedStatuses}
+          onlyStatusEditing={onlyStatusEditing}
         />
       )}
     </>

@@ -53,7 +53,8 @@ export function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const isAdmin = profile?.role && ['registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin'].includes(profile.role);
+  const isAdmin = profile?.role && ['registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin', 'cashier_role'].includes(profile.role);
+  const isFinanceUser = profile?.role && ['cashier_role', 'event_organizer', 'regional_admin', 'super_admin'].includes(profile.role);
 
   return (
     <nav className="w-full border-b border-border bg-gradient-to-r from-blue-50 via-white to-purple-50 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -109,9 +110,20 @@ export function Navbar() {
                 >
                   Chương trình
                 </Link>
-                {isAdmin && (
+                {isFinanceUser && (
                   <Link 
-                    href={profile?.role === 'registration_manager' ? '/registration-manager' : '/admin'}
+                    href="/finance"
+                    className="text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg"
+                  >
+                    Tài chính
+                  </Link>
+                )}
+                {isAdmin && !['cashier_role'].includes(profile?.role || '') && (
+                  <Link 
+                    href={
+                      profile?.role === 'registration_manager' ? '/registration-manager' :
+                      '/admin'
+                    }
                     className="text-sm font-medium transition-colors hover:text-orange-600 hover:bg-orange-50 px-3 py-2 rounded-lg"
                   >
                     {profile?.role === 'registration_manager' ? 'Quản lý đăng ký' : 'Quản trị'}
@@ -182,13 +194,25 @@ export function Navbar() {
                   >
                     Chương trình
                   </Link>
-                  {isAdmin && (
+                  {isFinanceUser && (
                     <Link 
-                      href={profile?.role === 'registration_manager' ? '/registration-manager' : '/admin'}
+                      href="/finance"
+                      className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-3 rounded-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Tài chính
+                    </Link>
+                  )}
+                  {isAdmin && !['cashier_role'].includes(profile?.role || '') && (
+                    <Link 
+                      href={
+                        profile?.role === 'registration_manager' ? '/registration-manager' :
+                        '/admin'
+                      }
                       className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-orange-600 hover:bg-orange-50 px-3 py-3 rounded-lg"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                     {profile?.role === 'registration_manager' ? 'Quản lý đăng ký' : 'Quản trị'}
+                      {profile?.role === 'registration_manager' ? 'Quản lý đăng ký' : 'Quản trị'}
                     </Link>
                   )}
                   <div className="border-t pt-3 mt-3">

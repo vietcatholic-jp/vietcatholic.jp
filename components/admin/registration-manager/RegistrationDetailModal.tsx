@@ -184,7 +184,12 @@ export function RegistrationDetailModal({ registration, onClose }: RegistrationD
                         )}
                         {registrant.second_day_only && (
                           <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
-                            Chỉ ngày 15/09
+                            Chỉ tham dự :
+                            {new Date(registrant.selected_attendance_day || '2025-09-15').toLocaleDateString('vi-VN', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
                           </Badge>
                         )}
                       </div>
