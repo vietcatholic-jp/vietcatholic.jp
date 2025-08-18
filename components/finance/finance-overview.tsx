@@ -210,7 +210,7 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
 
     return [
       {
-        title: "Tổng doanh thu",
+        title: "Tổng thu",
         value: formatJPY(stats.payments.totalAmount + stats.donations.totalAmount),
         description: `${stats.payments.confirmed} thanh toán + ${stats.donations.received} quyên góp`,
         icon: TrendingUp,
