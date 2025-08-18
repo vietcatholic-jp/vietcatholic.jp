@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getServerUser } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient();
     
@@ -53,13 +53,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Check confirmed registrations
-    const { count: confirmedCount, error: confirmedError } = await supabase
+    const { count: confirmedCount } = await supabase
       .from('registrants')
       .select('id, registrations!inner(status)', { count: 'exact', head: true })
       .eq('registrations.status', 'confirmed');
 
     // Check already checked-in
-    const { count: checkedInCount, error: checkedInError } = await supabase
+    const { count: checkedInCount } = await supabase
       .from('registrants')
       .select('id', { count: 'exact', head: true })
       .eq('is_checked_in', true);
@@ -72,8 +72,8 @@ export async function GET(request: NextRequest) {
         id: r.id,
         name: r.full_name,
         email: r.email,
-        registrationStatus: r.registrations.status,
-        invoiceCode: r.registrations.invoice_code,
+        registrationStatus: r.registrations[0]?.status,
+        invoiceCode: r.registrations[0]?.invoice_code,
         isCheckedIn: r.is_checked_in,
         checkedInAt: r.checked_in_at
       }))
