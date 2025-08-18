@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET() {
   try {
     // Verify user has appropriate role
-    const user = await requireRole(['event_organizer', 'group_leader', 'regional_admin', 'super_admin']);
+    const user = await requireRole(['registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin', "cashier_role"]);
     const supabase = await createClient();
     
     // Get user profile for filtering

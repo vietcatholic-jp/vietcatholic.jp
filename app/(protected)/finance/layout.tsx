@@ -8,7 +8,7 @@ export default async function FinanceLayout({
   children: React.ReactNode;
 }) {
   try {
-    await requireRole(['cashier_role', 'super_admin', 'regional_admin', 'event_organizer']);
+    await requireRole(['cashier_role', 'super_admin']);
   } catch {
     redirect('/dashboard');
   }
