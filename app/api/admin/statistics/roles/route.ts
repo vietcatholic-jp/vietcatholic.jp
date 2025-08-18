@@ -24,7 +24,7 @@ export async function GET() {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 });
     }
 
-    const allowedRoles = ['super_admin', 'regional_admin', 'event_organizer'];
+    const allowedRoles = ['super_admin', 'regional_admin', 'event_organizer', 'cashier_role'];
     if (!allowedRoles.includes(userProfile.role)) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
