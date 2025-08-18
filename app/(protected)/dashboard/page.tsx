@@ -11,7 +11,8 @@ import {
   Settings, 
   AlertTriangle,
   DollarSign,
-  Users2Icon
+  Users2Icon,
+  QrCode
 } from "lucide-react";
 import Link from "next/link";
 import { RegistrationCard } from "@/components/dashboard/registration-card";
@@ -125,12 +126,20 @@ export default async function DashboardPage({
               </Link>
 
               {(profile.role === 'event_organizer' || profile.role === 'super_admin' || profile.role === 'registration_manager') && (
-                <Link href="/admin">
-                  <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
-                    <Settings className="h-4 w-4" />
-                    <span className="text-center leading-tight">Quản trị</span>
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/check-in">
+                    <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
+                      <QrCode className="h-4 w-4" />
+                      <span className="text-center leading-tight">Check-in</span>
+                    </Button>
+                  </Link>
+                  <Link href="/admin">
+                    <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
+                      <Settings className="h-4 w-4" />
+                      <span className="text-center leading-tight">Quản trị</span>
+                    </Button>
+                  </Link>
+                </>
               )}
 
               {(profile.role === 'cashier_role' || profile.role === 'event_organizer' || profile.role === 'super_admin' || profile.role === 'registration_manager') && (
@@ -169,7 +178,7 @@ export default async function DashboardPage({
             </div>
 
             {/* Desktop: Grid layout with cards */}
-            <div className="hidden md:grid md:grid-cols-4 md:gap-4">
+            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-4">
               <Card className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -202,7 +211,25 @@ export default async function DashboardPage({
                 </CardContent>
               </Card>
 
-              {(profile.role === 'regional_admin' || profile.role === 'super_admin') && (
+              {(profile.role === 'registration_manager' || profile.role === 'event_organizer' || profile.role === 'super_admin') && (
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <QrCode className="h-4 w-4" />
+                      Check-in
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Link href="/check-in">
+                      <Button variant="outline" className="w-full" size="sm">
+                        Quét mã QR
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
+
+              {(profile.role === 'registration_manager' || profile.role === 'event_organizer' || profile.role === 'super_admin') && (
                 <Card className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">

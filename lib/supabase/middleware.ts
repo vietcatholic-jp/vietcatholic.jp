@@ -65,6 +65,7 @@ export async function updateSession(request: NextRequest) {
     '/profile',
     '/register',
     '/admin',
+    '/check-in',
   ];
 
   // Check if current route is public
@@ -112,6 +113,14 @@ export async function updateSession(request: NextRequest) {
         pathname.startsWith('/admin/super') 
       ) {
         url.pathname = "/admin";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // Check role-based access for check-in routes
+    if (pathname.startsWith('/check-in')) {
+      if (!profile || !['registration_manager', 'event_organizer', 'super_admin'].includes(profile.role)) {
+        url.pathname = "/dashboard";
         return NextResponse.redirect(url);
       }
     }

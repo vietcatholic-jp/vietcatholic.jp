@@ -45,7 +45,7 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
   }, [registrant]);
 
   const handleSaveTicket = () => {
-    if (ticketRef.current) {
+    if (typeof window !== 'undefined' && ticketRef.current) {
       html2canvas(ticketRef.current, { useCORS: true }).then(canvas => {
         const link = document.createElement('a');
         link.href = canvas.toDataURL('image/png');
