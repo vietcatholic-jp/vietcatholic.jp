@@ -216,7 +216,7 @@ export default function CashierDashboard() {
               loadRegistrations(page, searchTerm, statusFilter);
             }}
             // Cashier can only toggle between these statuses
-            allowedStatuses={['pending', 'confirm_paid', 'payment_rejected']}
+            allowedStatuses={['pending', 'confirm_paid', 'payment_rejected','be_cancelled']}
             // Hide registrant fields for cashier, only status + notes
             onlyStatusEditing
           />
