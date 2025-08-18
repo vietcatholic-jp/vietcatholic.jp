@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Get user profile to check permissions
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select('role, region')
       .eq('id', user.id)
       .single();
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     // Filter by region for regional admins
     if (profile.role === 'regional_admin' && profile.region) {
       const { data: users } = await supabase
-        .from('user_profiles')
+        .from('users')
         .select('id')
         .eq('region', profile.region);
       
