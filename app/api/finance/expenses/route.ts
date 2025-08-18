@@ -52,7 +52,7 @@ const CreateExpenseSchema = z.object({
   catchment: z.string().optional(),
   team_name: z.string().optional(),
   category: z.string().optional(),
-  optional_invoice_url: z.string().url().optional(),
+  optional_invoice_url: z.string().optional(),
 });
 
 // Accept legacy/public status filters from UI (pending maps to submitted in DB)
@@ -262,9 +262,9 @@ export async function GET(request: NextRequest) {
       transfer_fee: e.transfer_fee != null ? Number(e.transfer_fee) : undefined,
       admin_notes: e.notes || undefined,
       created_by_user:{
-        id: e.user.id,
-        full_name: e.user.full_name,
-        email: e.user.email,
+        id: e.user?.id,
+        full_name: e.user?.full_name,
+        email: e.user?.email,
       },
       created_by: e.user_id,
       created_at: e.created_at,

@@ -68,7 +68,6 @@ export default function ExpensesManager() {
     purpose: '',
     amount_requested: 0,
     bank_account_name: '',
-    account_number: '',
     bank_branch: '',
     optional_invoice_url: '',
     category: '',
@@ -145,7 +144,7 @@ export default function ExpensesManager() {
         if (response.ok) {
           const { events } = await response.json();
           const activeEvent = (events || []).find((event: EventConfigLite) => event.is_active);
-          setEventConfig(activeEvent || null);
+          setEventConfig(activeEvent || events[0] || null);
         }
       } catch (error) {
         console.error('Failed to fetch event config:', error);
@@ -289,9 +288,9 @@ export default function ExpensesManager() {
         event_config_id: eventConfig?.id,
         status: 'pending', // Default status for new requests
         // New fields
-        category: formData.category || null,
-        team_name: formData.team_name || null,
-        optional_invoice_url: formData.optional_invoice_url || null,
+        category: formData.category || "",
+        team_name: formData.team_name || "",
+        optional_invoice_url: formData.optional_invoice_url || "",
         type: formData.type || 'reimbursement'
       };
       
@@ -383,7 +382,6 @@ export default function ExpensesManager() {
       purpose: '',
       amount_requested: 0,
       bank_account_name: '',
-      account_number: '',
       bank_branch: '',
       optional_invoice_url: '',
       // New fields
@@ -462,9 +460,9 @@ export default function ExpensesManager() {
     };
   };
 
-  const canCreateExpense = userRole && ['cashier_role', 'super_admin', 'regional_admin'].includes(userRole);
-  const canApprove = userRole && ['super_admin', 'regional_admin'].includes(userRole);
-  const canTransfer = userRole && ['cashier_role', 'super_admin'].includes(userRole);
+  const canCreateExpense = userRole && ['cashier_role', 'super_admin', 'event_organizer'].includes(userRole);
+  const canApprove = userRole && ['super_admin'].includes(userRole);
+  const canTransfer = userRole && ['cashier_role'].includes(userRole);
   const displayStats = getStats();
 
   return (
@@ -885,8 +883,8 @@ export default function ExpensesManager() {
               <div>
                 <label className="text-sm font-medium">Số tài khoản</label>
                 <Input
-                  value={formData.account_number}
-                  onChange={(e) => setFormData(prev => ({ ...prev, account_number: e.target.value }))}
+                  value={formData.bank_account_number}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bank_account_number: e.target.value }))}
                   placeholder="Số tài khoản ngân hàng"
                 />
               </div>
