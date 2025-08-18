@@ -1,6 +1,6 @@
 <a href="https://daihoiconggiao.jp/">
   <img alt="Dai Hoi Cong Giao Nhat Ban 2025" src="public/Jubilee2025.png">
-  <h1 align="center">Dai Hoi Cong Giao Nhat Ban 2025</h1>
+  <h1 align="center">ĐẠI HỘI CÔNG GIÁO VIỆT NAM TẠI NHẬT NĂM THÁNH 2025</h1>
 </a>
 
 <p align="center">
@@ -13,7 +13,7 @@
   <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
 </p>
 <br/>
-t
+
 ## Features
 
 ### Core Technology Stack
@@ -83,5 +83,5 @@ t
 
 ## Feedback and issues
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+Please file feedback and issues over on the [Vietcatholic.jp](https://github.com/vietcatholic-jp/vietcatholic.jp/issues/new).
 # Test production workflow - Thu Jul 31 14:51:13 JST 2025
