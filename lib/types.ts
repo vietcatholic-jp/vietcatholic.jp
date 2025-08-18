@@ -231,7 +231,6 @@ export interface ExpenseFormData {
   // Legacy fields for compatibility
   purpose?: string;
   amount_requested?: number;
-  account_number?: string;
   bank_branch?: string;
   optional_invoice_url?: string;
   // New fields
