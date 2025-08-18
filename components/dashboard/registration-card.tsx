@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RegistrationActions } from "@/components/dashboard/registration-actions";
 import {
@@ -18,16 +18,18 @@ import {
   Edit3
 } from "lucide-react";
 import Link from "next/link";
-import { Registrant, SHIRT_SIZES } from "@/lib/types";
+import { EventConfig, Registrant, SHIRT_SIZES } from "@/lib/types";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
 import { AvatarManager } from "@/components/avatar/avatar-manager";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface RegistrationCardProps {
   registration: {
     id: string;
+    event_config_id: string;
     invoice_code: string;
     status: string;
     created_at: string;
@@ -37,18 +39,38 @@ interface RegistrationCardProps {
     registrants: Registrant[];
     notes?: string;
   };
-  eventConfig: {
-    cancellation_deadline?: string;
-    deadline_payment?: number;
-  };
   isLast: boolean;
 }
 
-export function RegistrationCard({ registration, eventConfig }: RegistrationCardProps) {
+export function RegistrationCard({ registration }: RegistrationCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   // Track per-registrant go_with value overrides after inline updates
   const [goWithOverrides, setGoWithOverrides] = useState<Record<string, boolean | undefined>>({});
   const [savingGoWith, setSavingGoWith] = useState<Record<string, boolean>>({});
+  const [eventConfig, setEventConfig] = useState<EventConfig | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+      const fetchEventData = async () => {
+        try {
+          // Fetch event config
+          const { data: eventData, error: eventError } = await supabase.from('event_configs')
+            .select('*')
+            .eq('id', registration.event_config_id)
+            .single();
+  
+          if (eventError) {
+            console.error('Error fetching event config:', eventError);
+          } else {
+            setEventConfig(eventData || null);
+          }
+        } catch (error) {
+          console.error('Failed to fetch event data:', error);
+        }
+      };
+  
+      fetchEventData();
+    }, [supabase, registration]);
 
   const handleToggleGoWith = async (registrantId: string, currentValue: boolean | undefined) => {
     const nextValue = !Boolean(currentValue);
@@ -285,8 +307,8 @@ export function RegistrationCard({ registration, eventConfig }: RegistrationCard
             {registration.status === 'pending' && (
               <div className="p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/30 rounded-lg shadow-sm">
                 <ul className="text-sm">
-                  <li>Hạn chuyển khoản: <strong className="text-xl ml-1">{eventConfig.deadline_payment || 10}</strong> ngày kể từ ngày đăng ký.</li>
-                  <li>Vui lòng chuyển khoản trước ngày <strong className="text-xl">{new Date(new Date(registration.created_at).getTime() + (eventConfig.deadline_payment || 10) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong> </li>
+                  <li>Hạn chuyển khoản: <strong className="text-xl ml-1">{eventConfig?.deadline_payment || 10}</strong> ngày kể từ ngày đăng ký.</li>
+                  <li>Vui lòng chuyển khoản trước ngày <strong className="text-xl">{new Date(new Date(registration.created_at).getTime() + (eventConfig?.deadline_payment || 10) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</strong> </li>
                 </ul>
               </div>
             )}

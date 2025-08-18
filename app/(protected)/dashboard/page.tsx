@@ -30,13 +30,6 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
 
-  // Get active event config
-  const { data: eventConfig } = await supabase
-    .from('event_configs')
-    .select('*')
-    .eq('is_active', true)
-    .single();
-
   // Get user's registrations with full registrant details
   const { data: registrations } = await supabase
     .from('registrations')
@@ -54,7 +47,7 @@ export default async function DashboardPage({
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
-
+  
   // Handle error messages from redirects
   const resolvedSearchParams = await searchParams;
   const errorMessage = resolvedSearchParams?.error === 'registration-locked' 
@@ -353,8 +346,7 @@ export default async function DashboardPage({
                   {registrations.map((registration, index) => (
                     <RegistrationCard 
                       key={registration.id} 
-                      registration={registration} 
-                      eventConfig={eventConfig}
+                      registration={registration}
                       isLast={index === registrations.length - 1}
                     />
                   ))}

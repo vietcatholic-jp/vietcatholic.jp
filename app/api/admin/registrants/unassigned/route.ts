@@ -70,7 +70,13 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,registration.invoice_code.ilike.%${search}%`);
+      // Smart detection: if search contains any digit, search by invoice code, otherwise by name
+      const isInvoiceSearch = /\d/.test(search);
+      if (isInvoiceSearch) {
+        query = query.ilike("registration.invoice_code", `%${search}%`);
+      } else {
+        query = query.ilike("full_name", `%${search}%`);
+      }
     }
     if (gender) {
       query = query.eq("gender", gender);
@@ -93,12 +99,42 @@ export async function GET(request: NextRequest) {
       query = query.eq("registration.user.region", profile.region);
     }
 
-    // Get total count for pagination
-    const { count } = await supabase
+    // Build count query with same filters for accurate pagination
+    let countQuery = supabase
       .from("registrants")
-      .select("id, registrations!inner(status)", { count: "exact", head: true })
+      .select("id, registration:registrations!inner(status, invoice_code, users!registrations_user_id_fkey(region))", { count: "exact", head: true })
       .is("event_team_id", null)
-      .eq("registrations.status", "confirmed");
+      .eq("registration.status", "confirmed");
+
+    // Apply same filters to count query
+    if (search) {
+      const isInvoiceSearch = /\d/.test(search);
+      if (isInvoiceSearch) {
+        countQuery = countQuery.ilike("registration.invoice_code", `%${search}%`);
+      } else {
+        countQuery = countQuery.ilike("full_name", `%${search}%`);
+      }
+    }
+    if (gender) {
+      countQuery = countQuery.eq("gender", gender);
+    }
+    if (ageGroup) {
+      countQuery = countQuery.eq("age_group", ageGroup);
+    }
+    if (province) {
+      countQuery = countQuery.ilike("province", `%${province}%`);
+    }
+    if (diocese) {
+      countQuery = countQuery.ilike("diocese", `%${diocese}%`);
+    }
+    if (roleId) {
+      countQuery = countQuery.eq("event_role_id", roleId);
+    }
+    if (profile.role === "regional_admin" && profile.region) {
+      countQuery = countQuery.eq("registration.user.region", profile.region);
+    }
+
+    const { count } = await countQuery;
 
     // Get paginated results
     const { data: registrants, error } = await query
