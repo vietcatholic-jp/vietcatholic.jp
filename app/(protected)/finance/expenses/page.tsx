@@ -4,7 +4,7 @@ import ExpensesManager from '@/components/finance/expenses-manager';
 
 export default async function FinanceExpensesPage() {
   try {
-    await requireRole(['event_organizer', 'super_admin', 'cashier_role']);
+    await requireRole(['super_admin', 'cashier_role']);
   } catch {
     redirect('/finance');
   }

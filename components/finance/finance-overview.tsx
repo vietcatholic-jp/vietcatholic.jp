@@ -6,8 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, 
-  TrendingDown, 
-  Receipt, 
+  TrendingDown,
   Heart,
   Clock,
   CheckCircle,
@@ -23,6 +22,9 @@ interface FinanceStats {
     confirmed: number;
     rejected: number;
     totalAmount: number;
+    totalPendingPayments: number;
+    totalTempConfirmed: number;
+    tmpConfirmed: number;
   };
   donations: {
     total: number;
@@ -39,6 +41,7 @@ interface FinanceStats {
   cancelRequests: {
     pending: number;
     approved: number;
+    totalApproved: number;
     processed: number;
     totalRefunds: number;
   };
@@ -47,7 +50,10 @@ interface FinanceStats {
 interface CancelRequestLite { status: string; registration?: { total_amount?: number } }
 
 interface RegistrationDataLite {
-  stats?: { pending_payments?: number; confirmed_registrations?: number; rejected_payments?: number; confirmed_amount?: number };
+  stats?: { pending_payments?: number;
+    total_pending_payments?:number;
+    total_temp_confirmed?: number; temp_confirmed?: number;
+    confirmed_registrations?: number; rejected_payments?: number; confirmed_amount?: number };
   cancelRequests?: CancelRequestLite[];
 }
 
@@ -74,6 +80,9 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
         const financeStats: FinanceStats = {
           payments: {
             pending: registrationData?.stats?.pending_payments || 0,
+            totalPendingPayments: registrationData?.stats?.total_pending_payments || 0,
+            totalTempConfirmed: registrationData?.stats?.total_temp_confirmed || 0,
+            tmpConfirmed: registrationData?.stats?.temp_confirmed || 0,
             confirmed: registrationData?.stats?.confirmed_registrations || 0,
             rejected: registrationData?.stats?.rejected_payments || 0,
             totalAmount: registrationData?.stats?.confirmed_amount || 0,
@@ -93,6 +102,7 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
           cancelRequests: {
             pending: (registrationData?.cancelRequests || []).filter((req) => req.status === 'pending').length || 0,
             approved: (registrationData?.cancelRequests || []).filter((req) => req.status === 'approved').length || 0,
+            totalApproved: (registrationData?.cancelRequests || []).filter((req) => req.status === 'approved').reduce((sum, req) => sum + (req.registration?.total_amount || 0), 0) || 0,
             processed: (registrationData?.cancelRequests || []).filter((req) => req.status === 'processed').length || 0,
             totalRefunds: (registrationData?.cancelRequests || [])
               .filter((req) => req.status === 'processed')
@@ -105,10 +115,10 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
         console.error('Error loading finance stats:', error);
         // Set empty stats on error
         setStats({
-          payments: { pending: 0, confirmed: 0, rejected: 0, totalAmount: 0 },
+          payments: { pending: 0, totalPendingPayments: 0, tmpConfirmed:0, totalTempConfirmed:0, confirmed: 0, rejected: 0, totalAmount: 0 },
           donations: { total: 0, received: 0, pledged: 0, totalAmount: 0 },
           expenses: { submitted: 0, approved: 0, transferred: 0, totalRequested: 0 },
-          cancelRequests: { pending: 0, approved: 0, processed: 0, totalRefunds: 0 }
+          cancelRequests: { pending: 0, approved: 0, totalApproved: 0, processed: 0, totalRefunds: 0 }
         });
       } finally {
         setIsLoading(false);
@@ -118,8 +128,8 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
     loadStats();
     
     // Auto refresh every 2 minutes
-    const interval = setInterval(loadStats, 120000);
-    return () => clearInterval(interval);
+    //const interval = setInterval(loadStats, 120000);
+    //return () => clearInterval(interval);
   }, []);
 
   const formatJPY = (amount: number) => {
@@ -143,7 +153,7 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
         {
           title: "Thanh toán chờ xác nhận",
           value: stats.payments.pending,
-          description: `${formatJPY(stats.payments.totalAmount)} cần xử lý`,
+          description: `${formatJPY(stats.payments.totalPendingPayments)} cần xử lý`,
           icon: CreditCard,
           color: "bg-orange-50 text-orange-600",
           iconBg: "bg-orange-500",
@@ -164,7 +174,7 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
     }
 
     // Admin-specific cards
-    if (['super_admin', 'regional_admin'].includes(userRole)) {
+    if (['super_admin','cashier_role'].includes(userRole)) {
       cards.push(
         {
           title: "Quyên góp đã nhận",
@@ -188,19 +198,6 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
       );
     }
 
-    // Event organizer cards
-    if (['event_organizer', 'super_admin', 'regional_admin'].includes(userRole)) {
-      cards.push({
-        title: "Yêu cầu chi tiêu của tôi",
-        value: stats.expenses.approved,
-        description: `${stats.expenses.transferred} đã được chuyển khoản`,
-        icon: Receipt,
-        color: "bg-purple-50 text-purple-600",
-        iconBg: "bg-purple-500",
-        action: { href: '/finance/expenses', label: 'Xem chi tiết' }
-      });
-    }
-
     return cards;
   };
 
@@ -217,7 +214,40 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
         color: "text-green-600"
       },
       {
-        title: "Hoàn tiền đã xử lý",
+        title: "Tổng chi",
+        value: formatJPY(stats.expenses.totalRequested),
+        description: `${stats.expenses.submitted} yêu cầu chi tiêu`,
+        icon: TrendingDown,
+        color: "text-red-600"
+      },
+      {
+        title: "Đăng ký đã xác nhận (tạm thời)",
+        value: formatJPY(stats.payments.totalTempConfirmed),
+        description: `${stats.payments.tmpConfirmed} thanh toán đã được xác nhận (tạm thời)`,
+        icon: CheckCircle,
+      },
+      {
+        title: "Đăng ký đã xác nhận",
+        value: formatJPY(stats.payments.totalAmount),
+        description: `${stats.payments.confirmed} thanh toán đã được xác nhận`,
+        icon: CheckCircle,
+      },
+      {
+        title: "Tổng quyên góp",
+        value: formatJPY(stats.donations.total),
+        description: `${stats.donations.received} đã nhận + ${stats.donations.pledged} cam kết`,
+        icon: Heart,
+        color: "text-green-600"
+      },
+      {
+        title: "Tổng hoàn tiền đã duyệt",
+        value: formatJPY(stats.cancelRequests.totalApproved),
+        description: `${stats.cancelRequests.approved} yêu cầu đã xử lý`,
+        icon: AlertCircle,
+        color: "text-blue-600"
+      },
+      {
+        title: "Tổng hoàn tiền đã thanh toán",
         value: formatJPY(stats.cancelRequests.totalRefunds),
         description: `${stats.cancelRequests.processed} yêu cầu đã xử lý`,
         icon: AlertCircle,
@@ -228,12 +258,7 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
         description: `${stats.payments.pending} thanh toán + ${stats.expenses.submitted} chi tiêu`,
         icon: Clock,
       },
-      {
-        title: "Đã xác nhận/đã chuyển",
-        value: `${stats.payments.confirmed + stats.expenses.transferred}`,
-        description: `${stats.payments.confirmed} thanh toán + ${stats.expenses.transferred} chi tiêu`,
-        icon: CheckCircle,
-      },
+      
     ];
   };
 
