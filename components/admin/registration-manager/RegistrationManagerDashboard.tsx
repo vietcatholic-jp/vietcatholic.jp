@@ -52,7 +52,7 @@ export function RegistrationManagerDashboard() {
           if (response.ok) {
             const { events } = await response.json();
             const activeEvent = events?.find((event: EventConfig) => event.is_active);
-            setEventConfig(activeEvent || null);
+            setEventConfig(activeEvent || events[0] || null);
           }
         } catch (error) {
           console.error('Failed to fetch event data:', error);

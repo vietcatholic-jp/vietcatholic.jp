@@ -148,7 +148,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         if (response.ok) {
           const { events } = await response.json();
           const activeEvent = events?.find((event: EventConfig) => event.is_active);
-          setEventConfig(activeEvent || null);
+          setEventConfig(activeEvent || events[0] || null);
           
           // Fetch event roles if we have an active event
           if (activeEvent) {
