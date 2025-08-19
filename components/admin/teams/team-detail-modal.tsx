@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   Users,
   User,
-  Calendar,
   Mail,
   Phone,
   MapPin,
@@ -97,11 +96,10 @@ interface TeamInfo {
 }
 
 interface TeamStats {
-  total_members: number;
-  gender_distribution: Array<{ gender: string; count: number }>;
-  age_distribution: Array<{ age_group: string; count: number }>;
-  province_distribution: Array<{ province: string; count: number }>;
-  status_distribution: Array<{ status: string; count: number }>;
+  gender: Array<{ gender: string; count: number }>;
+  age: Array<{ age_group: string; count: number }>;
+  province: Array<{ province: string; count: number }>;
+  registration_status: Array<{ status: string; count: number }>;
 }
 
 interface TeamDetailModalProps {
@@ -140,7 +138,7 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
 
       setTeamInfo(membersData.team);
       setMembers(membersData.members || []);
-      setStats(statsData.statistics);
+      setStats(statsData.distributions);
     } catch (err) {
       console.error("Error fetching team data:", err);
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
@@ -170,15 +168,29 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const getGenderRatio = () => {
+    if (!stats || !stats.gender || stats.gender.length === 0) {
+      return "Chưa có dữ liệu";
+    }
+
+    const totalMembers = stats.gender.reduce((sum, item) => sum + item.count, 0);
+    if (totalMembers === 0) {
+      return "Chưa có thành viên";
+    }
+
+    const maleData = stats.gender.find(g => g.gender === "Nam");
+    const femaleData = stats.gender.find(g => g.gender === "Nữ");
+
+    const maleCount = maleData?.count || 0;
+    const femaleCount = femaleData?.count || 0;
+
+    const malePercent = totalMembers > 0 ? Math.round((maleCount / totalMembers) * 100) : 0;
+    const femalePercent = totalMembers > 0 ? Math.round((femaleCount / totalMembers) * 100) : 0;
+
+    return `Nam: ${maleCount} người (${malePercent}%) - Nữ: ${femaleCount} người (${femalePercent}%)`;
   };
+
+
 
   if (!isOpen) return null;
 
@@ -234,13 +246,13 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                     <div className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4" />
                       <span>
-                        Số thành viên: {stats?.total_members || 0}
+                        Số thành viên: {stats?.gender ? stats.gender.reduce((sum, item) => sum + item.count, 0) : 0}
                         {teamInfo.capacity && ` / ${teamInfo.capacity}`}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4" />
-                      <span>Tạo lúc: {formatDate(teamInfo.created_at)}</span>
+                      <Users className="h-4 w-4" />
+                      <span>{getGenderRatio()}</span>
                     </div>
                   </div>
                 </div>
@@ -299,24 +311,26 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{stats.total_members}</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {stats.gender ? stats.gender.reduce((sum, item) => sum + item.count, 0) : 0}
+                      </div>
                       <div className="text-sm text-muted-foreground">Tổng thành viên</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {stats.gender_distribution.find(g => g.gender === "Nam")?.count || 0}
+                        {stats.gender?.find(g => g.gender === "Nam")?.count || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Nam</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-pink-600">
-                        {stats.gender_distribution.find(g => g.gender === "Nữ")?.count || 0}
+                        {stats.gender?.find(g => g.gender === "Nữ")?.count || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Nữ</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {stats.status_distribution.find(s => s.status === "confirmed")?.count || 0}
+                        {stats.registration_status?.find(s => s.status === "confirmed")?.count || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Đã xác nhận</div>
                     </div>
@@ -428,7 +442,7 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
             )}
 
             {/* Distribution Charts */}
-            {stats && stats.total_members > 0 && (
+            {stats && stats.gender && stats.gender.reduce((sum, item) => sum + item.count, 0) > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Age Distribution */}
                 <Card>
@@ -437,20 +451,20 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.age_distribution.map((item) => (
+                      {stats.age?.map((item) => (
                         <div key={item.age_group} className="flex items-center justify-between">
                           <span className="text-sm">{formatAgeGroup(item.age_group)}</span>
                           <div className="flex items-center gap-2">
                             <div className="w-20 bg-gray-200 rounded-full h-2">
                               <div
                                 className="bg-blue-600 h-2 rounded-full"
-                                style={{ width: `${(item.count / stats.total_members) * 100}%` }}
+                                style={{ width: `${(item.count / (stats.gender?.reduce((sum, g) => sum + g.count, 0) || 1)) * 100}%` }}
                               />
                             </div>
                             <span className="text-sm font-medium w-8 text-right">{item.count}</span>
                           </div>
                         </div>
-                      ))}
+                      )) || []}
                     </div>
                   </CardContent>
                 </Card>
@@ -462,23 +476,23 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.province_distribution.slice(0, 5).map((item) => (
+                      {stats.province?.slice(0, 5).map((item) => (
                         <div key={item.province} className="flex items-center justify-between">
                           <span className="text-sm">{item.province}</span>
                           <div className="flex items-center gap-2">
                             <div className="w-20 bg-gray-200 rounded-full h-2">
                               <div
                                 className="bg-green-600 h-2 rounded-full"
-                                style={{ width: `${(item.count / stats.total_members) * 100}%` }}
+                                style={{ width: `${(item.count / (stats.gender?.reduce((sum, g) => sum + g.count, 0) || 1)) * 100}%` }}
                               />
                             </div>
                             <span className="text-sm font-medium w-8 text-right">{item.count}</span>
                           </div>
                         </div>
-                      ))}
-                      {stats.province_distribution.length > 5 && (
+                      )) || []}
+                      {stats.province && stats.province.length > 5 && (
                         <div className="text-xs text-muted-foreground text-center pt-2">
-                          Và {stats.province_distribution.length - 5} tỉnh thành khác...
+                          Và {stats.province.length - 5} tỉnh thành khác...
                         </div>
                       )}
                     </div>
