@@ -3,7 +3,7 @@
 import { AnalyticsProvider, SummaryReport } from "@/components/admin/analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, Settings, Database } from "lucide-react";
+import { FileText, Users, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAdminData } from "@/components/admin/admin-context";
 
@@ -59,7 +59,6 @@ export function AdminOverview() {
             )}
 
             {userRole === 'super_admin' && (
-              <>
               <Button
               variant="outline"
               className="h-20 flex-col gap-2"
@@ -68,16 +67,6 @@ export function AdminOverview() {
               <Users className="h-6 w-6" />
               <span className="text-sm">Quản lý người dùng</span>
             </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-                onClick={() => router.push('/admin/backup')}
-              >
-                <Database className="h-6 w-6" />
-                <span className="text-sm">Backup & Export</span>
-              </Button>
-              </>
             )}
           </div>
         </CardContent>

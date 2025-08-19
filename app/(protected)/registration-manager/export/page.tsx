@@ -7,22 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Filter, 
-  Printer,
+  Filter,
   BarChart3,
   Users,
   MapPin,
-  Church,
-  Download
+  Church
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import {Registrant,Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES, AGE_GROUPS } from "@/lib/types";
+import {Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES, AGE_GROUPS } from "@/lib/types";
 import { format } from "date-fns";
 
-import { exportRegistrantsWithRolesCSV, RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
+import {  RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
 
 
 interface ExportFilters {
@@ -67,8 +64,7 @@ const STATUS_OPTIONS = [
 ];
 
 const REPORT_TYPES = [
-  { value: 'detailed', label: 'Báo cáo chi tiết', icon: Users },
-  { value: 'registrants', label: 'Danh sách người tham gia theo ban', icon: Users },
+  { value: 'registrants', label: 'Danh sách người tham', icon: Users },
   { value: 'shirt-size', label: 'Thống kê size áo', icon: BarChart3 },
   { value: 'province', label: 'Thống kê tỉnh thành', icon: MapPin },
   { value: 'diocese', label: 'Thống kê giáo phận', icon: Church }
@@ -121,19 +117,6 @@ function formatCurrency(amount: number): string {
     style: 'currency',
     currency: 'JPY',
   }).format(amount);
-}
-
-function formatParticipantNames(registrants: Registrant[]): string {
-  if (!registrants || registrants.length === 0) return '';
-  if (registrants.length === 1) return registrants[0].full_name;
-  
-  const primary = registrants.find(r => r.is_primary)?.full_name || registrants[0].full_name;
-  const others = registrants.filter(r => !r.is_primary).length;
-  
-  if (others > 0) {
-    return `${primary} (+ ${others} người khác)`;
-  }
-  return primary;
 }
 
 // Analytics helper functions
@@ -221,7 +204,7 @@ export default function ExportPage() {
       includePersonalInfo: true,
       includePaymentInfo: true,
       includeRegistrants: true,
-      reportType: 'detailed',
+      reportType: 'registrants',
       teamName: 'all',
       ageGroup: 'all'
     }
@@ -389,19 +372,6 @@ export default function ExportPage() {
     }));
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-
-  const handleExportCSV = () => {
-    if (state.filters.reportType === 'registrants') {
-      exportRegistrantsWithRolesCSV(state.filteredRegistrants);
-      toast.success('Đã xuất dữ liệu registrants thành công!');
-    } else {
-      toast.info('Chức năng xuất CSV chỉ có sẵn cho báo cáo registrants');
-    }
-  };
 
   const clearFilters = () => {
     setState(prev => ({
@@ -442,18 +412,6 @@ export default function ExportPage() {
           <Link href="/registration-manager" className="text-blue-500 hover:border-b hover:border-blue-500 hover:bg-blue-50 px-2 py-1 rounded">
             Quay lại quản lý đăng ký
           </Link>
-        </div>
-        <div className="flex gap-2">
-          {state.filters.reportType === 'registrants' && (
-            <Button onClick={handleExportCSV} className="no-print" variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Xuất CSV
-            </Button>
-          )}
-          <Button onClick={handlePrint} className="no-print">
-            <Printer className="h-4 w-4 mr-2" />
-            In / Xuất PDF
-          </Button>
         </div>
       </div>
 
@@ -570,35 +528,6 @@ export default function ExportPage() {
             </div>
           </div>
 
-          {state.filters.reportType === 'detailed' && (
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="includePersonalInfo"
-                  checked={state.filters.includePersonalInfo}
-                  onCheckedChange={(checked) => updateFilter('includePersonalInfo', checked as boolean)}
-                />
-                <Label htmlFor="includePersonalInfo">Thông tin cá nhân</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="includePaymentInfo"
-                  checked={state.filters.includePaymentInfo}
-                  onCheckedChange={(checked) => updateFilter('includePaymentInfo', checked as boolean)}
-                />
-                <Label htmlFor="includePaymentInfo">Thông tin đóng phí tham dự</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="includeRegistrants"
-                  checked={state.filters.includeRegistrants}
-                  onCheckedChange={(checked) => updateFilter('includeRegistrants', checked as boolean)}
-                />
-                <Label htmlFor="includeRegistrants">Chi tiết người tham gia</Label>
-              </div>
-            </div>
-          )}
-
           <div className="flex gap-2">
             <Button variant="outline" onClick={clearFilters}>
               Xóa bộ lọc
@@ -658,98 +587,6 @@ export default function ExportPage() {
         </CardContent>
       </Card>
 
-      {/* Conditional Report Content */}
-      {state.filters.reportType === 'detailed' && (
-        <Card className="print-include">
-          <CardHeader>
-            <CardTitle>Chi tiết đăng ký ({state.filteredRegistrations.length} kết quả)</CardTitle>
-          </CardHeader>
-          <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 p-2 text-left">Mã đăng ký</th>
-                  {state.filters.includePersonalInfo && (
-                    <>
-                      <th className="border border-gray-300 p-2 text-left">Người đăng ký</th>
-                      <th className="border border-gray-300 p-2 text-left">Email</th>
-                      <th className="border border-gray-300 p-2 text-left">Vai trò</th>
-                    </>
-                  )}
-                  <th className="border border-gray-300 p-2 text-left">Số người</th>
-                  <th className="border border-gray-300 p-2 text-left">Trạng thái</th>
-                  {state.filters.includePaymentInfo && (
-                    <th className="border border-gray-300 p-2 text-left">Số tiền</th>
-                  )}
-                  <th className="border border-gray-300 p-2 text-left">Ngày đăng ký</th>
-                  {state.filters.includeRegistrants && (
-                    <th className="border border-gray-300 p-2 text-left">Người tham gia</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {state.filteredRegistrations.map((registration) => (
-                  <tr key={registration.id} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 p-2 font-mono text-sm">
-                      {registration.invoice_code}
-                    </td>
-                    {state.filters.includePersonalInfo && (
-                      <>
-                        <td className="border border-gray-300 p-2">
-                          {registration.user?.full_name || 'N/A'}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-sm">
-                          {registration.user?.email || 'N/A'}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-sm">
-                          {(() => {
-                            const primaryRegistrant = registration.registrants?.find(r => r.is_primary);
-                            const roleName = primaryRegistrant?.event_roles?.name;
-                            // Nếu là participant hoặc không có role thì để trống
-                            if (!roleName) {
-                              return 'Tham dự viên';
-                            }
-                            return roleName;
-                          })()}
-                        </td>
-                      </>
-                    )}
-                    <td className="border border-gray-300 p-2 text-center">
-                      {registration.participant_count}
-                    </td>
-                    <td className="border border-gray-300 p-2">
-                      <Badge variant={getStatusBadgeVariant(registration.status)}>
-                        {getStatusLabel(registration.status)}
-                      </Badge>
-                    </td>
-                    {state.filters.includePaymentInfo && (
-                      <td className="border border-gray-300 p-2 text-right">
-                        {formatCurrency(registration.total_amount)}
-                      </td>
-                    )}
-                    <td className="border border-gray-300 p-2 text-sm">
-                      {format(new Date(registration.created_at), 'dd/MM/yyyy')}
-                    </td>
-                    {state.filters.includeRegistrants && (
-                      <td className="border border-gray-300 p-2">
-                        {formatParticipantNames(registration.registrants || [])}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-            {state.filteredRegistrations.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                Không có dữ liệu phù hợp với bộ lọc
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Shirt Size Report */}
       {state.filters.reportType === 'shirt-size' && (
@@ -881,7 +718,7 @@ export default function ExportPage() {
           <CardHeader>
             <CardTitle>
               Danh sách người tham gia ({state.filteredRegistrants.length} người)
-              {state.filters.teamName && ` - Nhóm: ${state.filters.teamName}`}
+              {state.filters.teamName && ` - Nhóm: ${state.filters.teamName === 'all' ? 'Tất cả' : state.filters.teamName}`}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -889,6 +726,7 @@ export default function ExportPage() {
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
                   <tr className="bg-gray-50">
+                    <th className="border border-gray-300 p-2 text-left">Mã đăng ký</th>
                     <th className="border border-gray-300 p-2 text-left">Họ tên</th>
                     <th className="border border-gray-300 p-2 text-left">Fb/Email</th>
                     <th className="border border-gray-300 p-2 text-left">Giới tính</th>
@@ -902,6 +740,9 @@ export default function ExportPage() {
                 <tbody>
                   {state.filteredRegistrants.map((registrant) => (
                     <tr key={registrant.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 p-2 font-mono text-sm">
+                        {registrant.registration?.invoice_code}
+                      </td>
                       <td className="border border-gray-300 p-2">
                         {registrant.full_name}
                         {registrant.is_primary && <span className="ml-1 text-blue-600 text-xs">(Chính)</span>}
