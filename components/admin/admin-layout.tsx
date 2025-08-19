@@ -12,7 +12,6 @@ import {
   BarChart3,
   Wrench,
   Truck,
-  Database
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -130,12 +129,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/events',
       label: 'Sự kiện',
       icon: Settings,
-      roles: ['super_admin']
-    },
-    {
-      href: '/admin/backup',
-      label: 'Backup',
-      icon: Database,
       roles: ['super_admin']
     },
   ];
