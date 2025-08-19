@@ -12,7 +12,8 @@ import {
   BarChart3,
   Users,
   MapPin,
-  Church
+  Church,
+  ArrowUpDown
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -33,6 +34,11 @@ interface ExportFilters {
   reportType: string;
   teamName: string;
   ageGroup: string; // added age group filter
+  gender: string; // new gender filter
+  province: string; // new province filter
+  diocese: string; // new diocese filter
+  sortBy: string; // sorting field
+  sortDirection: 'asc' | 'desc'; // sorting direction
 }
 
 interface ExportPageState {
@@ -43,6 +49,7 @@ interface ExportPageState {
   loading: boolean;
   filters: ExportFilters;
   availableTeams: string[];
+  availableDioceses: string[]; // new
 }
 
 const STATUS_OPTIONS = [
@@ -68,6 +75,21 @@ const REPORT_TYPES = [
   { value: 'shirt-size', label: 'Thống kê size áo', icon: BarChart3 },
   { value: 'province', label: 'Thống kê tỉnh thành', icon: MapPin },
   { value: 'diocese', label: 'Thống kê giáo phận', icon: Church }
+];
+
+const GENDER_OPTIONS = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'male', label: 'Nam' },
+  { value: 'female', label: 'Nữ' },
+  { value: 'other', label: 'Khác' }
+];
+
+const SORT_OPTIONS = [
+  { value: 'name', label: 'Họ tên' },
+  { value: 'province', label: 'Tỉnh thành' },
+  { value: 'diocese', label: 'Giáo phận' },
+  { value: 'gender', label: 'Giới tính' },
+  { value: 'status', label: 'Trạng thái' }
 ];
 
 function getStatusLabel(status: RegistrationStatus): string {
@@ -196,8 +218,9 @@ export default function ExportPage() {
     filteredRegistrants: [],
     loading: true,
     availableTeams: [],
+    availableDioceses: [],
     filters: {
-      status: 'all',
+      status: 'confirmed',
       dateFrom: '',
       dateTo: '',
       search: '',
@@ -206,7 +229,12 @@ export default function ExportPage() {
       includeRegistrants: true,
       reportType: 'registrants',
       teamName: 'all',
-      ageGroup: 'all'
+      ageGroup: 'all',
+      gender: 'all',
+      province: 'all',
+      diocese: 'all',
+      sortBy: 'name',
+      sortDirection: 'asc'
     }
   });
 
@@ -249,11 +277,15 @@ export default function ExportPage() {
           registrantsResponse.json()
         ]);
 
-        // Extract unique team names for filtering
+        // Extract unique team names & dioceses for filtering
         const teams = new Set<string>();
+        const dioceses = new Set<string>();
         registrantsData.registrants?.forEach((r: RegistrantWithRoleAndRegistration) => {
           if (r.event_roles?.team_name) {
             teams.add(r.event_roles.team_name);
+          }
+          if (r.diocese) {
+            dioceses.add(r.diocese.trim());
           }
         });
         
@@ -263,7 +295,8 @@ export default function ExportPage() {
           filteredRegistrations: registrationsData.registrations || [],
           registrants: registrantsData.registrants || [],
           filteredRegistrants: registrantsData.registrants || [],
-          availableTeams: Array.from(teams).sort(),
+          availableTeams: Array.from(teams).sort((a,b)=>a.localeCompare(b,'vi',{sensitivity:'base'})),
+          availableDioceses: Array.from(dioceses).sort((a,b)=>a.localeCompare(b,'vi',{sensitivity:'base'})),
           loading: false
         }));
       } catch (error) {
@@ -280,24 +313,28 @@ export default function ExportPage() {
   useEffect(() => {
     // Filter registrations
     let filteredRegs = [...state.registrations];
+    let filteredRegsts = [...state.registrants];
 
     // Status filter
     if (state.filters.status !== 'all') {
       filteredRegs = filteredRegs.filter(reg => reg.status === state.filters.status);
+      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.status === state.filters.status);
     }
 
-    // Date range filter
+    // Date range
     if (state.filters.dateFrom) {
       const fromDate = new Date(state.filters.dateFrom);
       filteredRegs = filteredRegs.filter(reg => new Date(reg.created_at) >= fromDate);
+      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.created_at && new Date(reg.registration.created_at) >= fromDate);
     }
     if (state.filters.dateTo) {
       const toDate = new Date(state.filters.dateTo);
       toDate.setHours(23, 59, 59, 999);
       filteredRegs = filteredRegs.filter(reg => new Date(reg.created_at) <= toDate);
+      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.created_at && new Date(reg.registration.created_at) <= toDate);
     }
 
-    // Search filter
+    // Search
     if (state.filters.search) {
       const searchTerm = state.filters.search.toLowerCase();
       filteredRegs = filteredRegs.filter(reg => 
@@ -306,34 +343,6 @@ export default function ExportPage() {
         reg.user?.email?.toLowerCase().includes(searchTerm) ||
         reg.registrants?.some(r => r.full_name.toLowerCase().includes(searchTerm))
       );
-    }
-
-    // Filter registrants
-    let filteredRegsts = [...state.registrants];
-
-    // Status filter for registrants (based on registration status)
-    if (state.filters.status !== 'all') {
-      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.status === state.filters.status);
-    }
-
-    // Date range filter for registrants
-    if (state.filters.dateFrom) {
-      const fromDate = new Date(state.filters.dateFrom);
-      filteredRegsts = filteredRegsts.filter(reg => 
-        reg.registration?.created_at && new Date(reg.registration.created_at) >= fromDate
-      );
-    }
-    if (state.filters.dateTo) {
-      const toDate = new Date(state.filters.dateTo);
-      toDate.setHours(23, 59, 59, 999);
-      filteredRegsts = filteredRegsts.filter(reg => 
-        reg.registration?.created_at && new Date(reg.registration.created_at) <= toDate
-      );
-    }
-
-    // Search filter for registrants
-    if (state.filters.search) {
-      const searchTerm = state.filters.search.toLowerCase();
       filteredRegsts = filteredRegsts.filter(reg => 
         reg.registration?.invoice_code?.toLowerCase().includes(searchTerm) ||
         reg.registration?.user?.full_name?.toLowerCase().includes(searchTerm) ||
@@ -343,23 +352,54 @@ export default function ExportPage() {
       );
     }
 
-    // Team filter for registrants
-    if (state.filters.teamName && state.filters.teamName !== 'all') {
-      filteredRegsts = filteredRegsts.filter(reg => 
-        reg.event_roles?.team_name === state.filters.teamName
-      );
+    // Team
+    if (state.filters.teamName !== 'all') {
+      filteredRegsts = filteredRegsts.filter(reg => reg.event_roles?.team_name === state.filters.teamName);
     }
 
-    // Age group filter (applies to both registrations and registrants)
-    if (state.filters.ageGroup && state.filters.ageGroup !== 'all') {
-      filteredRegs = filteredRegs.filter(reg => 
-        reg.registrants?.some(r => r.age_group === state.filters.ageGroup)
-      );
+    // Age group
+    if (state.filters.ageGroup !== 'all') {
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.age_group === state.filters.ageGroup));
       filteredRegsts = filteredRegsts.filter(reg => reg.age_group === state.filters.ageGroup);
     }
 
-    setState(prev => ({ 
-      ...prev, 
+    // Gender
+    if (state.filters.gender !== 'all') {
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.gender === state.filters.gender));
+      filteredRegsts = filteredRegsts.filter(reg => reg.gender === state.filters.gender);
+    }
+
+    // Province
+    if (state.filters.province !== 'all') {
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.province === state.filters.province));
+      filteredRegsts = filteredRegsts.filter(reg => reg.province === state.filters.province);
+    }
+
+    // Diocese
+    if (state.filters.diocese !== 'all') {
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.diocese === state.filters.diocese));
+      filteredRegsts = filteredRegsts.filter(reg => reg.diocese === state.filters.diocese);
+    }
+
+    // Sorting (registrants)
+    const { sortBy, sortDirection } = state.filters;
+    if (sortBy) {
+      const dir = sortDirection === 'asc' ? 1 : -1;
+      const cmp = (a?: string, b?: string) => (a?.localeCompare(b || '', 'vi', { sensitivity: 'base' }) || 0) * dir;
+      filteredRegsts.sort((a, b) => {
+        switch (sortBy) {
+          case 'name': return cmp(a.full_name, b.full_name);
+          case 'province': return cmp(a.province, b.province);
+          case 'diocese': return cmp(a.diocese, b.diocese);
+          case 'gender': return cmp(a.gender, b.gender);
+          case 'status': return cmp(a.registration?.status, b.registration?.status);
+          default: return 0;
+        }
+      });
+    }
+
+    setState(prev => ({
+      ...prev,
       filteredRegistrations: filteredRegs,
       filteredRegistrants: filteredRegsts
     }));
@@ -386,7 +426,12 @@ export default function ExportPage() {
         includeRegistrants: true,
         reportType: 'detailed',
         teamName: 'all',
-        ageGroup: 'all'
+        ageGroup: 'all',
+        gender: 'all',
+        province: 'all',
+        diocese: 'all',
+        sortBy: 'name',
+        sortDirection: 'asc'
       }
     }));
   };
@@ -447,41 +492,6 @@ export default function ExportPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="status">Trạng thái</Label>
-              <Select value={state.filters.status} onValueChange={(value) => updateFilter('status', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="dateFrom">Từ ngày</Label>
-              <Input
-                id="dateFrom"
-                type="date"
-                value={state.filters.dateFrom}
-                onChange={(e) => updateFilter('dateFrom', e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="dateTo">Đến ngày</Label>
-              <Input
-                id="dateTo"
-                type="date"
-                value={state.filters.dateTo}
-                onChange={(e) => updateFilter('dateTo', e.target.value)}
-              />
-            </div>
 
             <div>
               <Label htmlFor="search">Tìm kiếm</Label>
@@ -495,18 +505,33 @@ export default function ExportPage() {
           </div>
 
           {/* Team filter for registrants report */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t py-4">
             <div>
-              <Label htmlFor="teamName">Lọc theo nhóm</Label>
+              <Label htmlFor="teamName">Lọc theo Ban</Label>
               <Select value={state.filters.teamName} onValueChange={(value) => updateFilter('teamName', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Tất cả nhóm" />
+                  <SelectValue placeholder="Tất cả mọi người" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả nhóm</SelectItem>
+                  <SelectItem value="all">Tất cả mọi người</SelectItem>
                   {state.availableTeams.map(team => (
                     <SelectItem key={team} value={team}>
                       {team}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="status">Trạng thái</Label>
+              <Select value={state.filters.status} onValueChange={(value) => updateFilter('status', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -525,6 +550,71 @@ export default function ExportPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="gender">Giới tính</Label>
+              <Select value={state.filters.gender} onValueChange={(value) => updateFilter('gender', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDER_OPTIONS.map(g => (
+                    <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Extended filters row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t py-4">
+            <div>
+              <Label htmlFor="province">Tỉnh thành</Label>
+              <Select value={state.filters.province} onValueChange={(value) => updateFilter('province', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả tỉnh" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả tỉnh</SelectItem>
+                  {JAPANESE_PROVINCES.map(p => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="diocese">Giáo phận</Label>
+              <Select value={state.filters.diocese} onValueChange={(value) => updateFilter('diocese', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả giáo phận" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả giáo phận</SelectItem>
+                  {state.availableDioceses.map(d => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="sortBy">Sắp xếp</Label>
+              <Select value={state.filters.sortBy} onValueChange={(value) => updateFilter('sortBy', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn tiêu chí" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map(o => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col justify-end gap-1">
+              <Label className="hidden md:block">&nbsp;</Label>
+              <Button variant="outline" size="sm" onClick={() => updateFilter('sortDirection', state.filters.sortDirection === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4" />
+                {state.filters.sortDirection === 'asc' ? 'Tăng dần' : 'Giảm dần'}
+              </Button>
             </div>
           </div>
 
