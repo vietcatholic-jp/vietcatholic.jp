@@ -645,9 +645,9 @@ export default function ExportPage() {
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {state.filteredRegistrants.filter(r => ['confirm_paid', 'confirmed', 'checked_in'].includes(r.registration?.status ?? "")).length}
+                {state.filteredRegistrants.filter(r => ['report_paid','temp_confirmed','confirm_paid', 'confirmed', 'checked_in'].includes(r.registration?.status ?? "")).length}
               </div>
-              <div className="text-sm text-muted-foreground">Đã xác nhận</div>
+              <div className="text-sm text-muted-foreground">Đã chuyển khoản + Đã xác nhận + Xác nhận tạm</div>
             </div>
           </div>
           ):(
@@ -667,9 +667,9 @@ export default function ExportPage() {
             </div>)}
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {state.filteredRegistrations.filter(r => ['confirm_paid', 'confirmed', 'checked_in'].includes(r.status)).length}
+                {state.filteredRegistrations.filter(r => ['report_paid','temp_confirmed','confirm_paid', 'confirmed', 'checked_in'].includes(r.status)).length}
               </div>
-              <div className="text-sm text-muted-foreground">Đã xác nhận</div>
+              <div className="text-sm text-muted-foreground">Đã chuyển khoản + Đã xác nhận + Xác nhận tạm</div>
             </div>
           </div>
           )}
