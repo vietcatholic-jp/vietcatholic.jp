@@ -60,6 +60,7 @@ const STATUS_OPTIONS = [
   { value: 'payment_rejected', label: 'Đóng phí tham dự bị từ chối' },
   { value: 'confirmed', label: 'Đã xác nhận' },
   { value: 'temp_confirmed', label: 'Đã xác nhận (thanh toán sau)' },
+  { value: 'all_confirmed', label: 'Tất cả đã xác nhận' },
   { value: 'checked_in', label: 'Đã check-in' },
   { value: 'checked_out', label: 'Đã check-out' },
   { value: 'donation', label: 'Đã chuyển thành quyên góp' },
@@ -67,7 +68,8 @@ const STATUS_OPTIONS = [
   { value: 'cancel_accepted', label: 'Đã chấp nhận hủy' },
   { value: 'cancel_rejected', label: 'Đã từ chối hủy' },
   { value: 'cancel_processed', label: 'Đã hoàn tiền' },
-  { value: 'cancelled', label: 'Đã hủy' }
+  { value: 'cancelled', label: 'Đã hủy' },
+  { value: 'be_cancelled', label: 'Đã bị hủy' },
 ];
 
 const REPORT_TYPES = [
@@ -316,9 +318,14 @@ export default function ExportPage() {
     let filteredRegsts = [...state.registrants];
 
     // Status filter
-    if (state.filters.status !== 'all') {
+    if (state.filters.status !== 'all' && state.filters.status !== 'all_confirmed') {
       filteredRegs = filteredRegs.filter(reg => reg.status === state.filters.status);
       filteredRegsts = filteredRegsts.filter(reg => reg.registration?.status === state.filters.status);
+    }
+
+    if (state.filters.status === 'all_confirmed') {
+      filteredRegs = filteredRegs.filter(reg => ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.status));
+      filteredRegsts = filteredRegsts.filter(reg => ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.registration?.status || ""));
     }
 
     // Date range
