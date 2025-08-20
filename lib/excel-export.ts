@@ -27,8 +27,8 @@ export function createTeamMembersWorkbook(
   const excelData = members.map((member, index) => ({
     'STT': index + 1,
     'Họ và tên': member.full_name || '',
-    'Giới tính': member.gender || '',
-    'Nhóm tuổi': member.age_group || '',
+    'Giới tính': formatGender(member.gender),
+    'Nhóm tuổi': formatAgeGroup(member.age_group),
     'Tỉnh/Thành phố': member.province || '',
     'Giáo phận': member.diocese || '',
     'Email': member.email || '',
@@ -137,6 +137,30 @@ function getStatusLabel(status?: string): string {
     'cancelled': 'Đã hủy',
     'rejected': 'Bị từ chối'
   };
-  
+
   return statusLabels[status || ''] || status || '';
+}
+
+// Helper function to format gender in Vietnamese
+function formatGender(gender?: string): string {
+  const genderLabels: Record<string, string> = {
+    'male': 'Nam',
+    'female': 'Nữ'
+  };
+
+  return genderLabels[gender || ''] || gender || '';
+}
+
+// Helper function to format age group in Vietnamese
+function formatAgeGroup(ageGroup?: string): string {
+  const ageGroupLabels: Record<string, string> = {
+    '18_25': '18-25 tuổi',
+    '26_35': '26-35 tuổi',
+    '36_45': '36-45 tuổi',
+    '46_55': '46-55 tuổi',
+    '56_65': '56-65 tuổi',
+    '66_plus': '66+ tuổi'
+  };
+
+  return ageGroupLabels[ageGroup || ''] || ageGroup || '';
 }
