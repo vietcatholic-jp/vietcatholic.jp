@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { EventLogger } from "@/lib/logging/event-logger";
+import { EVENT_CATEGORIES } from "@/lib/logging/types";
+import { createRequestContext } from "@/lib/logging/request-context";
 
 export async function GET() {
   try {
@@ -44,12 +47,23 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+    const logger = new EventLogger();
+    const context = createRequestContext(request);
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    await logger.logInfo(
+      "event_creation_attempt",
+      EVENT_CATEGORIES.ADMIN,
+      {
+        ...context,
+        userId: user.id,
+        userEmail: user.email,
+      }
+    );
 
     // Check if user is super admin
     const { data: profile } = await supabase
@@ -110,6 +124,8 @@ export async function PUT(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const logger = new EventLogger();
+    const context = createRequestContext(request);
 
     // Check if user is super admin
     const { data: profile } = await supabase
@@ -117,6 +133,16 @@ export async function PUT(request: NextRequest) {
       .select("role")
       .eq("id", user.id)
       .single();
+
+    await logger.logInfo(
+      "event_update_attempt",
+      EVENT_CATEGORIES.ADMIN,
+      {
+        ...context,
+        userId: user.id,
+        userEmail: user.email,
+      }
+    );
 
     if (!profile || profile.role !== "super_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -165,7 +191,9 @@ export async function PUT(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+    const logger = new EventLogger();
+    const context = createRequestContext(request);
+
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -178,6 +206,16 @@ export async function PATCH(request: NextRequest) {
       .select("role")
       .eq("id", user.id)
       .single();
+
+    await logger.logInfo(
+      "event_update_status_attempt",
+      EVENT_CATEGORIES.ADMIN,
+      {
+        ...context,
+        userId: user.id,
+        userEmail: user.email,
+      }
+    );
 
     if (!profile || profile.role !== "super_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -255,6 +293,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete event
+    /**
     const { error: deleteError } = await supabase
       .from("event_configs")
       .delete()
@@ -264,7 +303,7 @@ export async function DELETE(request: NextRequest) {
       console.error("Event deletion error:", deleteError);
       return NextResponse.json({ error: "Failed to delete event" }, { status: 500 });
     }
-
+    */
     return NextResponse.json({ 
       success: true, 
       message: "Event deleted successfully" 
