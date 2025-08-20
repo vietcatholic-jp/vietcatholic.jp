@@ -13,7 +13,8 @@ import {
   MapPin,
   UserX,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Download
 } from "lucide-react";
 import { formatAgeGroup, formatGender } from "@/lib/utils";
 import { RoleBadgeCompact } from "@/components/ui/role-badge";
@@ -114,6 +115,7 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
   const [stats, setStats] = useState<TeamStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const fetchTeamData = useCallback(async () => {
     if (!teamId) return;
@@ -190,6 +192,49 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
     return `Nam: ${maleCount} người (${malePercent}%) - Nữ: ${femaleCount} người (${femalePercent}%)`;
   };
 
+  const handleExportExcel = async () => {
+    if (!teamInfo || !teamId) return;
+
+    setIsExporting(true);
+    try {
+      const response = await fetch(`/api/admin/teams/${teamId}/export`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Không thể xuất file Excel');
+      }
+
+      // Get filename from response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `Danh_sach_${teamInfo.name}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''));
+        }
+      }
+
+      // Download file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('Export error:', error);
+      alert(error instanceof Error ? error.message : 'Đã xảy ra lỗi khi xuất file');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
 
 
   if (!isOpen) return null;
@@ -241,6 +286,19 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                     {teamInfo.description && (
                       <p className="text-muted-foreground mt-1">{teamInfo.description}</p>
                     )}
+                    {/* Export Excel Button */}
+                    <div className="mt-3">
+                      <Button
+                        onClick={handleExportExcel}
+                        disabled={isExporting || !members || members.length === 0}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        {isExporting ? 'Đang xuất...' : 'Xuất Excel'}
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
