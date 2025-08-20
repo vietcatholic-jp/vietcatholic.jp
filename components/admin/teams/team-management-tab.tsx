@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Eye, UserMinus, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { Users, Eye, UserMinus, MoreVertical, Edit, Trash2, Download } from "lucide-react";
 import { formatAgeGroup } from "@/lib/utils";
 import { CreateTeamModal } from "./create-team-modal";
 import { EditTeamModal } from "./edit-team-modal";
@@ -37,6 +37,7 @@ export function TeamManagementTab() {
   const [editTeam, setEditTeam] = useState<EventTeamWithDetails | null>(null);
   const [manageTeam, setManageTeam] = useState<EventTeamWithDetails | null>(null);
   const [detailTeamId, setDetailTeamId] = useState<string | null>(null);
+  const [exportingTeamId, setExportingTeamId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeams();
@@ -85,6 +86,48 @@ export function TeamManagementTab() {
       toast.error(error instanceof Error ? error.message : "Đã xảy ra lỗi");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleExportExcel = async (team: EventTeamWithDetails) => {
+    setExportingTeamId(team.id);
+    try {
+      const response = await fetch(`/api/admin/teams/${team.id}/export`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Không thể xuất file Excel');
+      }
+
+      // Get filename from response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `Danh_sach_${team.name}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''));
+        }
+      }
+
+      // Download file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Xuất file Excel thành công!');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error(error instanceof Error ? error.message : 'Đã xảy ra lỗi khi xuất file');
+    } finally {
+      setExportingTeamId(null);
     }
   };
 
@@ -220,6 +263,15 @@ export function TeamManagementTab() {
                   <Button variant="outline" size="sm" onClick={() => setDetailTeamId(team.id)}>
                     <Eye className="h-4 w-4 mr-1" />
                     Xem chi tiết
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExportExcel(team)}
+                    disabled={exportingTeamId === team.id || team.member_count === 0}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    {exportingTeamId === team.id ? 'Đang xuất...' : 'Xuất Excel'}
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => setManageTeam(team)}>
                     <UserMinus className="h-4 w-4 mr-1" />
