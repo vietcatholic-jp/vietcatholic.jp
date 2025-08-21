@@ -26,6 +26,7 @@ interface MissingRegistrant {
     email: string;
     full_name?: string;
     province?: string;
+    facebook_link?: string;
   };
 }
 
@@ -253,6 +254,18 @@ export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
                               </div>
                               <div className="text-gray-600 mt-1">
                                 📧 {reg.user?.email}
+                              </div>
+                              <div className="text-gray-600 mt-1">
+                                {reg.user?.facebook_link && (
+                                  <a 
+                                    href={reg.user.facebook_link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline"
+                                  >
+                                    {reg.user.facebook_link}
+                                  </a>
+                                )}
                               </div>
                               <div className="text-gray-500 text-xs mt-1">
                                 📋 Mã: {reg.invoice_code} • 
