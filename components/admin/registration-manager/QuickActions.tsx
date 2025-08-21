@@ -295,7 +295,7 @@ export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
                       ))}
                     </div>
                     <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-                      💡 <strong>Hướng dẫn:</strong> Liên hệ với từng người qua email, gửi cho họ link chỉnh sửa để họ tự cập nhật thông tin đầy đủ.
+                      💡 <strong>Hướng dẫn:</strong> Liên hệ với từng người qua facebook(email), gửi cho họ link chỉnh sửa để họ tự cập nhật thông tin đầy đủ.
                     </div>
                   </div>
                 )}
