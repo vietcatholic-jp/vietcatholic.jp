@@ -146,7 +146,8 @@ export async function GET() {
         users!registrations_user_id_fkey(
           email,
           full_name,
-          province
+          province,
+		  facebook_url
         )
       `)
       .not("status", "in", "(cancelled,be_cancelled,cancel_accepted)");
