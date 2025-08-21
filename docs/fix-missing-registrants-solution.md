@@ -40,8 +40,17 @@ Admin API endpoint that can:
 Added to the Registration Manager Dashboard:
 - Automatically checks for missing registrants on page load
 - Shows a warning if registrations without registrants are found
-- Provides one-click bulk fix functionality
-- Shows success/status feedback
+- Provides a "View List" button to see detailed information about problematic registrations
+- Shows user contact information and registration details
+- Provides copy-to-clipboard functionality for edit links
+- Shows guidance on how to contact users to guide them through the update process
+
+**Key Features:**
+- Lists all registrations missing registrant information
+- Shows user email, name, province, registration code, and date
+- One-click copy of edit URLs to send to users
+- Clear instructions for registration managers on how to proceed
+- Collapsible interface to save space when not needed
 
 ## Database Queries
 
@@ -108,8 +117,10 @@ AND r.status NOT IN ('cancelled', 'be_cancelled', 'cancel_accepted');
 1. Navigate to the Registration Manager Dashboard
 2. Look for the "Data Maintenance" section in Quick Actions
 3. If there are registrations missing registrants, a warning will appear
-4. Click "Tự động sửa chữa" (Auto Fix) to create missing registrants
-5. Users can then edit their registrations normally
+4. Click "Xem danh sách" (View List) to see the detailed list of problematic registrations
+5. Contact users via email using the provided contact information
+6. Use the "Copy link" button to get the edit URL for each user
+7. Send the edit link to users with instructions to complete their information
 
 ### For Users
 1. Access your registration edit page: `/register/[registration-id]`
@@ -122,11 +133,14 @@ Use the SQL script: `supabase/production/fix-missing-registrants.sql`
 
 ## Benefits
 
-1. **User-Friendly**: Users can immediately edit their registrations without technical intervention
-2. **Admin-Friendly**: Registration managers have tools to identify and fix issues in bulk
-3. **Safe**: Only creates registrants for valid, non-cancelled registrations
-4. **Informative**: Clear messaging guides users to complete missing information
-5. **Automatic**: Individual fixes happen seamlessly when users access edit pages
+1. **User-Guided Approach**: Registration managers can contact users directly to guide them through the update process
+2. **Personal Touch**: Maintains human contact rather than automated fixes
+3. **Data Quality**: Users provide their own accurate information rather than using defaults
+4. **Transparency**: Registration managers can see exactly which registrations need attention
+5. **Contact Management**: Easy access to user contact information and edit links
+6. **User-Friendly**: Users can immediately edit their registrations when they receive the link
+7. **Safe**: Only creates registrants for valid, non-cancelled registrations when users access edit pages
+8. **Automatic**: Individual fixes happen seamlessly when users access edit pages after being contacted
 
 ## Notes
 

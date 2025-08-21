@@ -11,12 +11,23 @@ import {
   Users,
   FileText,
   ExternalLink,
-  UserPlus,
   Database
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+
+interface MissingRegistrant {
+  id: string;
+  invoice_code: string;
+  status: string;
+  created_at: string;
+  user: {
+    email: string;
+    full_name?: string;
+    province?: string;
+  };
+}
 
 interface QuickActionsProps {
   stats: {
@@ -33,8 +44,10 @@ interface QuickActionsProps {
 
 export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
   const router = useRouter();
-  const [isFixingRegistrants, setIsFixingRegistrants] = useState(false);
   const [missingRegistrantsCount, setMissingRegistrantsCount] = useState<number | null>(null);
+  const [missingRegistrations, setMissingRegistrations] = useState<MissingRegistrant[]>([]);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   // Check for registrations without registrants on component mount
   useEffect(() => {
@@ -53,30 +66,32 @@ export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
     checkMissingRegistrants();
   }, []);
 
-  const handleFixRegistrants = async () => {
-    setIsFixingRegistrants(true);
+  const handleShowMissingRegistrants = async () => {
+    if (showDetails) {
+      setShowDetails(false);
+      return;
+    }
+
+    setIsLoadingDetails(true);
     try {
-      const response = await fetch('/api/admin/fix-registrants', {
-        method: 'POST',
-      });
-      
+      const response = await fetch('/api/admin/fix-registrants');
       if (!response.ok) {
-        throw new Error('Failed to fix registrants');
+        throw new Error('Failed to fetch missing registrants');
       }
       
       const result = await response.json();
       
-      if (result.created > 0) {
-        toast.success(`✅ Đã tạo thành công ${result.created} người tham gia chính cho các đăng ký thiếu thông tin`);
-        setMissingRegistrantsCount(0);
+      if (result.registrations) {
+        setMissingRegistrations(result.registrations);
+        setShowDetails(true);
       } else {
-        toast.info('ℹ️ Không có đăng ký nào cần sửa chữa');
+        toast.info('ℹ️ Không có đăng ký nào thiếu thông tin người tham gia');
       }
     } catch (error) {
-      console.error('Error fixing registrants:', error);
-      toast.error('❌ Lỗi khi sửa chữa đăng ký: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error('Error fetching missing registrants:', error);
+      toast.error('❌ Lỗi khi tải danh sách: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
-      setIsFixingRegistrants(false);
+      setIsLoadingDetails(false);
     }
   };
 
@@ -204,19 +219,73 @@ export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
                       Phát hiện {missingRegistrantsCount} đăng ký thiếu thông tin người tham gia
                     </h5>
                     <p className="text-sm text-amber-700 mb-3">
-                      Một số đăng ký không có thông tin người tham gia. Điều này có thể xảy ra do lỗi trong quá trình đăng ký.
+                      Các đăng ký này cần người tham gia cập nhật thông tin. Hãy liên hệ với họ để hướng dẫn.
                     </p>
                     <Button
                       size="sm"
-                      onClick={handleFixRegistrants}
-                      disabled={isFixingRegistrants}
-                      className="bg-amber-600 hover:bg-amber-700 text-white"
+                      onClick={handleShowMissingRegistrants}
+                      disabled={isLoadingDetails}
+                      variant="outline"
+                      className="border-amber-300 text-amber-800 hover:bg-amber-100"
                     >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      {isFixingRegistrants ? 'Đang sửa chữa...' : 'Tự động sửa chữa'}
+                      <Users className="h-4 w-4 mr-2" />
+                      {isLoadingDetails ? 'Đang tải...' : (showDetails ? 'Ẩn danh sách' : 'Xem danh sách')}
                     </Button>
                   </div>
                 </div>
+                
+                {/* List of registrations */}
+                {showDetails && missingRegistrations.length > 0 && (
+                  <div className="mt-4 border-t border-amber-200 pt-4">
+                    <h6 className="font-medium text-amber-800 mb-3">
+                      Danh sách đăng ký cần liên hệ:
+                    </h6>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {missingRegistrations.map((reg) => (
+                        <div
+                          key={reg.id}
+                          className="bg-white border border-amber-200 rounded-lg p-3 text-sm"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">
+                                {reg.user?.full_name || 'Tên chưa cập nhật'}
+                              </div>
+                              <div className="text-gray-600 mt-1">
+                                📧 {reg.user?.email}
+                              </div>
+                              <div className="text-gray-500 text-xs mt-1">
+                                📋 Mã: {reg.invoice_code} • 
+                                📅 {new Date(reg.created_at).toLocaleDateString('vi-VN')} •
+                                🏷️ {reg.status}
+                              </div>
+                              {reg.user?.province && (
+                                <div className="text-gray-500 text-xs">
+                                  📍 {reg.user.province}
+                                </div>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                const editUrl = `/register/${reg.id}`;
+                                navigator.clipboard.writeText(`${window.location.origin}${editUrl}`);
+                                toast.success('📋 Đã copy link chỉnh sửa vào clipboard');
+                              }}
+                              className="text-xs"
+                            >
+                              📋 Copy link
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                      💡 <strong>Hướng dẫn:</strong> Liên hệ với từng người qua email, gửi cho họ link chỉnh sửa để họ tự cập nhật thông tin đầy đủ.
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">

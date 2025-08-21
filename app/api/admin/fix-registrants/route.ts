@@ -139,8 +139,15 @@ export async function GET() {
       .from("registrations")
       .select(`
         id,
+        invoice_code,
         status,
-        registrants(id)
+        created_at,
+        registrants(id),
+        users!registrations_user_id_fkey(
+          email,
+          full_name,
+          province
+        )
       `)
       .not("status", "in", "(cancelled,be_cancelled,cancel_accepted)");
 
@@ -158,7 +165,14 @@ export async function GET() {
 
     return NextResponse.json({ 
       count: count || 0,
-      message: count ? `Found ${count} registrations without registrants` : "No registrations need fixing"
+      message: count ? `Found ${count} registrations without registrants` : "No registrations need fixing",
+      registrations: registrationsWithoutRegistrants.map(reg => ({
+        id: reg.id,
+        invoice_code: reg.invoice_code,
+        status: reg.status,
+        created_at: reg.created_at,
+        user: Array.isArray(reg.users) ? reg.users[0] : reg.users
+      }))
     });
 
   } catch (error) {
