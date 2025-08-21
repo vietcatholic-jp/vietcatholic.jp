@@ -75,7 +75,7 @@ export async function POST() {
         diocese: null,
         shirt_size: 'M' as const,
         is_primary: true,
-        facebook_link: userInfo?.facebook_url || '',
+        facebook_url: userInfo?.facebook_url || '',
         notes: 'Auto-created primary registrant - Please update all fields',
         created_at: reg.created_at, // Use registration creation time
         updated_at: new Date().toISOString()
@@ -146,7 +146,8 @@ export async function GET() {
         users!registrations_user_id_fkey(
           email,
           full_name,
-          province
+          province,
+		  facebook_url
         )
       `)
       .not("status", "in", "(cancelled,be_cancelled,cancel_accepted)");

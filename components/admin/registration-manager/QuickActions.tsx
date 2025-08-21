@@ -26,7 +26,7 @@ interface MissingRegistrant {
     email: string;
     full_name?: string;
     province?: string;
-    facebook_link?: string;
+    facebook_url?: string;
   };
 }
 
@@ -256,14 +256,14 @@ export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
                                 📧 {reg.user?.email}
                               </div>
                               <div className="text-gray-600 mt-1">
-                                {reg.user?.facebook_link && (
+                                {reg.user?.facebook_url && (
                                   <a 
-                                    href={reg.user.facebook_link} 
-                                    target="_blank" 
+                                    href={reg.user.facebook_url} 
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:underline"
                                   >
-                                    {reg.user.facebook_link}
+                                    {reg.user.facebook_url}
                                   </a>
                                 )}
                               </div>
