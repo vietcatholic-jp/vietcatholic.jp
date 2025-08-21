@@ -26,7 +26,7 @@ export async function POST() {
     }
 
     // Find registrations without registrants
-    const { data: registrationsWithoutRegistrants, error: findError } = await supabase
+    const { data: allRegistrations, error: findError } = await supabase
       .from("registrations")
       .select(`
         id,
@@ -34,6 +34,7 @@ export async function POST() {
         invoice_code,
         status,
         created_at,
+        registrants(id),
         users!registrations_user_id_fkey(
           email,
           full_name,
@@ -41,13 +42,17 @@ export async function POST() {
           facebook_url
         )
       `)
-      .not("status", "in", "(cancelled,be_cancelled,cancel_accepted)")
-      .is("registrants.id", null);
+      .not("status", "in", "(cancelled,be_cancelled,cancel_accepted)");
 
     if (findError) {
-      console.error("Error finding registrations without registrants:", findError);
+      console.error("Error finding registrations:", findError);
       return NextResponse.json({ error: "Failed to find registrations" }, { status: 500 });
     }
+
+    // Filter registrations that have no registrants
+    const registrationsWithoutRegistrants = allRegistrations?.filter(
+      reg => !reg.registrants || reg.registrants.length === 0
+    ) || [];
 
     if (!registrationsWithoutRegistrants || registrationsWithoutRegistrants.length === 0) {
       return NextResponse.json({ 
@@ -122,23 +127,34 @@ export async function GET() {
       .eq("id", user.id)
       .single();
 
-    const isAdmin = profile?.role && ["super_admin", "admin", "regional_admin"].includes(profile.role);
+    const isAdmin = profile?.role && ["super_admin", "registration_manager", "regional_admin"].includes(profile.role);
 
     if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 
     // Count registrations without registrants
-    const { count, error: countError } = await supabase
+    // Use a different approach since the LEFT JOIN with is() doesn't work well with count
+    const { data: allRegistrations, error: getAllError } = await supabase
       .from("registrations")
-      .select("id", { count: 'exact', head: true })
-      .not("status", "in", "(cancelled,be_cancelled,cancel_accepted)")
-      .is("registrants.id", null);
+      .select(`
+        id,
+        status,
+        registrants(id)
+      `)
+      .not("status", "in", "(cancelled,be_cancelled,cancel_accepted)");
 
-    if (countError) {
-      console.error("Error counting registrations without registrants:", countError);
-      return NextResponse.json({ error: "Failed to count registrations" }, { status: 500 });
+    if (getAllError) {
+      console.error("Error fetching registrations:", getAllError);
+      return NextResponse.json({ error: "Failed to fetch registrations" }, { status: 500 });
     }
+
+    // Count registrations that have no registrants
+    const registrationsWithoutRegistrants = allRegistrations?.filter(
+      reg => !reg.registrants || reg.registrants.length === 0
+    ) || [];
+
+    const count = registrationsWithoutRegistrants.length;
 
     return NextResponse.json({ 
       count: count || 0,
