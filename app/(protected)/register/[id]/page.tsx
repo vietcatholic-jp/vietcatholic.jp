@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Registration } from "@/lib/types";
+import { Registration, Registrant } from "@/lib/types";
 
 interface EditRegistrationPageProps {
   params: Promise<{
@@ -28,7 +28,8 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
     .from('registrations')
     .select(`
       *,
-      registrants(*)
+      registrants(*),
+      users!registrations_user_id_fkey(*)
     `)
     .eq('id', id)
     .single();
@@ -45,6 +46,36 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
 
   if (!canEdit) {
     redirect('/dashboard');
+  }
+
+  // Handle case where registration has no registrants - create a default primary registrant
+  if (!registration.registrants || registration.registrants.length === 0) {
+    const userInfo = registration.users || profile;
+    const defaultRegistrant = {
+      id: undefined, // Will be created when form is submitted
+      registration_id: registration.id,
+      email: userInfo?.email || user.email,
+      saint_name: '',
+      full_name: userInfo?.full_name || 'Vui lòng cập nhật tên',
+      gender: 'other' as const,
+      age_group: '18_25' as const,
+      province: userInfo?.province || '',
+      diocese: '',
+      address: '',
+      facebook_link: userInfo?.facebook_url || '',
+      phone: '',
+      shirt_size: 'M' as const,
+      event_team_id: null,
+      event_role_id: null,
+      is_primary: true,
+      notes: 'Vui lòng cập nhật tất cả thông tin',
+      portrait_url: null,
+      group_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    registration.registrants = [defaultRegistrant];
   }
 
   // Check if registration can be modified (check for tickets separately)
@@ -118,6 +149,26 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {(!registration.registrants || registration.registrants.length === 0 || 
+                    registration.registrants.some((r: Registrant) => r.full_name === 'Please Update Name')) && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <h4 className="font-medium mb-2 text-amber-800 flex items-center gap-2">
+                        ✨ Hoàn thiện thông tin
+                      </h4>
+                      <p className="text-sm text-amber-700 mb-2">
+                        Thông tin người tham gia chưa đầy đủ. Vui lòng cập nhật:
+                      </p>
+                      <ul className="text-sm text-amber-700 space-y-1 ml-4">
+                        <li>• Họ và tên đầy đủ</li>
+                        <li>• Giới tính</li>
+                        <li>• Độ tuổi</li>
+                        <li>• Tỉnh thành và giáo phận</li>
+                        <li>• Size áo</li>
+                        <li>• Thông tin liên hệ</li>
+                      </ul>
+                    </div>
+                  )}
+                  
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                     <h4 className="font-medium mb-2 text-red-800 flex items-center gap-2">
                       ⚠️ Lưu ý quan trọng

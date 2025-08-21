@@ -10,9 +10,13 @@ import {
   Download,
   Users,
   FileText,
-  ExternalLink
+  ExternalLink,
+  UserPlus,
+  Database
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface QuickActionsProps {
   stats: {
@@ -29,6 +33,52 @@ interface QuickActionsProps {
 
 export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
   const router = useRouter();
+  const [isFixingRegistrants, setIsFixingRegistrants] = useState(false);
+  const [missingRegistrantsCount, setMissingRegistrantsCount] = useState<number | null>(null);
+
+  // Check for registrations without registrants on component mount
+  useEffect(() => {
+    const checkMissingRegistrants = async () => {
+      try {
+        const response = await fetch('/api/admin/fix-registrants');
+        if (response.ok) {
+          const result = await response.json();
+          setMissingRegistrantsCount(result.count);
+        }
+      } catch (error) {
+        console.error('Error checking missing registrants:', error);
+      }
+    };
+
+    checkMissingRegistrants();
+  }, []);
+
+  const handleFixRegistrants = async () => {
+    setIsFixingRegistrants(true);
+    try {
+      const response = await fetch('/api/admin/fix-registrants', {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fix registrants');
+      }
+      
+      const result = await response.json();
+      
+      if (result.created > 0) {
+        toast.success(`✅ Đã tạo thành công ${result.created} người tham gia chính cho các đăng ký thiếu thông tin`);
+        setMissingRegistrantsCount(0);
+      } else {
+        toast.info('ℹ️ Không có đăng ký nào cần sửa chữa');
+      }
+    } catch (error) {
+      console.error('Error fixing registrants:', error);
+      toast.error('❌ Lỗi khi sửa chữa đăng ký: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsFixingRegistrants(false);
+    }
+  };
 
   const handleExport = (type: 'registrations' | 'payments') => {
     // Navigate to export page with pre-selected filters based on type
@@ -136,6 +186,50 @@ export function QuickActions({ stats, onTabChange }: QuickActionsProps) {
             </Button>
           </div>
         </div>
+
+        {/* Data Maintenance */}
+        {missingRegistrantsCount !== null && (
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Bảo trì dữ liệu
+            </h4>
+            
+            {missingRegistrantsCount > 0 ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h5 className="font-medium text-amber-800 mb-1">
+                      Phát hiện {missingRegistrantsCount} đăng ký thiếu thông tin người tham gia
+                    </h5>
+                    <p className="text-sm text-amber-700 mb-3">
+                      Một số đăng ký không có thông tin người tham gia. Điều này có thể xảy ra do lỗi trong quá trình đăng ký.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={handleFixRegistrants}
+                      disabled={isFixingRegistrants}
+                      className="bg-amber-600 hover:bg-amber-700 text-white"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      {isFixingRegistrants ? 'Đang sửa chữa...' : 'Tự động sửa chữa'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-700">
+                    Tất cả đăng ký đều có thông tin người tham gia đầy đủ
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
