@@ -249,7 +249,7 @@ export function RegistrationCard({ registration }: RegistrationCardProps) {
             </Link>
           )}
 
-          {(registration.status === 'confirmed' || registration.status === 'temp_confirmed' || registration.status === 'checked_in' || registration.status === 'checked_out') && (
+          {(registration.status === 'checked_in' || registration.status === 'checked_out') && (
             <Link href={`/register/${registration.id}`}>
               <Button size="sm" variant="outline" className="text-xs bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-purple-100 hover:border-blue-300 dark:from-blue-950/30 dark:to-purple-950/30 dark:border-blue-800 dark:text-blue-300">
                 <Eye className="h-3 w-3 mr-1" />
