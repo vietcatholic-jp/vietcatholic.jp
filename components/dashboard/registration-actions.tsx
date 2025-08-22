@@ -18,6 +18,7 @@ interface RegistrationActionsProps {
   eventConfig?: {
     cancellation_deadline?: string;
   } | null;
+  needEdit?: boolean;
 }
 
 export function RegistrationActions({ 
@@ -27,7 +28,8 @@ export function RegistrationActions({
   registrantIds,
   totalAmount,
   participantCount,
-  eventConfig
+  eventConfig,
+  needEdit
 }: RegistrationActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [hasTickets, setHasTickets] = useState(false);
@@ -119,6 +121,9 @@ export function RegistrationActions({
   // Show actions based on registration status and user permissions
   const showEditButton = () => {
     // Allow editing for pending and payment_rejected status (before payment is confirmed)
+    if (needEdit) {
+      return true;
+    }
     if (status === 'pending' || status === 'payment_rejected') {
       return !hasTickets;
     }
