@@ -91,7 +91,11 @@ export async function PUT(
       hasTickets = (ticketCount || 0) > 0;
     }
 
-    if (registration.status === 'confirmed' || hasTickets) {
+    // Special case: Allow editing if registration has no registrants (missing registrant data)
+    const hasNoRegistrants = !registration.registrants || registration.registrants.length === 0;
+    
+    // Block editing if tickets exist OR (registration is confirmed AND has registrants)
+    if (hasTickets || (registration.status === 'confirmed' && !hasNoRegistrants)) {
       return NextResponse.json({ 
         error: "Cannot modify registration - tickets have been exported or registration is confirmed" 
       }, { status: 400 });
@@ -101,10 +105,27 @@ export async function PUT(
     const { data: eventConfig } = await supabase
       .from("event_configs")
       .select("*")
-      .eq("is_active", true)
+      .eq("id", registration.event_config_id)
       .single();
 
-    const basePrice = eventConfig?.base_price || 6000;
+    // If no specific event config, try to get the active one
+    let basePrice = 6000; // Default fallback price
+    if (eventConfig) {
+      basePrice = eventConfig.base_price || 6000;
+    } else if (registration.event_config_id) {
+      console.warn(`Event config not found for registration ${id}, using default price`);
+    } else {
+      // Try to get active event config if registration doesn't have one
+      const { data: activeEventConfig } = await supabase
+        .from("event_configs")
+        .select("*")
+        .eq("is_active", true)
+        .single();
+      
+      if (activeEventConfig) {
+        basePrice = activeEventConfig.base_price || 6000;
+      }
+    }
     // Generate invoice code using the existing function
     const totalAmount = validated.registrants.reduce((total, registrant) => {
       let price = basePrice;
@@ -142,15 +163,17 @@ export async function PUT(
       return NextResponse.json({ error: "Failed to update registration" }, { status: 500 });
     }
 
-    // Delete existing registrants
-    const { error: deleteError } = await supabase
-      .from("registrants")
-      .delete()
-      .eq("registration_id", id);
+    // Delete existing registrants (only if they exist)
+    if (registration.registrants && registration.registrants.length > 0) {
+      const { error: deleteError } = await supabase
+        .from("registrants")
+        .delete()
+        .eq("registration_id", id);
 
-    if (deleteError) {
-      console.error("Delete registrants error:", deleteError);
-      return NextResponse.json({ error: "Failed to update registrants" }, { status: 500 });
+      if (deleteError) {
+        console.error("Delete registrants error:", deleteError);
+        return NextResponse.json({ error: "Failed to update registrants" }, { status: 500 });
+      }
     }
 
     // Insert updated registrants
@@ -284,7 +307,11 @@ export async function DELETE(
       hasTickets = (ticketCount || 0) > 0;
     }
 
-    if (registration.status === 'confirmed' || hasTickets) {
+    // Special case: Allow deletion if registration has no registrants (missing registrant data)
+    const hasNoRegistrants = !registration.registrants || registration.registrants.length === 0;
+
+    // Block deletion if tickets exist OR (registration is confirmed AND has registrants)
+    if (hasTickets || (registration.status === 'confirmed' && !hasNoRegistrants)) {
       return NextResponse.json({ 
         error: "Cannot delete registration - tickets have been exported or registration is confirmed" 
       }, { status: 400 });
