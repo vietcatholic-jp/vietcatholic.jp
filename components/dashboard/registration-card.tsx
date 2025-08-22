@@ -230,6 +230,10 @@ export function RegistrationCard({ registration }: RegistrationCardProps) {
             totalAmount={registration.total_amount}
             participantCount={registration.participant_count}
             eventConfig={eventConfig}
+            needEdit={registration.status === 'pending' || 
+              !registration.registrants || 
+              registration.registrants.length === 0 || 
+              registration.registrants.some((r: Registrant) => r.province === '')}
           />
           
           {(registration.status === 'pending' || registration.status === 'payment_rejected') && (
