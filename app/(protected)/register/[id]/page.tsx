@@ -94,7 +94,9 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
   const isConfirmed = registration.status === 'confirmed';
 
   if (hasTickets || isConfirmed) {
-    redirect('/dashboard?error=registration-locked');
+    if (registration.registrants.length > 0) {
+      redirect('/dashboard?error=registration-locked');
+    }
   }
 
   return (
