@@ -48,6 +48,8 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
     redirect('/dashboard');
   }
 
+  //const notFoundRegistrant = registration.registrants.length === 0;
+
   // Handle case where registration has no registrants - create a default primary registrant
   if (!registration.registrants || registration.registrants.length === 0) {
     const userInfo = registration.users || profile;
@@ -59,7 +61,7 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
       full_name: userInfo?.full_name || 'Vui lòng cập nhật tên',
       gender: 'other' as const,
       age_group: '18_25' as const,
-      province: userInfo?.province || '',
+      province: '',
       diocese: '',
       address: '',
       facebook_link: userInfo?.facebook_url || '',
@@ -113,10 +115,6 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
               ✏️ Chỉnh sửa đăng ký ✏️
             </div>
           </div>
-          
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-700 via-purple-600 to-amber-600 bg-clip-text text-transparent">
-            🔧 Cập nhật thông tin
-          </h1>
           <p className="text-xl text-gray-700 mb-2 font-light">
             Chỉnh sửa đăng ký của bạn cho Đại Hội 2025
           </p>
@@ -131,11 +129,13 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Edit Form */}
+            {(registration.status === 'pending' || !registration.registrants || registration.registrants.length === 0 || 
+              registration.registrants.some((r: Registrant) => r.province === '')) && (
             <div className="lg:col-span-3">
               <EditRegistrationWrapper 
                 registration={registration as Registration}
               />
-            </div>
+            </div>)}
 
             {/* Registration Info */}
             <div className="space-y-6">
@@ -150,7 +150,7 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {(!registration.registrants || registration.registrants.length === 0 || 
-                    registration.registrants.some((r: Registrant) => r.full_name === 'Please Update Name')) && (
+                    registration.registrants.some((r: Registrant) => r.province === '')) && (
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                       <h4 className="font-medium mb-2 text-amber-800 flex items-center gap-2">
                         ✨ Hoàn thiện thông tin

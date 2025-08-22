@@ -119,6 +119,7 @@ export function RegistrationCard({ registration }: RegistrationCardProps) {
       case 'pending': return <Clock className="h-4 w-4" />;
       case 'payment_rejected': return <XCircle className="h-4 w-4" />;
       case 'cancelled': return <XCircle className="h-4 w-4" />;
+      case 'be_cancelled': return <XCircle className="h-4 w-4" />;
       case 'cancel_pending': return <Clock className="h-4 w-4" />;
       case 'cancel_accepted': return <CheckCircle className="h-4 w-4" />;
       case 'donation': return <CreditCard className="h-4 w-4" />;
@@ -141,6 +142,7 @@ export function RegistrationCard({ registration }: RegistrationCardProps) {
       case 'cancel_rejected': return 'Yêu cầu hủy đã bị từ chối';
       case 'confirmed': return 'Đã xác nhận';
       case 'temp_confirmed': return 'Tạm xác nhận (thanh toán sau)';
+      case 'be_cancelled': return 'Đã bị hủy';
       case 'checked_in': return 'Đã check-in';
       case 'checked_out': return 'Đã check-out';
       default: return status;
