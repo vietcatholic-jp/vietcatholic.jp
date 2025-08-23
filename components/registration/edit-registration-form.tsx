@@ -250,6 +250,25 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
+    const primary = data.registrants[0];
+    if (!primary.province || primary.province.trim() === "") {
+      toast.error("Người đăng ký chính phải chọn Tỉnh/Phủ.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!primary.facebook_link || primary.facebook_link.trim() === "") {
+      toast.error("Người đăng ký chính phải nhập Link Facebook.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (registration.status === 'confirmed' || registration.status === 'report_paid' || registration.status === 'confirm_paid') {
+      if (data.registrants.length > registration.participant_count) {
+        toast.error("Không thể thêm người tham gia mới khi đăng ký đã được xác nhận hoặc đã đóng phí. Số người tham gia đã đăng ký: " + registration.participant_count);
+        setIsSubmitting(false);
+        return;
+      }
+    }
     
     try {
       const response = await fetch(`/api/registrations/${registration.id}`, {
@@ -257,7 +276,19 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          registrants: data.registrants.map(registrant => ({
+            ...registrant,
+            saint_name: registrant.saint_name?.toUpperCase() || "",
+            full_name: registrant.full_name.toUpperCase(),
+            email: registrant.is_primary ? registrant.email : data.registrants[0].email,
+            phone: registrant.is_primary ? registrant.phone : data.registrants[0].phone,
+            address: registrant.is_primary ? registrant.address : data.registrants[0].address,
+            province: registrant.is_primary ? registrant.province : data.registrants[0].province,
+            diocese: registrant.is_primary ? registrant.diocese : data.registrants[0].diocese,
+          })),
+          notes: data.notes,
+        }),
       });
 
       const result = await response.json();
@@ -311,16 +342,18 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                 </div>
                 Thông tin đăng ký ({registrants.length} người)
               </CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addRegistrant}
-                className="hidden sm:flex bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-600 text-blue-600 hover:from-blue-100 hover:to-purple-100 hover:border-blue-700 transform hover:scale-105 transition-all shadow-md"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Thêm người
-              </Button>
+              {(registration.status === 'pending') || (registrants.length < registration.participant_count) && (
+                  <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addRegistrant}
+                  className="hidden sm:flex bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-600 text-blue-600 hover:from-blue-100 hover:to-purple-100 hover:border-blue-700 transform hover:scale-105 transition-all shadow-md"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Thêm người
+                </Button>
+              )}
             </div>
             {/* Mobile add button */}
             <Button
@@ -703,6 +736,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
             })}
             
             {/* Final add button at the bottom */}
+            {(registration.status === 'pending') || (registrants.length < registration.participant_count) && (
             <div className="flex justify-center pt-4 border-t border-dashed">
               <Button
                 type="button"
@@ -714,6 +748,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                 Thêm người tham gia
               </Button>
             </div>
+            )}
           </CardContent>
         </Card>
 
