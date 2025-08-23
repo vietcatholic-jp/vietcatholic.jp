@@ -4,15 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Users, 
-  FileText, 
-  Calendar, 
-  Settings, 
+import {
+  Users,
+  FileText,
+  Calendar,
+  Settings,
   AlertTriangle,
   DollarSign,
   Users2Icon,
-  QrCode
+  QrCode,
+  UserCheck
 } from "lucide-react";
 import Link from "next/link";
 import { RegistrationCard } from "@/components/dashboard/registration-card";
@@ -47,6 +48,18 @@ export default async function DashboardPage({
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
+
+  // Check if user is a team leader or sub-leader
+  let isTeamLeader = false;
+  if (profile.role === 'event_organizer' || profile.role === 'super_admin') {
+    const { data: teamLeadership } = await supabase
+      .from('event_teams')
+      .select('id, name, capacity')
+      .or(`leader_id.eq.${user.id},sub_leader_id.eq.${user.id}`)
+      .limit(1);
+
+    isTeamLeader = Boolean(teamLeadership && teamLeadership.length > 0);
+  }
   
   // Handle error messages from redirects
   const resolvedSearchParams = await searchParams;
@@ -124,6 +137,15 @@ export default async function DashboardPage({
                   <span className="text-center leading-tight">Chương trình</span>
                 </Button>
               </Link>
+
+              {isTeamLeader && (
+                <Link href="/my-team">
+                  <Button variant="outline" className="w-full flex flex-col items-center gap-1 text-xs h-auto py-3" size="sm">
+                    <UserCheck className="h-4 w-4" />
+                    <span className="text-center leading-tight">Nhóm của tôi</span>
+                  </Button>
+                </Link>
+              )}
 
               {(profile.role === 'event_organizer' || profile.role === 'super_admin' || profile.role === 'registration_manager') && (
                 <>
@@ -210,6 +232,24 @@ export default async function DashboardPage({
                   </Link>
                 </CardContent>
               </Card>
+
+              {isTeamLeader && (
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <UserCheck className="h-4 w-4" />
+                      Nhóm của tôi
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Link href="/my-team">
+                      <Button variant="outline" className="w-full" size="sm">
+                        Quản lý nhóm
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
 
               {(profile.role === 'registration_manager' || profile.role === 'event_organizer' || profile.role === 'super_admin') && (
                 <Card className="hover:shadow-md transition-shadow">
