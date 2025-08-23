@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import {Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES, AGE_GROUPS } from "@/lib/types";
+import {Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES, AGE_GROUPS, EventConfig } from "@/lib/types";
 import { format } from "date-fns";
 
 import {  RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
@@ -37,6 +37,7 @@ interface ExportFilters {
   gender: string; // new gender filter
   province: string; // new province filter
   diocese: string; // new diocese filter
+  attendanceDay: string; // filter by attendance day (all, first, second)
   sortBy: string; // sorting field
   sortDirection: 'asc' | 'desc'; // sorting direction
 }
@@ -50,6 +51,7 @@ interface ExportPageState {
   filters: ExportFilters;
   availableTeams: string[];
   availableDioceses: string[]; // new
+  eventConfig: EventConfig | null; // add event config
 }
 
 const STATUS_OPTIONS = [
@@ -93,6 +95,44 @@ const SORT_OPTIONS = [
   { value: 'gender', label: 'Giới tính' },
   { value: 'status', label: 'Trạng thái' }
 ];
+
+// Generate attendance day options dynamically based on event config
+// This function supports events of any duration (1 day, 2 days, 3 days, etc.)
+// It calculates the number of days between start_date and end_date and generates appropriate labels
+function generateAttendanceDayOptions(eventConfig: EventConfig | null) {
+  const options = [{ value: 'all', label: 'Tất cả' }
+    ,{ value: 'both', label: 'Tham gia đầy đủ' }
+  ];
+  
+  if (!eventConfig?.start_date || !eventConfig?.end_date) {
+    return options;
+  }
+
+  const startDate = new Date(eventConfig.start_date);
+  const endDate = new Date(eventConfig.end_date);
+  
+  // Calculate number of days
+  const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end dates
+  
+  // Generate options for each day
+  for (let i = 0; i < diffDays; i++) {
+    const currentDate = new Date(startDate);
+    currentDate.setDate(startDate.getDate() + i);
+    
+    const dateString = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const formattedDate = currentDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+    
+    const label = `Ngày (${formattedDate})`;
+    
+    options.push({
+      value: dateString,
+      label: label
+    });
+  }
+  
+  return options;
+}
 
 function getStatusLabel(status: RegistrationStatus): string {
   const statusMap: Record<RegistrationStatus, string> = {
@@ -221,6 +261,7 @@ export default function ExportPage() {
     loading: true,
     availableTeams: [],
     availableDioceses: [],
+    eventConfig: null,
     filters: {
       status: 'confirmed',
       dateFrom: '',
@@ -235,6 +276,7 @@ export default function ExportPage() {
       gender: 'all',
       province: 'all',
       diocese: 'all',
+      attendanceDay: 'all',
       sortBy: 'name',
       sortDirection: 'asc'
     }
@@ -264,20 +306,25 @@ export default function ExportPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch both registrations and registrants data
-        const [registrationsResponse, registrantsResponse] = await Promise.all([
+        // Fetch registrations, registrants data, and event config
+        const [registrationsResponse, registrantsResponse, eventConfigResponse] = await Promise.all([
           fetch('/api/admin/export?type=registrations'),
-          fetch('/api/admin/export?type=registrants')
+          fetch('/api/admin/export?type=registrants'),
+          fetch('/api/admin/events')
         ]);
         
-        if (!registrationsResponse.ok || !registrantsResponse.ok) {
+        if (!registrationsResponse.ok || !registrantsResponse.ok || !eventConfigResponse.ok) {
           throw new Error('Failed to fetch data');
         }
         
-        const [registrationsData, registrantsData] = await Promise.all([
+        const [registrationsData, registrantsData, eventConfigData] = await Promise.all([
           registrationsResponse.json(),
-          registrantsResponse.json()
+          registrantsResponse.json(),
+          eventConfigResponse.json()
         ]);
+
+        // Get active event config
+        const activeEvent = eventConfigData.events?.find((event: EventConfig) => event.is_active) || eventConfigData.events?.[0] || null;
 
         // Extract unique team names & dioceses for filtering
         const teams = new Set<string>();
@@ -299,6 +346,7 @@ export default function ExportPage() {
           filteredRegistrants: registrantsData.registrants || [],
           availableTeams: Array.from(teams).sort((a,b)=>a.localeCompare(b,'vi',{sensitivity:'base'})),
           availableDioceses: Array.from(dioceses).sort((a,b)=>a.localeCompare(b,'vi',{sensitivity:'base'})),
+          eventConfig: activeEvent,
           loading: false
         }));
       } catch (error) {
@@ -388,6 +436,37 @@ export default function ExportPage() {
       filteredRegsts = filteredRegsts.filter(reg => reg.diocese === state.filters.diocese);
     }
 
+    // Attendance Day
+    if (state.filters.attendanceDay !== 'all' && state.eventConfig) {
+      const selectedDate = state.filters.attendanceDay; // This is now a date string (YYYY-MM-DD)
+      if (selectedDate === 'both') {
+        // Show registrants attending both days:
+        // - Those attending all days (!second_day_only)
+        // - Those who specifically selected both days
+        filteredRegs = filteredRegs.filter(reg => 
+          reg.registrants?.some(r => 
+             r.second_day_only === false
+          )
+        );
+        filteredRegsts = filteredRegsts.filter(reg => 
+          reg.second_day_only === false  
+        );
+      }else{
+        // Show registrants attending the selected day:
+        // - Those attending all days (!second_day_only)
+        // - Those who specifically selected this day
+        filteredRegs = filteredRegs.filter(reg => 
+          reg.registrants?.some(r => 
+            r.selected_attendance_day === selectedDate
+          )
+        );
+        filteredRegsts = filteredRegsts.filter(reg => 
+          reg.selected_attendance_day === selectedDate
+        );
+      }
+      
+    }
+
     // Sorting (registrants)
     const { sortBy, sortDirection } = state.filters;
     if (sortBy) {
@@ -410,7 +489,7 @@ export default function ExportPage() {
       filteredRegistrations: filteredRegs,
       filteredRegistrants: filteredRegsts
     }));
-  }, [state.filters, state.registrations, state.registrants]);
+  }, [state.filters, state.registrations, state.registrants, state.eventConfig]);
 
   const updateFilter = <K extends keyof ExportFilters>(key: K, value: ExportFilters[K]) => {
     setState(prev => ({
@@ -437,6 +516,7 @@ export default function ExportPage() {
         gender: 'all',
         province: 'all',
         diocese: 'all',
+        attendanceDay: 'all',
         sortBy: 'name',
         sortDirection: 'asc'
       }
@@ -604,6 +684,21 @@ export default function ExportPage() {
               </Select>
             </div>
             <div>
+              <Label htmlFor="attendanceDay">Ngày tham gia</Label>
+              <Select value={state.filters.attendanceDay} onValueChange={(value) => updateFilter('attendanceDay', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả ngày" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateAttendanceDayOptions(state.eventConfig).map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label htmlFor="sortBy">Sắp xếp</Label>
               <Select value={state.filters.sortBy} onValueChange={(value) => updateFilter('sortBy', value)}>
                 <SelectTrigger>
@@ -616,6 +711,13 @@ export default function ExportPage() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Sort direction row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t py-4">
+            <div></div>
+            <div></div>
+            <div></div>
             <div className="flex flex-col justify-end gap-1">
               <Label className="hidden md:block">&nbsp;</Label>
               <Button variant="outline" size="sm" onClick={() => updateFilter('sortDirection', state.filters.sortDirection === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
@@ -815,7 +917,12 @@ export default function ExportPage() {
           <CardHeader>
             <CardTitle>
               Danh sách người tham gia ({state.filteredRegistrants.length} người)
-              {state.filters.teamName && ` - Nhóm: ${state.filters.teamName === 'all' ? 'Tất cả' : state.filters.teamName}`}
+              {state.filters.teamName !== 'all' && ` - Nhóm: ${state.filters.teamName}`}
+              {state.filters.attendanceDay !== 'all' && state.eventConfig && (() => {
+                const attendanceOptions = generateAttendanceDayOptions(state.eventConfig);
+                const selectedOption = attendanceOptions.find(opt => opt.value === state.filters.attendanceDay);
+                return selectedOption ? ` - ${selectedOption.label}` : '';
+              })()}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -829,6 +936,7 @@ export default function ExportPage() {
                     <th className="border border-gray-300 p-2 text-left">Giới tính</th>
                     <th className="border border-gray-300 p-2 text-left">Giáo phận</th>
                     <th className="border border-gray-300 p-2 text-left">Size áo</th>
+                    <th className="border border-gray-300 p-2 text-left">Ngày tham gia</th>
                     <th className="border border-gray-300 p-2 text-left">Vai trò</th>
                     <th className="border border-gray-300 p-2 text-left">Nhóm</th>
                     <th className="border border-gray-300 p-2 text-left">Trạng thái đăng ký</th>
@@ -855,6 +963,24 @@ export default function ExportPage() {
                       </td>
                       <td className="border border-gray-300 p-2">
                         {SHIRT_SIZES.find(s => s.value === registrant.shirt_size)?.label || registrant.shirt_size}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {(() => {
+                          if (!registrant.second_day_only) {
+                            return 'Tất cả ngày';
+                          }
+                          
+                          if (registrant.selected_attendance_day && state.eventConfig) {
+                            const selectedDate = new Date(registrant.selected_attendance_day);
+                            
+                            // Calculate which day number this is
+                            const formattedDate = selectedDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                            
+                            return `Ngày (${formattedDate})`;
+                          }
+                          
+                          return 'Chưa chọn';
+                        })()}
                       </td>
                       <td className="border border-gray-300 p-2">
                         {(() => {
@@ -907,6 +1033,30 @@ export default function ExportPage() {
                   <span className="font-medium">Người chính:</span> {state.filteredRegistrants.filter(r => r.is_primary).length}
                 </div>
               </div>
+              
+              {/* Show attendance day breakdown when not filtering by specific day */}
+              {state.filters.attendanceDay === 'all' && state.eventConfig && (
+                <div className="mt-3 pt-3 border-t">
+                  <h5 className="font-medium mb-2">Thống kê ngày tham gia:</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Tất cả ngày:</span> {state.filteredRegistrants.filter(r => !r.second_day_only).length}
+                    </div>
+                    {generateAttendanceDayOptions(state.eventConfig)
+                      .filter(option => option.value !== 'all')
+                      .map(option => {
+                        const count = state.filteredRegistrants.filter(r => 
+                          r.second_day_only && r.selected_attendance_day === option.value
+                        ).length;
+                        return (
+                          <div key={option.value}>
+                            <span className="font-medium">Chỉ {option.label}:</span> {count}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
