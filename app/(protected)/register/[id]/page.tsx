@@ -41,7 +41,7 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
 
   // Check if user can edit this registration
   const canEdit = registration.user_id === user.id || 
-                  profile?.role === 'admin' || 
+                  profile?.role === 'registration_manager' || 
                   profile?.role === 'super_admin';
 
   if (!canEdit) {
