@@ -264,7 +264,12 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
 
     if (registration.status === 'confirmed' || registration.status === 'report_paid' || registration.status === 'confirm_paid') {
       if (data.registrants.length > registration.participant_count) {
-        toast.error("Không thể thêm người tham gia mới khi đăng ký đã được xác nhận hoặc đã đóng phí. Số người tham gia đã đăng ký: " + registration.participant_count);
+        toast.error("Không thể thêm người tham gia mới khi đăng ký đã được xác nhận hoặc đã đóng phí. Số người đã đóng phí đã đăng ký: " + registration.participant_count);
+        setIsSubmitting(false);
+        return;
+      }
+      if (data.registrants.length < registration.participant_count) {
+        toast.error("Không thể giảm số người tham gia khi đăng ký đã được xác nhận hoặc đã đóng phí. Số người đã đóng phí đã đăng ký: " + registration.participant_count);
         setIsSubmitting(false);
         return;
       }
@@ -340,9 +345,9 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                 <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full">
                   <Users className="h-5 w-5 text-white" />
                 </div>
-                Thông tin đăng ký ({registrants.length} người)
+                Thông tin đăng ký ({registration.participant_count > registrants.length ? `${registration.participant_count} người` : `${registrants.length} người`})
               </CardTitle>
-              {(registration.status === 'pending') || (registrants.length < registration.participant_count) && (
+              {((registration.status === 'pending') || (registration.participant_count > registrants.length)) && (
                   <Button
                   type="button"
                   variant="outline"
@@ -356,6 +361,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
               )}
             </div>
             {/* Mobile add button */}
+            {((registration.status === 'pending') || (registration.participant_count > registrants.length)) && (
             <Button
               type="button"
               variant="outline"
@@ -365,7 +371,8 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
             >
               <Plus className="h-4 w-4 mr-2" />
               Thêm người
-            </Button>
+            </Button>)}
+
           </CardHeader>
           <CardContent className="space-y-8">
             {fields.map((field, index) => {
@@ -736,7 +743,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
             })}
             
             {/* Final add button at the bottom */}
-            {(registration.status === 'pending') || (registrants.length < registration.participant_count) && (
+            {((registration.status === 'pending') || (registration.participant_count > registrants.length))&& (
             <div className="flex justify-center pt-4 border-t border-dashed">
               <Button
                 type="button"
