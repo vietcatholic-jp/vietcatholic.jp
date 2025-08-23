@@ -71,7 +71,7 @@ export async function PUT(
       .single();
 
     const isOwner = registration.user_id === user.id;
-    const isAdmin = profile?.role && ["super_admin", "regional_admin"].includes(profile.role);
+    const isAdmin = profile?.role && ["super_admin","registration_manager"].includes(profile.role);
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -193,7 +193,7 @@ export async function PUT(
         shirt_size: string;
         is_primary: boolean;
         second_day_only?: boolean;
-        selected_attendance_day?: string;
+        selected_attendance_day?: string | null;
         notes?: string;
         event_team_id?: string | null;
         event_role_id?: string | null;
@@ -212,9 +212,11 @@ export async function PUT(
         shirt_size: registrant.shirt_size,
         is_primary: registrant.is_primary,
         second_day_only: registrant.second_day_only,
-        selected_attendance_day: registrant.selected_attendance_day,
         notes: registrant.notes,
       };
+      if (registrant.second_day_only) {
+        data.selected_attendance_day = registrant.selected_attendance_day;
+      }
       if (registrant.event_role === 'participant') {
         data.event_team_id = null;
         data.event_role_id = null;
