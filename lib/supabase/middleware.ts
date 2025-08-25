@@ -66,6 +66,7 @@ export async function updateSession(request: NextRequest) {
     '/register',
     '/admin',
     '/check-in',
+    '/my-team',
   ];
 
   // Check if current route is public
