@@ -18,6 +18,7 @@ export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTeamLeader, setIsTeamLeader] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -32,8 +33,24 @@ export function Navbar() {
           .single();
 
         setProfile(profileData);
+
+        // Check if user is a team leader or sub-leader
+        if (profileData?.role === 'event_organizer' || profileData?.role === 'super_admin') {
+          const { data: teamLeadership } = await supabase
+            .from('event_teams')
+            .select('id')
+            .or(`leader_id.eq.${user.id},sub_leader_id.eq.${user.id}`)
+            .limit(1);
+
+          const isLeader = Boolean(teamLeadership && teamLeadership.length > 0);
+          console.log('Team leadership check:', { userId: user.id, role: profileData.role, teamLeadership, isLeader });
+          setIsTeamLeader(isLeader);
+        } else {
+          setIsTeamLeader(false);
+        }
       } else {
         setProfile(null);
+        setIsTeamLeader(false);
       }
       setUser(user);
     };
@@ -104,14 +121,22 @@ export function Navbar() {
                 >
                   Hướng dẫn
                 </Link>
-                <Link 
-                  href="/agenda" 
+                <Link
+                  href="/agenda"
                   className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
                 >
                   Chương trình
                 </Link>
+                {isTeamLeader && (
+                  <Link
+                    href="/my-team"
+                    className="text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg"
+                  >
+                    Nhóm của tôi
+                  </Link>
+                )}
                 {isFinanceUser && (
-                  <Link 
+                  <Link
                     href="/finance"
                     className="text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg"
                   >
@@ -187,15 +212,24 @@ export function Navbar() {
                   >
                     Hướng dẫn
                   </Link>
-                  <Link 
-                    href="/agenda" 
+                  <Link
+                    href="/agenda"
                     className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Chương trình
                   </Link>
+                  {isTeamLeader && (
+                    <Link
+                      href="/my-team"
+                      className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-3 rounded-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Nhóm của tôi
+                    </Link>
+                  )}
                   {isFinanceUser && (
-                    <Link 
+                    <Link
                       href="/finance"
                       className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-3 rounded-lg"
                       onClick={() => setIsMenuOpen(false)}
