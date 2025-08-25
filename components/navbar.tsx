@@ -19,36 +19,51 @@ export function Navbar() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTeamLeader, setIsTeamLeader] = useState(false);
+  const [isLoadingTeamCheck, setIsLoadingTeamCheck] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
     
     const fetchUserAndProfile = async (user: User | null) => {
+      setIsLoadingTeamCheck(true);
+
       if (user) {
-        // Get user profile
-        const { data: profileData } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
+        try {
+          // Get user profile
+          const { data: profileData } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single();
 
-        setProfile(profileData);
+          setProfile(profileData);
 
-        // Check if user is a team leader or sub-leader (regardless of role)
-        const { data: teamLeadership } = await supabase
-          .from('event_teams')
-          .select('id')
-          .or(`leader_id.eq.${user.id},sub_leader_id.eq.${user.id}`)
-          .limit(1);
+          // Check if user is a team leader or sub-leader (regardless of role)
+          const { data: teamLeadership, error: teamError } = await supabase
+            .from('event_teams')
+            .select('id')
+            .or(`leader_id.eq.${user.id},sub_leader_id.eq.${user.id}`)
+            .limit(1);
 
-        const isLeader = Boolean(teamLeadership && teamLeadership.length > 0);
-        console.log('Team leadership check:', { userId: user.id, teamLeadership, isLeader });
-        setIsTeamLeader(isLeader);
+          if (teamError) {
+            console.error('Team leadership check error:', teamError);
+            setIsTeamLeader(false);
+          } else {
+            const isLeader = Boolean(teamLeadership && teamLeadership.length > 0);
+            console.log('Team leadership check:', { userId: user.id, teamLeadership, isLeader });
+            setIsTeamLeader(isLeader);
+          }
+        } catch (error) {
+          console.error('Error fetching user profile or team leadership:', error);
+          setIsTeamLeader(false);
+        }
       } else {
         setProfile(null);
         setIsTeamLeader(false);
       }
+
       setUser(user);
+      setIsLoadingTeamCheck(false);
     };
 
     // Get initial user
@@ -123,7 +138,7 @@ export function Navbar() {
                 >
                   Chương trình
                 </Link>
-                {isTeamLeader && (
+                {!isLoadingTeamCheck && isTeamLeader && (
                   <Link
                     href="/my-team"
                     className="text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg"
@@ -215,7 +230,7 @@ export function Navbar() {
                   >
                     Chương trình
                   </Link>
-                  {isTeamLeader && (
+                  {!isLoadingTeamCheck && isTeamLeader && (
                     <Link
                       href="/my-team"
                       className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-3 rounded-lg"
