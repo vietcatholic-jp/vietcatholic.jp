@@ -49,17 +49,14 @@ export default async function DashboardPage({
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  // Check if user is a team leader or sub-leader
-  let isTeamLeader = false;
-  if (profile.role === 'event_organizer' || profile.role === 'super_admin') {
-    const { data: teamLeadership } = await supabase
-      .from('event_teams')
-      .select('id, name, capacity')
-      .or(`leader_id.eq.${user.id},sub_leader_id.eq.${user.id}`)
-      .limit(1);
+  // Check if user is a team leader or sub-leader (regardless of role)
+  const { data: teamLeadership } = await supabase
+    .from('event_teams')
+    .select('id, name, capacity')
+    .or(`leader_id.eq.${user.id},sub_leader_id.eq.${user.id}`)
+    .limit(1);
 
-    isTeamLeader = Boolean(teamLeadership && teamLeadership.length > 0);
-  }
+  const isTeamLeader = Boolean(teamLeadership && teamLeadership.length > 0);
   
   // Handle error messages from redirects
   const resolvedSearchParams = await searchParams;

@@ -34,20 +34,16 @@ export function Navbar() {
 
         setProfile(profileData);
 
-        // Check if user is a team leader or sub-leader
-        if (profileData?.role === 'event_organizer' || profileData?.role === 'super_admin') {
-          const { data: teamLeadership } = await supabase
-            .from('event_teams')
-            .select('id')
-            .or(`leader_id.eq.${user.id},sub_leader_id.eq.${user.id}`)
-            .limit(1);
+        // Check if user is a team leader or sub-leader (regardless of role)
+        const { data: teamLeadership } = await supabase
+          .from('event_teams')
+          .select('id')
+          .or(`leader_id.eq.${user.id},sub_leader_id.eq.${user.id}`)
+          .limit(1);
 
-          const isLeader = Boolean(teamLeadership && teamLeadership.length > 0);
-          console.log('Team leadership check:', { userId: user.id, role: profileData.role, teamLeadership, isLeader });
-          setIsTeamLeader(isLeader);
-        } else {
-          setIsTeamLeader(false);
-        }
+        const isLeader = Boolean(teamLeadership && teamLeadership.length > 0);
+        console.log('Team leadership check:', { userId: user.id, teamLeadership, isLeader });
+        setIsTeamLeader(isLeader);
       } else {
         setProfile(null);
         setIsTeamLeader(false);
