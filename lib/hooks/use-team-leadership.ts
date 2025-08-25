@@ -78,14 +78,7 @@ export function useTeamLeadership(user: User | null): UseTeamLeadershipReturn {
 
 // Alternative hook that uses localStorage for faster initial load
 export function useTeamLeadershipWithCache(user: User | null): UseTeamLeadershipReturn {
-  const [isTeamLeader, setIsTeamLeader] = useState(() => {
-    // Try to get cached value on initial load
-    if (typeof window !== 'undefined' && user) {
-      const cached = localStorage.getItem(`team-leader-${user.id}`);
-      return cached === 'true';
-    }
-    return false;
-  });
+  const [isTeamLeader, setIsTeamLeader] = useState(false); // Don't use cache for initial state
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -105,7 +98,7 @@ export function useTeamLeadershipWithCache(user: User | null): UseTeamLeadership
         setError(null);
 
         const supabase = createClient();
-        
+
         // Check if user is leader or sub-leader in any team
         const { data: teamLeadership, error: teamError } = await supabase
           .from('event_teams')
@@ -114,30 +107,42 @@ export function useTeamLeadershipWithCache(user: User | null): UseTeamLeadership
           .limit(1);
 
         if (teamError) {
+          console.error('Team leadership check error:', teamError);
           throw new Error(`Team leadership check failed: ${teamError.message}`);
         }
 
         if (isMounted) {
           const isLeader = Boolean(teamLeadership && teamLeadership.length > 0);
-          
-          // Cache the result
-          localStorage.setItem(`team-leader-${user.id}`, isLeader.toString());
-          
-          console.log('Team leadership cached hook check:', { 
-            userId: user.id, 
+
+          console.log('Team leadership check:', {
+            userId: user.id,
             email: user.email,
-            teamLeadership, 
+            teamLeadership,
             isLeader,
-            cached: true
+            environment: process.env.NODE_ENV
           });
-          
+
+          // Clear any old cache and set new value
+          if (typeof window !== 'undefined') {
+            if (isLeader) {
+              localStorage.setItem(`team-leader-${user.id}`, 'true');
+            } else {
+              localStorage.removeItem(`team-leader-${user.id}`);
+            }
+          }
+
           setIsTeamLeader(isLeader);
         }
       } catch (err) {
         console.error('Team leadership check error:', err);
         if (isMounted) {
           setError(err instanceof Error ? err : new Error('Unknown error'));
-          // Don't change isTeamLeader on error, keep cached value
+          setIsTeamLeader(false); // Set to false on error
+
+          // Clear cache on error
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(`team-leader-${user.id}`);
+          }
         }
       } finally {
         if (isMounted) {
