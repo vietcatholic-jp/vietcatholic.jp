@@ -151,23 +151,27 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {member.facebook_link && (
-                  <a 
-                    href={member.facebook_link} 
-                    target="_blank" 
+            {/* Facebook Link */}
+            {member.facebook_link && (
+              <div className="mb-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <Facebook className="h-3 w-3 flex-shrink-0 text-blue-600" />
+                  <a
+                    href={member.facebook_link}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                    className="text-blue-600 hover:text-blue-800 transition-colors truncate"
                   >
-                    <Facebook className="h-4 w-4" />
+                    {member.facebook_link}
                   </a>
-                )}
+                </div>
               </div>
-              
-              <Button 
-                variant="outline" 
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-end">
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={handleViewDetails}
                 className="text-xs"
