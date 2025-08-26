@@ -8,10 +8,14 @@ import { ClientAuthButton } from "../../../components/client-auth-button";
 import { Button } from "../../../components/ui/button";
 import { useUser } from "./user-provider";
 import Image from "next/image";
+import { useTeamLeadershipWithCache } from "@/lib/hooks/use-team-leadership";
 
 export function Header() {
   const { user, profile, isLoading, isAdmin } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Check team leadership
+  const { isTeamLeader } = useTeamLeadershipWithCache(user);
 
   if (isLoading) {
     return (
@@ -74,12 +78,20 @@ export function Header() {
                 >
                   Hướng dẫn
                 </Link>
-                <Link 
-                  href="/agenda" 
+                <Link
+                  href="/agenda"
                   className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
                 >
                   Chương trình
                 </Link>
+                {isTeamLeader && (
+                  <Link
+                    href="/my-team"
+                    className="text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg"
+                  >
+                    Nhóm của tôi
+                  </Link>
+                )}
                 {isAdmin && (
                   <Link 
                     href={profile?.role === 'registration_manager' ? '/registration-manager' : '/admin'}
@@ -146,13 +158,22 @@ export function Header() {
                   >
                     Hướng dẫn
                   </Link>
-                  <Link 
-                    href="/agenda" 
+                  <Link
+                    href="/agenda"
                     className="flex items-center text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Chương trình
                   </Link>
+                  {isTeamLeader && (
+                    <Link
+                      href="/my-team"
+                      className="flex items-center text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-3 rounded-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Nhóm của tôi
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link 
                       href={profile?.role === 'registration_manager' ? '/registration-manager' : '/admin'}

@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
+import { useTeamLeadershipWithCache } from "@/lib/hooks/use-team-leadership";
 
 interface UserProfile {
   role: string;
@@ -18,6 +19,20 @@ export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Use the custom hook for team leadership
+  const { isTeamLeader, isLoading: isLoadingTeamCheck } = useTeamLeadershipWithCache(user);
+
+  // Debug: Force show menu for testing (remove this after testing)
+  const shouldShowTeamMenu = isTeamLeader || (user?.email === 'dev.thubv@gmail.com');
+
+  // Debug logging
+  console.log('Navbar debug:', {
+    user: user?.email,
+    isTeamLeader,
+    isLoadingTeamCheck,
+    shouldShowTeamMenu
+  });
 
   useEffect(() => {
     const supabase = createClient();
@@ -35,6 +50,7 @@ export function Navbar() {
       } else {
         setProfile(null);
       }
+
       setUser(user);
     };
 
@@ -104,14 +120,22 @@ export function Navbar() {
                 >
                   Hướng dẫn
                 </Link>
-                <Link 
-                  href="/agenda" 
+                <Link
+                  href="/agenda"
                   className="text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-lg"
                 >
                   Chương trình
                 </Link>
+                {user && (
+                  <Link
+                    href="/my-team"
+                    className="text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg"
+                  >
+                    Nhóm của tôi
+                  </Link>
+                )}
                 {isFinanceUser && (
-                  <Link 
+                  <Link
                     href="/finance"
                     className="text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg"
                   >
@@ -187,15 +211,24 @@ export function Navbar() {
                   >
                     Hướng dẫn
                   </Link>
-                  <Link 
-                    href="/agenda" 
+                  <Link
+                    href="/agenda"
                     className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-purple-600 hover:bg-purple-50 px-3 py-3 rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Chương trình
                   </Link>
+                  {user && (
+                    <Link
+                      href="/my-team"
+                      className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-3 rounded-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Nhóm của tôi
+                    </Link>
+                  )}
                   {isFinanceUser && (
-                    <Link 
+                    <Link
                       href="/finance"
                       className="flex items-center gap-3 text-sm font-medium transition-colors hover:text-green-600 hover:bg-green-50 px-3 py-3 rounded-lg"
                       onClick={() => setIsMenuOpen(false)}
