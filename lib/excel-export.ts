@@ -7,6 +7,7 @@ export interface TeamMemberForExport {
   full_name: string;
   gender: string;
   age_group: string;
+  shirt_size?: string;
   province: string;
   diocese?: string;
   email?: string;
