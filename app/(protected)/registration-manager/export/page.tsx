@@ -746,20 +746,7 @@ export default function ExportPage() {
           </p>
         </CardHeader>
         <CardContent>
-          {state.filters.reportType === 'registrants' ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-green-600">{state.filteredRegistrants.length}</div>
-              <div className="text-sm text-muted-foreground">Tổng người tham gia</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-600">
-                {state.filteredRegistrants.filter(r => ['report_paid','temp_confirmed','confirm_paid', 'confirmed', 'checked_in'].includes(r.registration?.status ?? "")).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Đã chuyển khoản + Đã xác nhận + Xác nhận tạm</div>
-            </div>
-          </div>
-          ):(
+          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-blue-600">{state.filteredRegistrations.length}</div>
@@ -769,19 +756,11 @@ export default function ExportPage() {
               <div className="text-2xl font-bold text-green-600">{totalParticipants}</div>
               <div className="text-sm text-muted-foreground">Tổng người tham gia</div>
             </div>
-            {state.filters.reportType === 'detailed' && (
             <div>
               <div className="text-2xl font-bold text-purple-600">{formatCurrency(totalAmount)}</div>
               <div className="text-sm text-muted-foreground">Tổng số tiền</div>
-            </div>)}
-            <div>
-              <div className="text-2xl font-bold text-orange-600">
-                {state.filteredRegistrations.filter(r => ['report_paid','temp_confirmed','confirm_paid', 'confirmed', 'checked_in'].includes(r.status)).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Đã chuyển khoản + Đã xác nhận + Xác nhận tạm</div>
             </div>
           </div>
-          )}
           
         </CardContent>
       </Card>
