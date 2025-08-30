@@ -20,13 +20,13 @@ const UpdateIncomeSourceSchema = z.object({
 // UPDATE income source
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { sourceId: string } }
+  context: { params: Promise<{ sourceId: string }> }
 ) {
   try {
     await requireRole(['super_admin','cashier_role', 'event_organizer']);
     const supabase = await createClient();
 
-    const { sourceId } = params;
+    const { sourceId } = await context.params;
     
     const payload = await request.json();
     const parsed = UpdateIncomeSourceSchema.parse(payload);
@@ -100,13 +100,13 @@ export async function PATCH(
 // DELETE income source
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { sourceId: string } }
+  context: { params: Promise<{ sourceId: string }> }
 ) {
   try {
     await requireRole(['super_admin', 'cashier_role']);
     const supabase = await createClient();
 
-    const { sourceId } = params;
+    const { sourceId } = await context.params;
 
     // Get current income source to verify it exists
     const { data: existingSource, error: fetchError } = await supabase
