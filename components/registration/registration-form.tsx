@@ -108,9 +108,22 @@ interface RegistrationFormProps {
   userEmail?: string;
   userName?: string;
   userFacebookUrl?: string;
+  // Admin mode props
+  isAdminMode?: boolean;
+  targetUserEmail?: string;
+  onAdminSuccess?: (registration: { id: string; invoice_code: string }) => void;
+  onAdminCancel?: () => void;
 }
 
-export function RegistrationForm({ userEmail, userName, userFacebookUrl }: RegistrationFormProps) {
+export function RegistrationForm({ 
+  userEmail, 
+  userName, 
+  userFacebookUrl, 
+  isAdminMode = false,
+  targetUserEmail,
+  onAdminSuccess,
+  onAdminCancel 
+}: RegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<'role-selection' | 'registration'>('role-selection');
   const [selectedRole, setSelectedRole] = useState<EventParticipationRole>('participant');
@@ -138,7 +151,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
     return baseRoles;
   };
 
-  // Fetch active event config and roles
+  // Fetch active event config and roles (or any event in admin mode)
   useEffect(() => {
     const fetchEventData = async () => {
       //setIsLoadingRoles(true);
@@ -147,15 +160,24 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         const response = await fetch('/api/admin/events');
         if (response.ok) {
           const { events } = await response.json();
-          const activeEvent = events?.find((event: EventConfig) => event.is_active);
-          setEventConfig(activeEvent || null);
+          let selectedEvent;
           
-          // Fetch event roles if we have an active event
-          if (activeEvent) {
+          if (isAdminMode) {
+            // In admin mode, prefer active event but fall back to any event
+            selectedEvent = events?.find((event: EventConfig) => event.is_active) || events?.[0];
+          } else {
+            // Normal mode: only active events
+            selectedEvent = events?.find((event: EventConfig) => event.is_active);
+          }
+          
+          setEventConfig(selectedEvent || null);
+          
+          // Fetch event roles if we have an event
+          if (selectedEvent) {
             const { data: roles, error: rolesError } = await supabase
               .from('event_roles')
               .select('*')
-              .eq('event_config_id', activeEvent.id)
+              .eq('event_config_id', selectedEvent.id)
               .order('name');
 
             if (rolesError) {
@@ -173,7 +195,7 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
     };
 
     fetchEventData();
-  }, [supabase]);
+  }, [supabase, isAdminMode]);
 
   const {
     register,
@@ -328,38 +350,57 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   };
 
   const onSubmit = async (data: FormData) => {
-    // Extra manual check for primary registrant
+    // Extra manual check for primary registrant (skip some validations in admin mode)
     setIsSubmitting(true);
     const primary = data.registrants[0];
-    if (!primary.province || primary.province.trim() === "") {
-      toast.error("Người đăng ký chính phải chọn Tỉnh/Phủ.");
-      setIsSubmitting(false);
-      return;
+    
+    if (!isAdminMode) {
+      // Normal user validations
+      if (!primary.province || primary.province.trim() === "") {
+        toast.error("Người đăng ký chính phải chọn Tỉnh/Phủ.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (!primary.facebook_link || primary.facebook_link.trim() === "") {
+        toast.error("Người đăng ký chính phải nhập Link Facebook.");
+        setIsSubmitting(false);
+        return;
+      }
     }
-    if (!primary.facebook_link || primary.facebook_link.trim() === "") {
-      toast.error("Người đăng ký chính phải nhập Link Facebook.");
-      setIsSubmitting(false);
-      return;
-    }
+
     try {
-      const response = await fetch('/api/registrations', {
+      // Choose API endpoint based on admin mode
+      const apiEndpoint = isAdminMode ? '/api/admin/registrations' : '/api/registrations';
+      
+      const requestBody = isAdminMode ? {
+        target_user_email: targetUserEmail,
+        registrants: data.registrants.map(registrant => ({
+          ...registrant,
+          saint_name: registrant.saint_name?.toUpperCase() || "",
+          full_name: registrant.full_name.toUpperCase(),
+        })),
+        notes: data.notes,
+        force_inactive_event: !eventConfig?.is_active, // Auto-enable if inactive event
+      } : {
+        registrants: data.registrants.map(registrant => ({
+          ...registrant,
+          saint_name: registrant.saint_name?.toUpperCase() || "",
+          full_name: registrant.full_name.toUpperCase(),
+          email: registrant.is_primary ? registrant.email : data.registrants[0].email,
+          phone: registrant.is_primary ? registrant.phone : data.registrants[0].phone,
+          address: registrant.is_primary ? registrant.address : data.registrants[0].address,
+          province: registrant.is_primary ? registrant.province : data.registrants[0].province,
+          diocese: registrant.is_primary ? registrant.diocese : data.registrants[0].diocese,
+        })),
+        notes: data.notes,
+      };
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          registrants: data.registrants.map(registrant => ({
-            ...registrant,
-            saint_name: registrant.saint_name?.toUpperCase() || "",
-            full_name: registrant.full_name.toUpperCase(),
-            email: registrant.is_primary ? registrant.email : data.registrants[0].email,
-            phone: registrant.is_primary ? registrant.phone : data.registrants[0].phone,
-            address: registrant.is_primary ? registrant.address : data.registrants[0].address,
-            province: registrant.is_primary ? registrant.province : data.registrants[0].province,
-            diocese: registrant.is_primary ? registrant.diocese : data.registrants[0].diocese,
-          })),
-          notes: data.notes,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
@@ -368,10 +409,16 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         throw new Error(result.error || 'Registration failed');
       }
 
-      toast.success("Đăng ký thành công! Bạn sẽ được chuyển đến trang đóng phí tham dự.");
-      
-      // Redirect to payment page
-      window.location.href = `/payment/${result.invoiceCode}`;
+      if (isAdminMode) {
+        toast.success(`Đăng ký thành công cho người dùng ${targetUserEmail}!`);
+        if (onAdminSuccess) {
+          onAdminSuccess(result.registration);
+        }
+      } else {
+        toast.success("Đăng ký thành công! Bạn sẽ được chuyển đến trang đóng phí tham dự.");
+        // Redirect to payment page
+        window.location.href = `/payment/${result.invoiceCode}`;
+      }
 
     } catch (error) {
       toast.error(`Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại. ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
@@ -391,17 +438,38 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
   if (!eventConfig) {
     return (
       <div className="max-w-4xl mx-auto text-center p-8">
-        <Card className="bg-red-50 border-red-200">
+        <Card className="bg-amber-50 border-amber-200">
           <CardHeader>
-            <CardTitle className="text-red-600 text-lg font-semibold flex items-center gap-2">
+            <CardTitle className="text-amber-600 text-lg font-semibold flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
-              Không tìm thấy sự kiện đang hoạt động
+              Đăng ký hiện tại không khả dụng
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-red-500">
-              Hiện tại không có sự kiện nào đang hoạt động. Vui lòng liên hệ với quản trị viên để biết thêm chi tiết.
+          <CardContent className="space-y-4">
+            <p className="text-amber-700">
+              Hiện tại không có sự kiện nào đang mở đăng ký trực tuyến. 
             </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800 mb-2">💡 Bạn vẫn có thể đăng ký!</h4>
+              <p className="text-blue-700 text-sm">
+                Nếu bạn muốn đăng ký tham gia, vui lòng liên hệ trực tiếp với ban tổ chức hoặc 
+                người quản lý đăng ký trong khu vực của bạn. Họ có thể hỗ trợ tạo đăng ký cho bạn.
+              </p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <h4 className="font-medium text-gray-800 mb-2">📞 Thông tin liên hệ</h4>
+              <div className="text-sm text-gray-600">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium">📘 Facebook:</span>
+                  <a href="https://www.facebook.com/GTCGVNtaiNhat/" 
+                     className="text-blue-600 hover:text-blue-800 hover:underline"
+                     target="_blank" 
+                     rel="noopener noreferrer">
+                    GTCGVNtaiNhat
+                  </a>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -1044,14 +1112,30 @@ export function RegistrationForm({ userEmail, userName, userFacebookUrl }: Regis
         </Card>
 
         {/* Submit */}
-        <div className="flex justify-center pt-8">
+        <div className={`flex ${isAdminMode ? 'justify-end gap-4' : 'justify-center'} pt-8`}>
+          {isAdminMode && onAdminCancel && (
+            <Button 
+              type="button" 
+              variant="outline"
+              size="lg"
+              onClick={onAdminCancel}
+              className="min-w-[140px] h-14 text-lg"
+            >
+              Hủy
+            </Button>
+          )}
           <Button 
             type="submit" 
             size="lg" 
             disabled={isSubmitting}
             className="min-w-[280px] h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-4 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 disabled:transform-none disabled:opacity-50 border-2 border-white/20"
           >
-            {isSubmitting ? "⏳ Đang xử lý..." : "✨ Hoàn tất đăng ký 🎉"}
+            {isSubmitting 
+              ? "⏳ Đang xử lý..." 
+              : isAdminMode 
+                ? "✨ Tạo đăng ký (Admin)" 
+                : "✨ Hoàn tất đăng ký 🎉"
+            }
           </Button>
         </div>
       </form>
