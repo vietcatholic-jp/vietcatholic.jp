@@ -771,3 +771,28 @@ export interface AvatarManagerConfig {
 
 // Legacy role definitions removed - now using dynamic event_roles from database
 // All role information is fetched from the event_roles table
+
+export type IncomeCategory =
+  | 'ticket_sales'     // Bán vé sự kiện
+  | 'merchandise'      // Bán sản phẩm lưu niệm
+  | 'food_beverage'    // Bán đồ ăn thức uống
+  | 'other';           // Khác
+
+export interface IncomeSource {
+  id: string;
+  event_config_id: string;
+  category: IncomeCategory;
+  title: string;
+  description?: string;
+  amount: number;
+  expected_amount?: number;
+  status: 'pending' | 'received' | 'overdue';
+  contact_person?: string;
+  contact_info?: string;
+  due_date?: string;
+  received_date?: string;
+  notes?: string;
+  created_by: string;
+  created_at: string;
+  updated_at?: string;
+}
