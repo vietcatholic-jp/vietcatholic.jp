@@ -10,11 +10,13 @@ import {
   BarChart3, 
   Users, 
   Loader2,
-  RefreshCw
+  RefreshCw,
+  UserPlus
 } from "lucide-react";
 import { Registration, CancelRequest, EventConfig } from "@/lib/types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface RegistrationManagerData {
   stats: {
@@ -170,6 +172,12 @@ export function RegistrationManagerDashboard() {
                   Cập nhật lần cuối: {lastRefresh.toLocaleTimeString('vi-VN')}
                 </span>
               )}
+              <Link href="/admin/registrations/create">
+                <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Tạo đăng ký mới
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 size="sm"

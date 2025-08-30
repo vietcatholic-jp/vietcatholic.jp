@@ -214,6 +214,14 @@ create policy "Users can upload portraits"
 on storage.objects for insert
 with check (bucket_id = 'portraits' and auth.uid()::text = (storage.foldername(name))[1]);
 
+create policy "Users can update portraits"
+on storage.objects for update
+using (bucket_id = 'portraits' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "Users can delete portraits"
+on storage.objects for delete
+using (bucket_id = 'portraits' and auth.uid()::text = (storage.foldername(name))[1]);
+
 create policy "Users can view portraits"
 on storage.objects for select
 using (bucket_id = 'portraits');
