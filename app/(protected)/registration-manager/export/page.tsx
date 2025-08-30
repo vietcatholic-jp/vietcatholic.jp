@@ -623,7 +623,7 @@ export default function ExportPage() {
         includePersonalInfo: true,
         includePaymentInfo: true,
         includeRegistrants: true,
-        reportType: 'detailed',
+        reportType: 'registrants',
         teamName: 'all',
         ageGroup: 'all',
         gender: 'all',
