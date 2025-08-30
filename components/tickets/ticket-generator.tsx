@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, MapPin } from "lucide-react";
-import QRCode from "qrcode";
 import { Registrant, Ticket } from "@/lib/types";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import { generateQRCodeForRegistrant, createTicketElement } from "@/lib/ticket-utils";
 import html2canvas from "html2canvas";
 
 interface TicketGeneratorProps {
@@ -21,20 +21,7 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
   useEffect(() => {
     const generateQRCode = async () => {
       try {
-        const qrData = {
-          id: registrant.id,
-          name: registrant.full_name,
-          event: "Đại hội Năm Thánh 2025",
-        };
-
-        const url = await QRCode.toDataURL(JSON.stringify(qrData), {
-          width: 256,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
+        const url = await generateQRCodeForRegistrant(registrant);
         setQrCodeUrl(url);
       } catch (error) {
         console.error('QR code generation error:', error);
@@ -44,16 +31,32 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
     generateQRCode();
   }, [registrant]);
 
-  const handleSaveTicket = () => {
-    if (typeof window !== 'undefined' && ticketRef.current) {
-      html2canvas(ticketRef.current, { useCORS: true }).then(canvas => {
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = `DaiHoiCongGiao2025-Ticket-${registrant.id}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+  const handleSaveTicket = async () => {
+    try {
+      const ticketElement = createTicketElement(registrant, qrCodeUrl);
+      
+      // Temporarily add to DOM for rendering
+      document.body.appendChild(ticketElement);
+      
+      const canvas = await html2canvas(ticketElement, { 
+        useCORS: true,
+        allowTaint: true,
+        scale: 2,
+        backgroundColor: '#ffffff'
       });
+      
+      // Remove from DOM
+      document.body.removeChild(ticketElement);
+      
+      // Download the image
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `DaiHoiCongGiao2025-Ticket-${registrant.id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error saving ticket:', error);
     }
   };
 
@@ -66,13 +69,13 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
             {registrant.portrait_url && (
-              <div className="size-48 rounded-full overflow-hidden border-4 border-gray-200">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200">
                 <Image
                   src={registrant.portrait_url}
                   alt="Portrait"
                   width={128}
                   height={128}
-                  className="object-fill w-full h-full"
+                  className="object-cover w-full h-full"
                   crossOrigin="anonymous"
                 />
               </div>
