@@ -13,12 +13,16 @@ import {
   Users,
   MapPin,
   Church,
-  ArrowUpDown
+  ArrowUpDown,
+  Ticket
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES, AGE_GROUPS, EventConfig } from "@/lib/types";
 import { format } from "date-fns";
+import QRCode from "qrcode";
+import html2canvas from "html2canvas";
+import JSZip from "jszip";
 
 import {  RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
 
@@ -48,6 +52,7 @@ interface ExportPageState {
   registrants: RegistrantWithRoleAndRegistration[];
   filteredRegistrants: RegistrantWithRoleAndRegistration[];
   loading: boolean;
+  downloading: boolean; // Add downloading state
   filters: ExportFilters;
   availableTeams: string[];
   availableDioceses: string[]; // new
@@ -252,6 +257,113 @@ function generateDioceseStats(registrations: Registration[]) {
     .map(([diocese, counts]) => ({ diocese, ...counts }));
 }
 
+// Ticket generation functions
+async function generateQRCodeForRegistrant(registrant: RegistrantWithRoleAndRegistration): Promise<string> {
+  try {
+    const qrData = {
+      id: registrant.id,
+      name: registrant.full_name,
+      event: "Đại hội Năm Thánh 2025",
+    };
+
+    const url = await QRCode.toDataURL(JSON.stringify(qrData), {
+      width: 256,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+    return url;
+  } catch (error) {
+    console.error('QR code generation error:', error);
+    return '';
+  }
+}
+
+function createTicketElement(registrant: RegistrantWithRoleAndRegistration, qrCodeUrl: string): HTMLDivElement {
+  const ticketDiv = document.createElement('div');
+  ticketDiv.style.width = '400px';
+  ticketDiv.style.fontFamily = 'Arial, sans-serif';
+  ticketDiv.style.backgroundColor = 'white';
+  ticketDiv.style.borderRadius = '16px';
+  ticketDiv.style.overflow = 'hidden';
+  ticketDiv.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+
+  const headerColor = registrant.event_role_id ? '#3b82f6' : '#10b981';
+  
+  ticketDiv.innerHTML = `
+    <div style="background-color: ${headerColor}; color: white; padding: 16px; text-align: center;">
+      <h1 style="font-size: 20px; font-weight: bold; margin: 0;">ĐẠI HỘI NĂM THÁNH TOÀN QUỐC 2025</h1>
+    </div>
+    <div style="padding: 24px;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+        ${registrant.portrait_url ? `
+          <div style="width: 128px; height: 128px; border-radius: 50%; overflow: hidden; border: 4px solid #e5e7eb;">
+            <img src="${registrant.portrait_url}" alt="Portrait" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous" />
+          </div>
+        ` : ''}
+        <div style="text-align: center;">
+          ${registrant.saint_name ? `<p style="color: #6b7280; margin: 0 0 8px 0;">(${registrant.saint_name})</p>` : ''}
+          <p style="font-size: 24px; font-weight: 600; margin: 0;">${registrant.full_name}</p>
+          ${registrant.second_day_only ? `
+            <div style="margin-top: 8px; display: inline-block; padding: 8px 8px; background-color: #fed7aa; color: #9a3412; font-size: 14px; font-weight: 500; border-radius: 9999px; border: 1px solid #fdba74;">
+              Chỉ tham dự: ${new Date(registrant.selected_attendance_day || '2025-09-15').toLocaleDateString('vi-VN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </div>
+          ` : ''}
+        </div>
+        <div style="display: flex; align-items: center; color: #6b7280;">
+          <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+          </svg>
+          <span>Kamiozuki, Hanado, Kanagawa</span>
+        </div>
+        ${qrCodeUrl ? `
+          <div style="padding: 8px; background-color: white; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <img src="${qrCodeUrl}" alt="QR Code" style="width: 200px; height: 200px;" />
+          </div>
+        ` : ''}
+        <div style="text-align: center; font-size: 14px; color: #6b7280; padding-top: 8px;">
+          <p style="margin: 0;">Sử dụng mã QR này để check-in tại sự kiện.</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return ticketDiv;
+}
+
+async function generateTicketImage(registrant: RegistrantWithRoleAndRegistration): Promise<Blob | null> {
+  try {
+    const qrCodeUrl = await generateQRCodeForRegistrant(registrant);
+    const ticketElement = createTicketElement(registrant, qrCodeUrl);
+    
+    // Temporarily add to DOM for rendering
+    document.body.appendChild(ticketElement);
+    
+    const canvas = await html2canvas(ticketElement, { 
+      useCORS: true,
+      allowTaint: true,
+      scale: 2,
+      backgroundColor: '#ffffff'
+    });
+    
+    // Remove from DOM
+    document.body.removeChild(ticketElement);
+    
+    return new Promise((resolve) => {
+      canvas.toBlob(resolve, 'image/png');
+    });
+  } catch (error) {
+    console.error('Error generating ticket image:', error);
+    return null;
+  }
+}
+
 export default function ExportPage() {
   const [state, setState] = useState<ExportPageState>({
     registrations: [],
@@ -259,6 +371,7 @@ export default function ExportPage() {
     registrants: [],
     filteredRegistrants: [],
     loading: true,
+    downloading: false,
     availableTeams: [],
     availableDioceses: [],
     eventConfig: null,
@@ -523,6 +636,74 @@ export default function ExportPage() {
     }));
   };
 
+  const handleBatchTicketDownload = async () => {
+    if (state.filteredRegistrants.length === 0) {
+      toast.error('Không có dữ liệu để tải vé');
+      return;
+    }
+
+    setState(prev => ({ ...prev, downloading: true }));
+    
+    try {
+      const zip = new JSZip();
+      const ticketsFolder = zip.folder('tickets');
+      
+      toast.info(`Đang tạo ${state.filteredRegistrants.length} vé...`);
+      
+      // Process registrants in batches to avoid browser hanging
+      const batchSize = 5;
+      const batches = [];
+      for (let i = 0; i < state.filteredRegistrants.length; i += batchSize) {
+        batches.push(state.filteredRegistrants.slice(i, i + batchSize));
+      }
+      
+      let processed = 0;
+      for (const batch of batches) {
+        const promises = batch.map(async (registrant) => {
+          try {
+            const blob = await generateTicketImage(registrant);
+            if (blob && ticketsFolder) {
+              const fileName = `${registrant.registration?.invoice_code || 'unknown'}-${registrant.full_name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+              ticketsFolder.file(fileName, blob);
+            }
+            processed++;
+            
+            // Update progress
+            if (processed % 5 === 0) {
+              toast.info(`Đã tạo ${processed}/${state.filteredRegistrants.length} vé...`);
+            }
+          } catch (error) {
+            console.error(`Error generating ticket for ${registrant.full_name}:`, error);
+          }
+        });
+        
+        await Promise.all(promises);
+        
+        // Small delay between batches to prevent browser blocking
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      toast.info('Đang nén file...');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // Download the zip file
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = `DaiHoiCongGiao2025-Tickets-${format(new Date(), 'yyyy-MM-dd-HHmm')}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      
+      toast.success(`Đã tải xuống ${processed} vé thành công!`);
+    } catch (error) {
+      console.error('Error during batch download:', error);
+      toast.error('Có lỗi xảy ra khi tải vé. Vui lòng thử lại.');
+    } finally {
+      setState(prev => ({ ...prev, downloading: false }));
+    }
+  };
+
   const totalAmount = state.filteredRegistrations.reduce((sum, reg) => sum + reg.total_amount, 0);
   const totalParticipants = state.filteredRegistrations.reduce((sum, reg) => sum + reg.participant_count, 0);
 
@@ -731,6 +912,25 @@ export default function ExportPage() {
             <Button variant="outline" onClick={clearFilters}>
               Xóa bộ lọc
             </Button>
+            {state.filters.reportType === 'registrants' && state.filteredRegistrants.length > 0 && (
+              <Button 
+                onClick={handleBatchTicketDownload} 
+                disabled={state.downloading}
+                className="flex items-center gap-2"
+              >
+                {state.downloading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Đang tải...
+                  </>
+                ) : (
+                  <>
+                    <Ticket className="w-4 h-4" />
+                    Tải tất cả vé ({state.filteredRegistrants.length})
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

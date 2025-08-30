@@ -24,7 +24,7 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
         const qrData = {
           id: registrant.id,
           name: registrant.full_name,
-          event: "Đại hội Công giáo Việt Nam 2025",
+          event: "Đại hội Năm Thánh 2025",
         };
 
         const url = await QRCode.toDataURL(JSON.stringify(qrData), {
