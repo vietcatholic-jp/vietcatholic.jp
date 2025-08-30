@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { EventLogger } from "@/lib/logging/event-logger";
 import { createRequestContext, calculateDuration } from "@/lib/logging/request-context";
@@ -35,6 +36,8 @@ const AdminRegistrationSchema = z.object({
   force_inactive_event: z.boolean().optional(),
   // Admin can specify event config id
   event_config_id: z.string().optional(),
+  // Admin can use their own profile when target user doesn't exist
+  use_admin_profile: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -43,6 +46,7 @@ export async function POST(request: NextRequest) {
   
   try {
     const supabase = await createClient();
+    const adminSupabase = createAdminClient(); // Admin client to bypass RLS
     
     // Get the authenticated user (admin)
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -118,30 +122,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Validation failed", details: error }, { status: 400 });
     }
 
-    // Find the target user
-    const { data: targetUser, error: targetUserError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", validated.target_user_email)
-      .single();
+    // Find the target user or use admin if specified
+    let targetUser;
+    if (validated.use_admin_profile) {
+      // Use admin as target user
+      targetUser = user;
+    } else {
+      // Find the specified target user
+      const { data: foundUser, error: targetUserError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", validated.target_user_email)
+        .single();
 
-    if (targetUserError || !targetUser) {
-      await logger.logWarning(
-        REGISTRATION_EVENT_TYPES.ADMIN_REGISTRATION_MODIFIED,
-        EVENT_CATEGORIES.REGISTRATION,
-        {
-          ...context,
-          userId: user.id,
-          userEmail: user.email,
-          eventData: { 
-            action: "create_registration_for_user",
-            targetEmail: validated.target_user_email,
-            error: "Target user not found"
-          },
-          durationMs: calculateDuration(context),
-        }
-      );
-      return NextResponse.json({ error: "Target user not found" }, { status: 404 });
+      if (targetUserError || !foundUser) {
+        await logger.logWarning(
+          REGISTRATION_EVENT_TYPES.ADMIN_REGISTRATION_MODIFIED,
+          EVENT_CATEGORIES.REGISTRATION,
+          {
+            ...context,
+            userId: user.id,
+            userEmail: user.email,
+            eventData: { 
+              action: "create_registration_for_user",
+              targetEmail: validated.target_user_email,
+              error: "Target user not found"
+            },
+            durationMs: calculateDuration(context),
+          }
+        );
+        return NextResponse.json({ error: "Target user not found" }, { status: 404 });
+      }
+      targetUser = foundUser;
     }
 
     // Get event config - allow inactive events for admin
@@ -219,8 +231,8 @@ export async function POST(request: NextRequest) {
       return total + price;
     }, 0);
 
-    // Create registration record for target user
-    const { data: registration, error: regError } = await supabase
+    // Create registration record for target user (using admin client to bypass RLS)
+    const { data: registration, error: regError } = await adminSupabase
       .from("registrations")
       .insert({
         user_id: targetUser.id,
@@ -229,7 +241,7 @@ export async function POST(request: NextRequest) {
         status: "temp_confirmed", // Admin created registrations start as temp_confirmed
         total_amount: totalAmount,
         participant_count: validated.registrants.length,
-        notes: `Created by admin ${user.email} for user ${targetUser.email}. ${validated.notes || ''}`,
+        notes: `Created by admin ${user.email} ${validated.use_admin_profile ? '(using admin profile)' : `for user ${targetUser.email}`}. ${validated.notes || ''}`,
       })
       .select()
       .single();
@@ -319,7 +331,7 @@ export async function POST(request: NextRequest) {
     });
 
 
-    const { error: registrantsError } = await supabase
+    const { error: registrantsError } = await adminSupabase
       .from("registrants")
       .insert(registrantsData);
 
@@ -346,8 +358,8 @@ export async function POST(request: NextRequest) {
         }
       );
 
-      // Clean up registration after logging
-      await supabase.from("registrations").delete().eq("id", registration.id);
+      // Clean up registration after logging (using admin client)
+      await adminSupabase.from("registrations").delete().eq("id", registration.id);
       console.error("Registrant creation error:", registrantsError);
       return NextResponse.json({ error: "Lỗi khi tạo thông tin người tham gia" }, { status: 500 });
     }

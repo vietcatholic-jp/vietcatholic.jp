@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Users, ArrowLeft, Calendar, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Users, ArrowLeft, Calendar, AlertCircle, UserPlus } from "lucide-react";
 import { 
   GENDERS, 
   AGE_GROUPS,
@@ -111,6 +111,7 @@ interface RegistrationFormProps {
   // Admin mode props
   isAdminMode?: boolean;
   targetUserEmail?: string;
+  useAdminProfile?: boolean;
   onAdminSuccess?: (registration: { id: string; invoice_code: string }) => void;
   onAdminCancel?: () => void;
 }
@@ -121,6 +122,7 @@ export function RegistrationForm({
   userFacebookUrl, 
   isAdminMode = false,
   targetUserEmail,
+  useAdminProfile = false,
   onAdminSuccess,
   onAdminCancel 
 }: RegistrationFormProps) {
@@ -381,6 +383,7 @@ export function RegistrationForm({
         })),
         notes: data.notes,
         force_inactive_event: !eventConfig?.is_active, // Auto-enable if inactive event
+        use_admin_profile: useAdminProfile,
       } : {
         registrants: data.registrants.map(registrant => ({
           ...registrant,
@@ -550,6 +553,28 @@ export function RegistrationForm({
           </div>
         </div>
       </div>
+
+      {/* Admin Mode Notice */}
+      {isAdminMode && (
+        <Card className="bg-amber-50 border-amber-200 mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-amber-800">
+              <div className="p-2 bg-amber-200 rounded-full">
+                <UserPlus className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Chế độ Admin</h3>
+                <p className="text-sm">
+                  {useAdminProfile 
+                    ? `Tạo đăng ký sử dụng thông tin profile của bạn (${userEmail})`
+                    : `Tạo đăng ký cho người dùng: ${targetUserEmail}`
+                  }
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Registrants */}

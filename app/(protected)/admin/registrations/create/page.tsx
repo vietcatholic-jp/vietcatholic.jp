@@ -23,6 +23,7 @@ export default function AdminRegistrationPage() {
   const [targetUserEmail, setTargetUserEmail] = useState("");
   const [targetUserData, setTargetUserData] = useState<{ name?: string; facebookUrl?: string } | null>(null);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [useAdminProfile, setUseAdminProfile] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -77,7 +78,18 @@ export default function AdminRegistrationPage() {
 
   const handleTargetUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!targetUserEmail) return;
+    
+    // If no email provided, use admin's own profile
+    if (!targetUserEmail) {
+      setTargetUserData({
+        name: profile?.full_name || '',
+        facebookUrl: '' // Admin's facebook will be used from their profile
+      });
+      setTargetUserEmail(user?.email || '');
+      setUseAdminProfile(true);
+      setShowRegistrationForm(true);
+      return;
+    }
 
     try {
       const supabase = createClient();
@@ -88,7 +100,20 @@ export default function AdminRegistrationPage() {
         .single();
 
       if (error || !userData) {
-        alert('Không tìm thấy người dùng với email này');
+        // User doesn't exist, offer to use admin profile instead
+        const useAdminInstead = confirm(
+          `Không tìm thấy người dùng với email "${targetUserEmail}".\n\n` +
+          'Bạn có muốn tạo đăng ký sử dụng thông tin của bạn thay thế không?'
+        );
+        
+        if (useAdminInstead) {
+          setTargetUserData({
+            name: profile?.full_name || '',
+            facebookUrl: '' // Will use admin's profile
+          });
+          setUseAdminProfile(true);
+          setShowRegistrationForm(true);
+        }
         return;
       }
 
@@ -96,6 +121,7 @@ export default function AdminRegistrationPage() {
         name: userData.full_name || '',
         facebookUrl: userData.facebook_url || ''
       });
+      setUseAdminProfile(false);
       setShowRegistrationForm(true);
     } catch (error) {
       console.error('Error finding user:', error);
@@ -130,21 +156,23 @@ export default function AdminRegistrationPage() {
                   Tạo đăng ký cho người dùng (Admin)
                 </CardTitle>
                 <p className="text-gray-600 mt-2">
-                  Nhập email người dùng để tạo đăng ký cho họ
+                  Nhập email người dùng để tạo đăng ký cho họ, hoặc để trống để sử dụng thông tin của bạn
                 </p>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleTargetUserSubmit} className="space-y-4">
                   <div>
-                    <Label htmlFor="target_email">Email người dùng *</Label>
+                    <Label htmlFor="target_email">Email người dùng (tùy chọn)</Label>
                     <Input
                       id="target_email"
                       type="email"
                       value={targetUserEmail}
                       onChange={(e) => setTargetUserEmail(e.target.value)}
-                      placeholder="user@example.com"
-                      required
+                      placeholder="user@example.com (để trống để dùng email của bạn)"
                     />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Để trống để tạo đăng ký sử dụng thông tin của bạn ({user?.email})
+                    </p>
                   </div>
                   <div className="flex justify-end gap-4">
                     <Button 
@@ -154,7 +182,7 @@ export default function AdminRegistrationPage() {
                     >
                       Hủy
                     </Button>
-                    <Button type="submit" disabled={!targetUserEmail}>
+                    <Button type="submit">
                       Tiếp tục
                     </Button>
                   </div>
@@ -174,10 +202,16 @@ export default function AdminRegistrationPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-blue-800">
-              Tạo đăng ký cho: {targetUserEmail}
+              {useAdminProfile 
+                ? `Tạo đăng ký sử dụng thông tin của bạn (${user?.email})`
+                : `Tạo đăng ký cho: ${targetUserEmail}`
+              }
             </h1>
             <p className="text-gray-600 mt-2">
-              Sử dụng form đăng ký thông thường với quyền admin
+              {useAdminProfile 
+                ? "Đăng ký này sẽ được tạo sử dụng thông tin profile của bạn"
+                : "Sử dụng form đăng ký thông thường với quyền admin"
+              }
             </p>
             <Button 
               variant="outline" 
@@ -195,6 +229,7 @@ export default function AdminRegistrationPage() {
             userFacebookUrl={targetUserData?.facebookUrl}
             isAdminMode={true}
             targetUserEmail={targetUserEmail}
+            useAdminProfile={useAdminProfile}
             onAdminSuccess={(registration) => {
               // Redirect to registration manager dashboard with success message
               router.push(`/registration-manager?success=created&invoice=${registration.invoice_code}`);
