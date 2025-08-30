@@ -307,7 +307,7 @@ function createTicketElement(registrant: RegistrantWithRoleAndRegistration, qrCo
           ${registrant.saint_name ? `<p style="color: #6b7280; margin: 0 0 8px 0;">(${registrant.saint_name})</p>` : ''}
           <p style="font-size: 24px; font-weight: 600; margin: 0;">${registrant.full_name}</p>
           ${registrant.second_day_only ? `
-            <div style="margin-top: 8px; display: inline-block; padding: 8px 12px; background-color: #fed7aa; color: #9a3412; font-size: 14px; font-weight: 500; border-radius: 9999px; border: 1px solid #fdba74;">
+            <div style="margin-top: 8px; display: inline-block; padding: 8px 8px; background-color: #fed7aa; color: #9a3412; font-size: 14px; font-weight: 500; border-radius: 9999px; border: 1px solid #fdba74;">
               Chỉ tham dự: ${new Date(registrant.selected_attendance_day || '2025-09-15').toLocaleDateString('vi-VN', {
                 year: 'numeric',
                 month: 'long',
