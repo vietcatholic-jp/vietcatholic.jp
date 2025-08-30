@@ -163,7 +163,7 @@ export function RegistrationForm({
         if (response.ok) {
           const { events } = await response.json();
           let selectedEvent;
-          
+          // TODO: parameterize event selection for both admin and normal mode
           if (isAdminMode) {
             // In admin mode, prefer active event but fall back to any event
             selectedEvent = events?.find((event: EventConfig) => event.is_active) || events?.[0];
@@ -484,6 +484,7 @@ export function RegistrationForm({
     return (
       <div className="max-w-4xl mx-auto">
         <RoleSelection
+            eventId={eventConfig.id}
             selectedRole={selectedRole}
             onRoleSelect={handleRoleSelection}
             onContinue={proceedToRegistration}

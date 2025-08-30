@@ -8,12 +8,13 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface RoleSelectionProps {
+  eventId: string;
   selectedRole: EventParticipationRole;
   onRoleSelect: (role: EventParticipationRole) => void;
   onContinue: () => void;
 }
 
-export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSelectionProps) {
+export function RoleSelection({ eventId, selectedRole, onRoleSelect, onContinue }: RoleSelectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<'participant' | 'organization' | null>(null);
   const [eventRoles, setEventRoles] = useState<EventRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,24 +23,12 @@ export function RoleSelection({ selectedRole, onRoleSelect, onContinue }: RoleSe
   useEffect(() => {
     const fetchEventRoles = async () => {
       try {
-        // First, get the active event
-        const { data: activeEvent, error: eventError } = await supabase
-          .from('event_configs')
-          .select('id')
-          .eq('is_active', true)
-          .single();
-
-        if (eventError) {
-          console.error('Error fetching active event:', eventError);
-          setIsLoading(false);
-          return;
-        }
 
         // Then fetch roles for this event
         const { data: roles, error: rolesError } = await supabase
           .from('event_roles')
           .select('*')
-          .eq('event_config_id', activeEvent.id)
+          .eq('event_config_id', eventId)
           .order('name');
 
         if (rolesError) {
