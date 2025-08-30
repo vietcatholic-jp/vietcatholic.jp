@@ -84,7 +84,14 @@ export default function FinanceNavigation() {
           icon: Receipt,
           description: 'Quản lý yêu cầu chi tiêu',
           roles: ['super_admin', 'cashier_role']
-        }
+        },
+        {
+          href: '/finance/income-sources',
+          label: 'Nguồn thu',
+          icon: Receipt,
+          description: 'Quản lý các nguồn thu khác',
+          roles: ['super_admin', 'cashier_role']
+        },
       );
     }
 
