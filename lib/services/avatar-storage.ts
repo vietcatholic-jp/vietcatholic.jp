@@ -48,6 +48,15 @@ export async function uploadAvatar(
 
     if (error) {
       console.error('Avatar upload error:', error);
+      
+      // More specific error messages for common issues
+      if (error.message?.includes('row-level security')) {
+        return {
+          success: false,
+          error: 'Permission denied: insufficient storage access rights',
+        };
+      }
+      
       return {
         success: false,
         error: `Upload failed: ${error.message}`,
@@ -108,6 +117,15 @@ export async function uploadAvatarServer(
 
     if (error) {
       console.error('Avatar upload error:', error);
+      
+      // More specific error messages for common issues
+      if (error.message?.includes('row-level security')) {
+        return {
+          success: false,
+          error: 'Permission denied: insufficient storage access rights',
+        };
+      }
+      
       return {
         success: false,
         error: `Upload failed: ${error.message}`,
