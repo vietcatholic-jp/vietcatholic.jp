@@ -60,8 +60,8 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
   return (
     <div className="w-full max-w-sm mx-auto font-sans">
       <Card ref={ticketRef} className="bg-white shadow-lg rounded-2xl overflow-hidden">
-        <div className="bg-gray-800 text-white p-4 text-center">
-          <h1 className="text-xl font-bold">ĐẠI HỘI TOÀN QUỐC 2025</h1>
+        <div className={(registrant.event_role_id ? "bg-blue-500 " : "bg-green-500 ") + `text-white p-4 text-center`}>
+          <h1 className="text-xl font-bold">ĐẠI HỘI NĂM THÁNH TOÀN QUỐC 2025</h1>
         </div>
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
@@ -82,7 +82,12 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
               <p className="text-2xl font-semibold">{registrant.full_name}</p>
               {registrant.second_day_only && (
                 <div className="mt-2 inline-block px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
-                  Chỉ tham gia ngày 15/09
+                  Chỉ tham dự :
+                  {new Date(registrant.selected_attendance_day || '2025-09-15').toLocaleDateString('vi-VN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
                 </div>
               )}
             </div>
