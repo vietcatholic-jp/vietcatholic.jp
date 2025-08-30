@@ -46,13 +46,24 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
 
   const handleSaveTicket = () => {
     if (typeof window !== 'undefined' && ticketRef.current) {
-      html2canvas(ticketRef.current, { useCORS: true }).then(canvas => {
+      html2canvas(ticketRef.current, {
+        useCORS: true,
+        allowTaint: true,
+        scale: 2, // Higher resolution
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+        removeContainer: true
+      }).then(canvas => {
         const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
+        link.href = canvas.toDataURL('image/png', 1.0); // Max quality
         link.download = `DaiHoiCongGiao2025-Ticket-${registrant.id}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      }).catch(error => {
+        console.error('Error generating ticket image:', error);
+        alert('Có lỗi xảy ra khi tạo ảnh vé. Vui lòng thử lại.');
       });
     }
   };
@@ -66,14 +77,16 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
             {registrant.portrait_url && (
-              <div className="size-48 rounded-full overflow-hidden border-4 border-gray-200">
+              <div className="size-48 rounded-full overflow-hidden border-4 border-gray-200 bg-gray-100">
                 <Image
                   src={registrant.portrait_url}
                   alt="Portrait"
-                  width={128}
-                  height={128}
-                  className="object-fill w-full h-full"
+                  width={192}
+                  height={192}
+                  className="object-cover w-full h-full"
                   crossOrigin="anonymous"
+                  priority
+                  unoptimized
                 />
               </div>
             )}
