@@ -42,21 +42,9 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error && data.user) {
-      // Debug logging
-      console.log('Auth callback - Parameters:', {
-        type,
-        next: searchParams.get("next"),
-        hasSession: !!data.session,
-        userEmail: data.user.email
-      });
-      
-      // For password reset flows, default to showing update password page
-      // Most legitimate logins come with explicit next parameters or oauth flows
-      const nextParam = searchParams.get("next");
-      const isExplicitLogin = nextParam && !nextParam.includes("update-password") && !nextParam.includes("reset");
-      
-      // If no explicit next parameter or if it's a password-related flow, treat as password reset
-      if (!isExplicitLogin || type === "recovery" || nextParam?.includes("update-password")) {
+      // Only redirect to update-password for explicit password recovery flows
+      // Check if this is specifically a password recovery flow
+      if (type === "recovery") {
         console.log('Detected password reset flow, redirecting to update-password');
         
         // For password recovery, redirect to update-password with session tokens

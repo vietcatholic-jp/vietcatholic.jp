@@ -44,7 +44,7 @@ export function RoleSelection({ eventId, selectedRole, onRoleSelect, onContinue 
     };
 
     fetchEventRoles();
-  }, [supabase]);
+  }, [supabase, eventId]);
 
   // Set initial category based on selected role
   useEffect(() => {
