@@ -5,6 +5,36 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
+  const type = searchParams.get("type"); // Check if this is a password recovery
+
+  // Helper function to get redirect URL
+  const getRedirectUrl = () => {
+    // Check for custom site URL environment variable
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+      return process.env.NEXT_PUBLIC_SITE_URL;
+    }
+    
+    // Check for Vercel URL
+    if (process.env.VERCEL_URL) {
+      return `https://${process.env.VERCEL_URL}`;
+    }
+    
+    // Check forwarded headers (common in production)
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+    if (forwardedHost) {
+      const protocol = forwardedProto || "https";
+      return `${protocol}://${forwardedHost}`;
+    }
+    
+    // Development fallback
+    if (process.env.NODE_ENV === "development") {
+      return origin;
+    }
+    
+    // Last resort fallback
+    return origin;
+  };
 
   if (code) {
     const supabase = await createClient();
@@ -12,6 +42,39 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error && data.user) {
+      // Debug logging
+      console.log('Auth callback - Parameters:', {
+        type,
+        next: searchParams.get("next"),
+        hasSession: !!data.session,
+        userEmail: data.user.email
+      });
+      
+      // For password reset flows, default to showing update password page
+      // Most legitimate logins come with explicit next parameters or oauth flows
+      const nextParam = searchParams.get("next");
+      const isExplicitLogin = nextParam && !nextParam.includes("update-password") && !nextParam.includes("reset");
+      
+      // If no explicit next parameter or if it's a password-related flow, treat as password reset
+      if (!isExplicitLogin || type === "recovery" || nextParam?.includes("update-password")) {
+        console.log('Detected password reset flow, redirecting to update-password');
+        
+        // For password recovery, redirect to update-password with session tokens
+        const redirectUrl = getRedirectUrl();
+        const updatePasswordUrl = new URL("/auth/update-password", redirectUrl);
+        
+        // Add session tokens to URL for password reset
+        if (data.session) {
+          updatePasswordUrl.searchParams.set("access_token", data.session.access_token);
+          updatePasswordUrl.searchParams.set("refresh_token", data.session.refresh_token);
+          updatePasswordUrl.searchParams.set("type", "recovery");
+        }
+        
+        return NextResponse.redirect(updatePasswordUrl.toString());
+      }
+
+      console.log('Processing normal login flow');
+
       // Check if user profile exists, if not create one
       const { data: existingProfile } = await supabase
         .from("users")
@@ -41,40 +104,14 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Get the correct base URL for redirect
-      const getRedirectUrl = () => {
-        // Check for custom site URL environment variable
-        if (process.env.NEXT_PUBLIC_SITE_URL) {
-          return process.env.NEXT_PUBLIC_SITE_URL;
-        }
-        
-        // Check for Vercel URL
-        if (process.env.VERCEL_URL) {
-          return `https://${process.env.VERCEL_URL}`;
-        }
-        
-        // Check forwarded headers (common in production)
-        const forwardedHost = request.headers.get("x-forwarded-host");
-        const forwardedProto = request.headers.get("x-forwarded-proto");
-        if (forwardedHost) {
-          const protocol = forwardedProto || "https";
-          return `${protocol}://${forwardedHost}`;
-        }
-        
-        // Development fallback
-        if (process.env.NODE_ENV === "development") {
-          return origin;
-        }
-        
-        // Last resort fallback
-        return origin;
-      };
-
       const redirectUrl = getRedirectUrl();
       return NextResponse.redirect(`${redirectUrl}${next}`);
     }
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/error?error=Authentication failed`);
+  const errorMessage = type === "recovery" ? 
+    "Password reset failed - invalid or expired link" : 
+    "Authentication failed";
+  return NextResponse.redirect(`${origin}/auth/error?error=${encodeURIComponent(errorMessage)}`);
 }
