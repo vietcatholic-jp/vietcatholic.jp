@@ -21,18 +21,7 @@ export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Use the custom hook for team leadership
-  const { isTeamLeader, isLoading: isLoadingTeamCheck } = useTeamLeadershipWithCache(user);
-
-  // Debug: Force show menu for testing (remove this after testing)
-  const shouldShowTeamMenu = isTeamLeader || (user?.email === 'dev.thubv@gmail.com');
-
-  // Debug logging
-  console.log('Navbar debug:', {
-    user: user?.email,
-    isTeamLeader,
-    isLoadingTeamCheck,
-    shouldShowTeamMenu
-  });
+  const { isTeamLeader} = useTeamLeadershipWithCache(user);
 
   useEffect(() => {
     const supabase = createClient();
@@ -126,7 +115,7 @@ export function Navbar() {
                 >
                   Chương trình
                 </Link>
-                {user && (
+                {isTeamLeader && (
                   <Link
                     href="/my-team"
                     className="text-sm font-medium transition-colors hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg"
