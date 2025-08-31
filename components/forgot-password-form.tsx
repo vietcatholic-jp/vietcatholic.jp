@@ -31,14 +31,35 @@ export function ForgotPasswordForm({
     setError(null);
 
     try {
+      // Get the site URL for the redirect
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      
       // The url which will be included in the email. This URL needs to be configured in your redirect URLs in the Supabase dashboard at https://supabase.com/dashboard/project/_/auth/url-configuration
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
+        redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent('/auth/update-password')}&type=recovery`,
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Password reset error:', error);
+        throw error;
+      }
+      
       setSuccess(true);
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
+      console.error('Password reset failed:', error);
+      
+      if (error instanceof Error) {
+        // Handle specific error messages
+        if (error.message.includes('User not found')) {
+          setError('Không tìm thấy tài khoản với email này');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Email chưa được xác nhận. Vui lòng kiểm tra hộp thư và xác nhận email trước');
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setError("Đã xảy ra lỗi khi gửi email đặt lại mật khẩu");
+      }
     } finally {
       setIsLoading(false);
     }

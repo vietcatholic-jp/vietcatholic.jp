@@ -43,6 +43,26 @@ export async function updateSession(request: NextRequest) {
   const url = request.nextUrl.clone();
   const pathname = request.nextUrl.pathname;
 
+  // Handle password reset codes that might land on any page
+  const code = url.searchParams.get('code');
+  const error = url.searchParams.get('error');
+  
+  // If we have a code but we're not on the callback page, redirect to callback
+  if (code && pathname !== '/auth/callback') {
+    url.pathname = '/auth/callback';
+    // Keep all existing search parameters
+    return NextResponse.redirect(url);
+  }
+  
+  // If we have auth errors, redirect to error page
+  if (error && pathname !== '/auth/error') {
+    const errorDescription = url.searchParams.get('error_description');
+    url.pathname = '/auth/error';
+    url.search = '';
+    url.searchParams.set('error', errorDescription || error);
+    return NextResponse.redirect(url);
+  }
+
   // Public routes that don't require authentication
   const publicRoutes = [
     '/',
