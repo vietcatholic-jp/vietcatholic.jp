@@ -71,3 +71,49 @@ export async function getMultipleUsersAuthIdentities(userIds: string[]) {
     return {};
   }
 }
+
+// Helper function to reset a user's password as an admin
+export async function adminResetUserPassword(userId: string, newPassword: string) {
+  const adminClient = createAdminClient();
+  
+  try {
+    const { data, error } = await adminClient.auth.admin.updateUserById(userId, {
+      password: newPassword
+    });
+    
+    if (error) {
+      console.error('Error resetting user password:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in adminResetUserPassword:', error);
+    throw error;
+  }
+}
+
+// Helper function to generate a secure random password
+export function generateSecurePassword(length: number = 12): string {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const symbols = '!@#?';
+  
+  const allChars = uppercase + lowercase + numbers + symbols;
+  let password = '';
+  
+  // Ensure at least one character from each category
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+  
+  // Fill the rest randomly
+  for (let i = 4; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  // Shuffle the password
+  return password.split('').sort(() => 0.5 - Math.random()).join('');
+}
