@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         )
       `)
       .is("event_team_id", null)
-      .eq("registration.status", "confirmed")
+      .in("registration.status", ["confirmed", "temp_confirmed"])
       .order("created_at", { ascending: false });
 
     // Apply filters
