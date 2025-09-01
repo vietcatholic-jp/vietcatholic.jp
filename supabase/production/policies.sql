@@ -226,6 +226,40 @@ create policy "Users can view portraits"
 on storage.objects for select
 using (bucket_id = 'portraits');
 
+-- Admin portrait management policies
+create policy "Registration managers can upload any portraits"
+on storage.objects for insert
+with check (
+  bucket_id = 'portraits' and 
+  exists (
+    select 1 from public.users 
+    where users.id = auth.uid() 
+    and users.role in ('registration_manager', 'registration_staff', 'super_admin')
+  )
+);
+
+create policy "Registration managers can update any portraits"
+on storage.objects for update
+using (
+  bucket_id = 'portraits' and 
+  exists (
+    select 1 from public.users 
+    where users.id = auth.uid() 
+    and users.role in ('registration_manager', 'registration_staff', 'super_admin')
+  )
+);
+
+create policy "Registration managers can delete any portraits"
+on storage.objects for delete
+using (
+  bucket_id = 'portraits' and 
+  exists (
+    select 1 from public.users 
+    where users.id = auth.uid() 
+    and users.role in ('registration_manager', 'registration_staff', 'super_admin')
+  )
+);
+
 -- Users can view their own tickets
 create policy "Users can view their tickets"
 on storage.objects for select

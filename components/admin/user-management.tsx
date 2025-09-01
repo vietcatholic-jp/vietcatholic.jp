@@ -46,6 +46,7 @@ interface UserManagementProps {
 const roleLabels: Record<UserRole, string> = {
   'participant': 'Tham dự viên',
   'registration_manager': 'Quản lý đăng ký',
+  'registration_staff': 'Nhân viên đăng ký',
   'event_organizer': 'Tổ chức sự kiện', 
   'group_leader': 'Trưởng nhóm',
   'regional_admin': 'Quản trị viên khu vực',
@@ -206,9 +207,9 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
   const getAssignableRoles = (): UserRole[] => {
     switch (currentUserRole) {
       case 'super_admin':
-        return ['participant','registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'cashier_role', 'super_admin'];
+        return ['participant','registration_manager', 'registration_staff', 'event_organizer', 'group_leader', 'regional_admin', 'cashier_role', 'super_admin'];
       case 'event_organizer':
-        return ['participant', 'regional_admin', 'group_leader','registration_manager'];
+        return ['participant', 'regional_admin', 'group_leader','registration_manager', 'registration_staff'];
       default:
         return [];
     }

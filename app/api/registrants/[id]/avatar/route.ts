@@ -10,6 +10,86 @@ import {
   checkRateLimit
 } from '@/lib/services/avatar-auth';
 import { uploadAvatarWithRetry } from '@/lib/services/avatar-storage';
+import { SupabaseClient } from '@supabase/supabase-js';
+
+interface AvatarAccessResult {
+  authorized: boolean;
+  registrant?: {
+    id: string;
+    registration_id: string;
+    registrations: { user_id: string };
+    event_team_id?: string;
+  };
+  userRole?: string;
+}
+
+/**
+ * Helper function to check if user can access/modify a registrant's avatar
+ */
+async function checkAvatarAccess(supabase: SupabaseClient, userId: string, registrantId: string): Promise<AvatarAccessResult> {
+  // Get user profile to check role
+  const { data: userProfile, error: profileError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .single();
+
+  if (profileError || !userProfile) {
+    return { authorized: false };
+  }
+
+  // Check if user is admin who can update any avatar
+  const isAuthorizedAdmin = ['registration_manager', 'registration_staff', 'super_admin'].includes(userProfile.role);
+
+  // Get registrant info
+  const { data: registrant, error: registrantError } = await supabase
+    .from('registrants')
+    .select('id, registration_id, registrations!inner(user_id), event_team_id')
+    .eq('id', registrantId)
+    .single();
+
+  if (registrantError || !registrant) {
+    return { authorized: false };
+  }
+
+  // Authorization check
+  let isAuthorized = false;
+  const registration = registrant.registrations as unknown as { user_id: string };
+
+  // Check if user owns the registrant
+  if (registration.user_id === userId) {
+    isAuthorized = true;
+  }
+  
+  // Check if user is authorized admin
+  if (isAuthorizedAdmin) {
+    isAuthorized = true;
+  }
+
+  // Check if user is registration_staff and sub_leader of the team
+  if (userProfile.role === 'registration_staff' && registrant.event_team_id) {
+    const { data: teamData, error: teamError } = await supabase
+      .from('event_teams')
+      .select('sub_leader_id')
+      .eq('id', registrant.event_team_id)
+      .single();
+
+    if (!teamError && teamData?.sub_leader_id === userId) {
+      isAuthorized = true;
+    }
+  }
+
+  return { 
+    authorized: isAuthorized, 
+    registrant: isAuthorized ? {
+      id: registrant.id,
+      registration_id: registrant.registration_id,
+      registrations: registration,
+      event_team_id: registrant.event_team_id
+    } : undefined,
+    userRole: userProfile.role 
+  };
+}
 
 
 
@@ -42,20 +122,9 @@ export async function POST(
       }, { status: 429 });
     }
 
-    // Verify user can access this registrant
-    const { data: registrant, error: registrantError } = await supabase
-      .from('registrants')
-      .select('id, registration_id, registrations!inner(user_id)')
-      .eq('id', registrantId)
-      .single();
-
-    if (registrantError || !registrant) {
-      return NextResponse.json({ error: "Registrant not found" }, { status: 404 });
-    }
-
-    // Type assertion for registrations relationship
-    const registration = registrant.registrations as unknown as { user_id: string };
-    if (registration.user_id !== user.id) {
+    // Check avatar access authorization
+    const accessCheck = await checkAvatarAccess(supabase, user.id, registrantId);
+    if (!accessCheck.authorized) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -166,20 +235,9 @@ export async function PUT(
       }, { status: 429 });
     }
 
-    // Verify user can access this registrant
-    const { data: registrant, error: registrantError } = await supabase
-      .from('registrants')
-      .select('id, registration_id, registrations!inner(user_id)')
-      .eq('id', registrantId)
-      .single();
-
-    if (registrantError || !registrant) {
-      return NextResponse.json({ error: "Registrant not found" }, { status: 404 });
-    }
-
-    // Type assertion for registrations relationship
-    const registration = registrant.registrations as unknown as { user_id: string };
-    if (registration.user_id !== user.id) {
+    // Check avatar access authorization
+    const accessCheck = await checkAvatarAccess(supabase, user.id, registrantId);
+    if (!accessCheck.authorized) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -290,21 +348,21 @@ export async function DELETE(
       }, { status: 429 });
     }
 
-    // Verify user can access this registrant and get current avatar URL
+    // Check avatar access authorization and get registrant data
+    const accessCheck = await checkAvatarAccess(supabase, user.id, registrantId);
+    if (!accessCheck.authorized || !accessCheck.registrant) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Get current avatar URL for deletion
     const { data: registrant, error: registrantError } = await supabase
       .from('registrants')
-      .select('id, portrait_url, registration_id, registrations!inner(user_id)')
+      .select('id, portrait_url')
       .eq('id', registrantId)
       .single();
 
     if (registrantError || !registrant) {
       return NextResponse.json({ error: "Registrant not found" }, { status: 404 });
-    }
-
-    // Type assertion for registrations relationship
-    const registration = registrant.registrations as unknown as { user_id: string };
-    if (registration.user_id !== user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     // Delete from storage if avatar exists
     if (registrant.portrait_url) {

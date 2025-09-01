@@ -54,7 +54,7 @@ declare
   user_role user_role;
 begin
   select role into user_role from public.users where id = user_id;
-  return user_role in ('super_admin', 'event_organizer', 'registration_manager','cashier_role');
+  return user_role in ('super_admin', 'registration_staff', 'registration_manager','cashier_role');
 end;
 $$;
 

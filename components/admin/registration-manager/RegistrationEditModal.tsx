@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Registration, RegistrationStatus, EventRole, SHIRT_SIZES_PARTICIPANT, SHIRT_SIZES_ORGANIZER, EventConfig } from "@/lib/types";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { AvatarManager } from "@/components/avatar/avatar-manager";
 import { 
   Save, 
   X,
@@ -51,7 +52,8 @@ export function RegistrationEditModal({ registration, onClose, onSave, allowedSt
       is_primary: r.is_primary,
       second_day_only: r.second_day_only || false,
       selected_attendance_day: r.selected_attendance_day || "",
-      event_role_id: r.event_role_id || null
+      event_role_id: r.event_role_id || null,
+      portrait_url: r.portrait_url || null
     })) || [],
   });
 
@@ -183,6 +185,8 @@ export function RegistrationEditModal({ registration, onClose, onSave, allowedSt
     }));
   };
 
+
+
   // Get role display name
   const getRoleDisplayName = (roleId: string | null) => {
     if (!roleId) return 'Tham dự viên';
@@ -245,6 +249,29 @@ export function RegistrationEditModal({ registration, onClose, onSave, allowedSt
                     {registrant.is_primary && (
                       <Badge variant="default" className="text-xs">Người chính</Badge>
                     )}
+                  </div>
+
+                  {/* Avatar Management */}
+                  <div 
+                    className="flex items-center gap-4 p-3 bg-muted/30 rounded-md"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex-shrink-0">
+                      <AvatarManager
+                        registrantId={registrant.id}
+                        registrantName={registrant.full_name}
+                        currentAvatarUrl={registrant.portrait_url || undefined}
+                        size="lg"
+                        editable={true}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Ảnh đại diện</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Nhấp vào ảnh để cập nhật ảnh đại diện
+                      </p>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
