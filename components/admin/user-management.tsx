@@ -30,7 +30,10 @@ import {
   MessageCircle,
   Shield,
   Zap,
-  Code
+  Code,
+  Key,
+  Copy,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import { User, UserRole, RegionType } from "@/lib/types";
@@ -186,6 +189,13 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Password reset state
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [showPasswordResult, setShowPasswordResult] = useState(false);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -326,9 +336,69 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
     }
   };
 
+  const handleResetPassword = (user: User) => {
+    setResetPasswordUser(user);
+    setIsResetPasswordDialogOpen(true);
+    setShowPasswordResult(false);
+    setNewPassword("");
+  };
+
+  const handleConfirmPasswordReset = async () => {
+    if (!resetPasswordUser) return;
+
+    setIsResettingPassword(true);
+    try {
+      const response = await fetch('/api/admin/users/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: resetPasswordUser.id,
+          generatePassword: true
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to reset password');
+      }
+
+      const data = await response.json();
+      setNewPassword(data.newPassword);
+      setShowPasswordResult(true);
+      
+      toast.success(`Đặt lại mật khẩu thành công cho ${resetPasswordUser.full_name || resetPasswordUser.email}`);
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast.error(error instanceof Error ? error.message : 'Không thể đặt lại mật khẩu');
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
+  const handleCopyPassword = async () => {
+    if (newPassword) {
+      try {
+        await navigator.clipboard.writeText(newPassword);
+        toast.success('Đã sao chép mật khẩu vào clipboard');
+      } catch (error) {
+        console.error('Failed to copy password:', error);
+        toast.error('Không thể sao chép mật khẩu');
+      }
+    }
+  };
+
+  const handleClosePasswordDialog = () => {
+    setIsResetPasswordDialogOpen(false);
+    setResetPasswordUser(null);
+    setNewPassword("");
+    setShowPasswordResult(false);
+  };
+
   const canManageUser = (user: User): boolean => {
     // Super admin can manage everyone except other super admins (unless they are the same person)
-    if (currentUserRole === 'super_admin') {
+    if (currentUserRole === 'super_admin' || currentUserRole === 'registration_manager') {
       return true;
     }
     
@@ -481,14 +551,27 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
                   </td>
                   <td className="p-3">
                     {canManageUser(user) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        <Edit2 className="h-4 w-4 mr-1" />
-                        Chỉnh sửa
-                      </Button>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                          className="w-full sm:w-auto"
+                        >
+                          <Edit2 className="h-4 w-4 mr-1" />
+                          Chỉnh sửa
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleResetPassword(user)}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 w-full sm:w-auto"
+                        >
+                          <Key className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Đặt lại MK</span>
+                          <span className="sm:hidden">Reset Password</span>
+                        </Button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -591,6 +674,102 @@ export function UserManagement({ currentUserRole, currentUserRegion }: UserManag
                     Lưu thay đổi
                   </Button>
                 </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Reset Password Dialog */}
+        <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5 text-orange-600" />
+                Đặt lại mật khẩu
+              </DialogTitle>
+              <DialogDescription>
+                {!showPasswordResult ? (
+                  <>Bạn có chắc chắn muốn đặt lại mật khẩu cho người dùng này?</>
+                ) : (
+                  <>Mật khẩu mới đã được tạo. Vui lòng lưu lại và cung cấp cho người dùng.</>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {resetPasswordUser && (
+              <div className="space-y-4">
+                {!showPasswordResult ? (
+                  <>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-sm text-gray-600">Người dùng:</div>
+                      <div className="font-medium">{resetPasswordUser.full_name || 'Chưa cập nhật'}</div>
+                      <div className="text-sm text-gray-600">{resetPasswordUser.email}</div>
+                    </div>
+                    
+                    <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-md">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Lưu ý quan trọng:</div>
+                        <div>Mật khẩu mới sẽ được tạo tự động. Người dùng sẽ cần đăng nhập bằng mật khẩu mới này.</div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        onClick={handleClosePasswordDialog}
+                        disabled={isResettingPassword}
+                      >
+                        Hủy
+                      </Button>
+                      <Button
+                        onClick={handleConfirmPasswordReset}
+                        disabled={isResettingPassword}
+                        className="bg-orange-600 hover:bg-orange-700"
+                      >
+                        {isResettingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        Đặt lại mật khẩu
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-green-50 p-3 rounded-md">
+                      <div className="text-sm text-green-600 font-medium mb-2">Mật khẩu mới:</div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          value={newPassword} 
+                          readOnly 
+                          className="font-mono text-sm"
+                          type="text"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCopyPassword}
+                          className="flex-shrink-0"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 p-3 rounded-md text-sm text-blue-700">
+                      <div className="font-medium mb-1">Hướng dẫn:</div>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Sao chép mật khẩu và gửi cho người dùng qua kênh liên lạc an toàn</li>
+                        <li>Khuyến khích người dùng đổi mật khẩu sau lần đăng nhập đầu tiên</li>
+                        <li>Không chia sẻ mật khẩu này qua email hoặc tin nhắn không bảo mật</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button onClick={handleClosePasswordDialog}>
+                        Đóng
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </DialogContent>
