@@ -35,7 +35,7 @@ export interface TeamMember {
   is_primary: boolean;
   created_at: string;
   updated_at: string;
-  registration?: TeamMemberRegistration[];
+  registration?: TeamMemberRegistration;
   event_role?: EventRole;
 }
 
@@ -182,6 +182,8 @@ export interface MemberListProps {
   members: unknown[];
   totalMembers: number;
   onMemberSelect?: (member: TeamMember) => void;
+  userRole?: string;
+  canEdit?: boolean;
 }
 
 export interface MemberCardProps {

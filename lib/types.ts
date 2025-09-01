@@ -1,4 +1,4 @@
-export type UserRole = 'participant' | 'registration_manager' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin' | 'cashier_role';
+export type UserRole = 'participant' | 'registration_manager' | 'registration_staff' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin' | 'cashier_role';
 export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | 'shikoku' | 'tohoku' | 'hokkaido';
 export type GenderType = 'male' | 'female' | 'other';
 export type AgeGroupType = 'under_12' | '12_17' | '18_25' | '26_35' | '36_50' | 'over_50';
@@ -482,6 +482,7 @@ export const REGIONS: { value: RegionType; label: string }[] = [
 export const ROLES: { value: UserRole; label: string }[] = [
   { value: 'participant', label: 'Participant' },
   { value: 'registration_manager', label: 'Registration Manager' },
+  { value: 'registration_staff', label: 'Registration Staff' },
   { value: 'event_organizer', label: 'Event Organizer' },
   { value: 'group_leader', label: 'Group Leader' },
   { value: 'regional_admin', label: 'Regional Admin' },

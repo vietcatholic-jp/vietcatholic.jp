@@ -20,7 +20,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  X
+  X,
+  Edit
 } from "lucide-react";
 import { MemberDetailModalProps } from "@/lib/types/team-management";
 
@@ -94,8 +95,14 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
-export function MemberDetailModal({ member, isOpen, onClose }: MemberDetailModalProps) {
+export function MemberDetailModal({ member, isOpen, onClose, onEdit }: MemberDetailModalProps) {
   if (!member) return null;
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(member);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -222,7 +229,7 @@ export function MemberDetailModal({ member, isOpen, onClose }: MemberDetailModal
           </div>
 
           {/* Registration Information */}
-          {member.registration?.[0] && (
+          {member.registration && (
             <div>
               <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
@@ -231,7 +238,7 @@ export function MemberDetailModal({ member, isOpen, onClose }: MemberDetailModal
               <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Trạng thái:</span>
-                  {getStatusBadge(member.registration[0].status)}
+                  {getStatusBadge(member.registration.status)}
                 </div>
                 
                 <Separator />
@@ -239,30 +246,30 @@ export function MemberDetailModal({ member, isOpen, onClose }: MemberDetailModal
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Ngày đăng ký:</span>
                   <span className="text-sm text-muted-foreground">
-                    {new Date(member.registration[0].created_at).toLocaleDateString('vi-VN')}
+                    {new Date(member.registration.created_at).toLocaleDateString('vi-VN')}
                   </span>
                 </div>
 
-                {member.registration[0].invoice_code && (
+                {member.registration.invoice_code && (
                   <>
                     <Separator />
                     <div className="flex items-center justify-between">
                       <span className="font-medium">Mã hóa đơn:</span>
                       <span className="text-sm font-mono bg-background px-2 py-1 rounded">
-                        {member.registration[0].invoice_code}
+                        {member.registration.invoice_code}
                       </span>
                     </div>
                   </>
                 )}
 
-                {member.registration[0].user && (
+                {member.registration.user && (
                   <>
                     <Separator />
                     <div>
                       <span className="font-medium">Người đăng ký:</span>
                       <div className="mt-1 text-sm text-muted-foreground">
-                        <p>{member.registration[0].user.full_name}</p>
-                        <p>{member.registration[0].user.email}</p>
+                        <p>{member.registration.user.full_name}</p>
+                        <p>{member.registration.user.email}</p>
                       </div>
                     </div>
                   </>
@@ -288,11 +295,19 @@ export function MemberDetailModal({ member, isOpen, onClose }: MemberDetailModal
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
-          <Button variant="outline" onClick={onClose}>
-            <X className="h-4 w-4 mr-2" />
-            Đóng
-          </Button>
+        <div className="flex justify-between pt-4">
+          {onEdit && (
+            <Button variant="outline" onClick={handleEdit}>
+              <Edit className="h-4 w-4 mr-2" />
+              Chỉnh sửa
+            </Button>
+          )}
+          <div className={onEdit ? "" : "w-full flex justify-end"}>
+            <Button variant="outline" onClick={onClose}>
+              <X className="h-4 w-4 mr-2" />
+              Đóng
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

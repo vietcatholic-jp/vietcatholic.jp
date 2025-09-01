@@ -24,6 +24,7 @@ import JSZip from "jszip";
 import { generateTicketImage as generateTicketImageUtil } from "@/lib/ticket-utils";
 
 import {  RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
+import { AvatarManager } from "@/components/avatar";
 
 
 interface ExportFilters {
@@ -614,8 +615,8 @@ export default function ExportPage() {
         <div>
           <h1 className="text-2xl font-bold">Xuất dữ liệu đăng ký</h1>
           <p className="text-muted-foreground">Lọc và xuất dữ liệu theo yêu cầu</p>
-          <Link href="/registration-manager" className="text-blue-500 hover:border-b hover:border-blue-500 hover:bg-blue-50 px-2 py-1 rounded">
-            Quay lại quản lý đăng ký
+          <Link href="/admin/registrations/manage" className="text-blue-500 mt-4 hover:border-b hover:border-blue-500 hover:bg-blue-50 px-2 py-1 rounded">
+            Đi tới trang quản lý đăng ký
           </Link>
         </div>
       </div>
@@ -1002,6 +1003,7 @@ export default function ExportPage() {
                 <thead>
                   <tr className="bg-gray-50">
                     <th className="border border-gray-300 p-2 text-left">Mã đăng ký</th>
+                    <th className="border border-gray-300 p-2 text-left">Avatar</th>
                     <th className="border border-gray-300 p-2 text-left">Họ tên</th>
                     <th className="border border-gray-300 p-2 text-left">Fb/Email</th>
                     <th className="border border-gray-300 p-2 text-left">Giới tính</th>
@@ -1018,6 +1020,15 @@ export default function ExportPage() {
                     <tr key={registrant.id} className="hover:bg-gray-50">
                       <td className="border border-gray-300 p-2 font-mono text-sm">
                         {registrant.registration?.invoice_code}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        <AvatarManager
+                          registrantId={registrant.id}
+                          registrantName={registrant.full_name}
+                          currentAvatarUrl={registrant.portrait_url || undefined}
+                          size="md"
+                          editable={true}
+                        />
                       </td>
                       <td className="border border-gray-300 p-2">
                         {registrant.full_name}

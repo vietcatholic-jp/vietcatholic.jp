@@ -12,7 +12,6 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     const roleFilter = searchParams.get('role') || '';
-    const regionFilter = searchParams.get('region') || '';
     const includeAuthProviders = searchParams.get('includeAuthProviders') === 'true';
 
     // Get the authenticated user
@@ -28,7 +27,7 @@ export async function GET(request: Request) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["super_admin", "regional_admin"].includes(profile.role)) {
+    if (!profile || !["super_admin", "registration_manager"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -43,12 +42,6 @@ export async function GET(request: Request) {
       .select("*")
       .order("created_at", { ascending: false });
 
-    // Regional admins can only see users in their region
-    if (profile.role === "regional_admin") {
-      countQuery = countQuery.eq("region", profile.region);
-      usersQuery = usersQuery.eq("region", profile.region);
-    }
-
     // Apply search filter if provided
     if (search) {
       const searchFilter = `full_name.ilike.%${search}%,email.ilike.%${search}%`;
@@ -62,11 +55,6 @@ export async function GET(request: Request) {
       usersQuery = usersQuery.eq("role", roleFilter);
     }
 
-    // Apply region filter if provided (only for super_admin)
-    if (regionFilter && regionFilter !== 'all' && profile.role === "super_admin") {
-      countQuery = countQuery.eq("region", regionFilter);
-      usersQuery = usersQuery.eq("region", regionFilter);
-    }
 
     // Get total count first
     const { count: totalCount, error: countError } = await countQuery;
