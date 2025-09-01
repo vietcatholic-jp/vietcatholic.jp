@@ -180,8 +180,19 @@ export default async function MyTeamPage() {
     redirect('/auth/login?redirectTo=/my-team');
   }
 
+  const supabase = await createClient();
+  
+  // Get user profile to check role
+  const { data: userProfile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
   const teamData = await getMyTeamData(user.id);
 
+  // Check if user can edit (registration_staff and sub_leader)
+  const canEdit = userProfile?.role === 'registration_staff' || userProfile?.role === 'registration_manager' || userProfile?.role === 'super_admin';
   if (!teamData) {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -246,7 +257,11 @@ export default async function MyTeamPage() {
         {/* Member List Component */}
         <div className="mt-8">
           <TeamManagementErrorBoundary fallback={MemberListErrorFallback}>
-            <MemberList members={teamData.members} totalMembers={statistics.total_members} />
+            <MemberList 
+              members={teamData.members} 
+              totalMembers={statistics.total_members}
+              canEdit={canEdit}
+            />
           </TeamManagementErrorBoundary>
         </div>
       </div>

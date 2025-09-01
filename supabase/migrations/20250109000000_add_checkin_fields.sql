@@ -41,13 +41,18 @@ ORDER BY check_in_date DESC, check_in_hour DESC;
 -- Grant permissions for the check-in stats view
 GRANT SELECT ON check_in_stats TO authenticated;
 
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'registration_staff';
+
+DROP POLICY "Registration managers can view all check-in data" ON public.registrants;
+DROP POLICY "Registration managers can update check-in status" ON public.registrants;
+
 -- Add RLS policy for check-in data access
 CREATE POLICY "Registration managers can view all check-in data" ON public.registrants
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.users 
       WHERE users.id = auth.uid() 
-      AND users.role IN ('registration_manager', 'event_organizer', 'super_admin')
+      AND users.role IN ('registration_manager', 'registration_staff', 'super_admin')
     )
   );
 
@@ -57,6 +62,6 @@ CREATE POLICY "Registration managers can update check-in status" ON public.regis
     EXISTS (
       SELECT 1 FROM public.users 
       WHERE users.id = auth.uid() 
-      AND users.role IN ('registration_manager', 'event_organizer', 'super_admin')
+      AND users.role IN ('registration_manager', 'registration_staff', 'super_admin')
     )
   );

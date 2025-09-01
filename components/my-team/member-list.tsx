@@ -9,14 +9,14 @@ import {
 } from "lucide-react";
 import { MemberCard } from "./member-card";
 import { MemberDetailModal } from "./member-detail-modal";
+import { MemberEditModal } from "./member-edit-modal";
 import { TeamMember, MemberListProps } from "@/lib/types/team-management";
 
-
-
-export function MemberList({ members, totalMembers }: MemberListProps) {
+export function MemberList({ members, totalMembers, canEdit = false }: MemberListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const filteredMembers = (members as TeamMember[]).filter(member => {
     const matchesSearch = member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -27,12 +27,28 @@ export function MemberList({ members, totalMembers }: MemberListProps) {
 
   const handleViewDetails = (member: TeamMember) => {
     setSelectedMember(member);
-    setIsModalOpen(true);
+    setIsDetailModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleEdit = (member: TeamMember) => {
+    setSelectedMember(member);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
     setSelectedMember(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedMember(null);
+  };
+
+  const handleSaveEdit = () => {
+    setIsEditModalOpen(false);
+    setSelectedMember(null);
+    // Optionally refresh the list here
   };
 
   if (totalMembers === 0) {
@@ -109,8 +125,17 @@ export function MemberList({ members, totalMembers }: MemberListProps) {
       {/* Member Detail Modal */}
       <MemberDetailModal
         member={selectedMember}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+        onEdit={canEdit ? handleEdit : undefined}
+      />
+
+      {/* Member Edit Modal */}
+      <MemberEditModal
+        member={selectedMember}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={handleSaveEdit}
       />
     </Card>
   );

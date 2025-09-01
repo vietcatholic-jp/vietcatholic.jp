@@ -14,6 +14,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { MemberCardProps } from "@/lib/types/team-management";
+import { AvatarManager } from "../avatar";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -24,6 +25,14 @@ const getStatusBadge = (status: string) => {
           Đã xác nhận
         </Badge>
       );
+    
+    case 'temp_confirmed':
+    return (
+      <Badge variant="default" className="text-xs">
+        <CheckCircle className="h-3 w-3 mr-1" />
+        Xác nhận tạm thời
+      </Badge>
+    );
     case 'pending':
       return (
         <Badge variant="secondary" className="text-xs">
@@ -76,14 +85,6 @@ const getAgeGroupText = (ageGroup: string) => {
   }
 };
 
-const getInitials = (name: string) => {
-  return name
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-};
 
 export function MemberCard({ member, onViewDetails }: MemberCardProps) {
   const handleViewDetails = () => {
@@ -97,12 +98,18 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           {/* Avatar */}
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium flex-shrink-0">
-            <span className="text-primary">{getInitials(member.full_name)}</span>
+          <div className="flex-shrink-0">
+              <AvatarManager
+                registrantId={member.id}
+                registrantName={member.full_name}
+                currentAvatarUrl={member.portrait_url}
+                size="md"
+                editable={true}
+                className="w-10 h-10 border-2 border-white shadow-md hover:shadow-lg transition-all duration-200"
+              />
           </div>
-
           {/* Member Info */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 ml-12">
             <div className="flex items-start justify-between flex-wrap gap-2 mb-2">
               <div>
                 <h4 className="font-semibold text-lg truncate">{member.full_name}</h4>
@@ -120,7 +127,7 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
               </div>
               
               <div className="flex flex-col items-end gap-1">
-                {member.registration?.[0] && getStatusBadge(member.registration[0].status)}
+                {member.registration && getStatusBadge(member.registration.status)}
                 {member.event_role && (
                   <Badge variant="secondary" className="text-xs">
                     {member.event_role.name}
@@ -182,11 +189,11 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
             </div>
 
             {/* Registration Info */}
-            {member.registration?.[0] && (
+            {member.registration && (
               <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                <span>Đăng ký: {new Date(member.registration[0].created_at).toLocaleDateString('vi-VN')}</span>
-                {member.registration[0].invoice_code && (
-                  <span className="ml-2">• Mã: {member.registration[0].invoice_code}</span>
+                <span>Đăng ký: {new Date(member.registration.created_at).toLocaleDateString('vi-VN')}</span>
+                {member.registration.invoice_code && (
+                  <span className="ml-2">• Mã: {member.registration.invoice_code}</span>
                 )}
               </div>
             )}
