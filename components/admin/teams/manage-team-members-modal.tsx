@@ -78,6 +78,7 @@ interface TeamMember {
   registration: {
     id: string;
     invoice_code?: string;
+    status?: string;
     user: {
       full_name: string;
       email: string;
@@ -349,6 +350,27 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
     }, 500);
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Đã xác nhận</Badge>;
+      case 'temp_confirmed':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Tạm xác nhận</Badge>;
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Chờ xác nhận</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Đã hủy</Badge>;
+      case 'be_cancelled':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Đã bị huỷ</Badge>;
+      case 'cancel_pending':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Chờ hủy</Badge>;
+      case 'cancel_accepted':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Chấp nhận hủy</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
@@ -414,8 +436,15 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
                 {members.map((member) => (
                   <div key={member.id} className="flex items-center justify-between px-3 py-2 border rounded-lg hover:bg-gray-50">
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm">{member.full_name}</div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <div className="font-medium text-sm">
+                        {member.full_name}
+                        {member.registration.status && (
+                          <span className="ml-2">
+                            {getStatusBadge(member.registration.status)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-2 mt-2">
                         <span>{member.gender === "male" ? "Nam" : "Nữ"}</span>
                         <span>•</span>
                         <span>{formatAgeGroup(member.age_group)}</span>

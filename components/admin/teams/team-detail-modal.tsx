@@ -58,7 +58,7 @@ interface TeamMember {
       full_name: string;
       email: string;
     };
-  }[];
+  };
   event_role?: {
     id: string;
     name: string;
@@ -131,6 +131,7 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
       }
       const membersData = await membersResponse.json();
 
+      console.log('Members response:', membersData);
       // Fetch team statistics
       const statsResponse = await fetch(`/api/admin/teams/${teamId}/stats`);
       if (!statsResponse.ok) {
@@ -159,12 +160,18 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
     switch (status) {
       case 'confirmed':
         return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Đã xác nhận</Badge>;
+      case 'temp_confirmed':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Tạm xác nhận</Badge>;
       case 'pending':
         return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Chờ xác nhận</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Đã hủy</Badge>;
+      case 'be_cancelled':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Đã bị huỷ</Badge>;
       case 'cancel_pending':
         return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Chờ hủy</Badge>;
+      case 'cancel_accepted':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Chấp nhận hủy</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -469,11 +476,11 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
 
                           {/* Status */}
                           <div className="flex flex-col items-end gap-1">
-                            {member.registration?.[0] && (
+                            {member.registration && (
                               <div className="flex items-center gap-2">
-                                {getStatusBadge(member.registration[0].status)}
+                                {getStatusBadge(member.registration.status)}
                                 <span className="text-xs text-muted-foreground">
-                                  #{member.registration[0].invoice_code}
+                                  #{member.registration.invoice_code}
                                 </span>
                               </div>
                             )}
