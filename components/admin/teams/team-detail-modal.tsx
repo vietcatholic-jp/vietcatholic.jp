@@ -131,7 +131,6 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
       }
       const membersData = await membersResponse.json();
 
-      console.log('Members response:', membersData);
       // Fetch team statistics
       const statsResponse = await fetch(`/api/admin/teams/${teamId}/stats`);
       if (!statsResponse.ok) {
