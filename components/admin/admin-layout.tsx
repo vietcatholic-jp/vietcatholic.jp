@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { AdminProvider } from "@/components/admin/admin-context";
-import { 
+import {
   Users,
   Loader2,
   Settings,
@@ -12,6 +12,7 @@ import {
   BarChart3,
   Wrench,
   Truck,
+  Badge,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -105,6 +106,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/teams-assignment',
       label: 'Phân đội',
       icon: UserCheck,
+      roles: ['event_organizer','registration_manager', 'super_admin']
+    },
+    {
+      href: '/admin/badges',
+      label: 'Tạo thẻ tham dự',
+      icon: Badge,
       roles: ['event_organizer','registration_manager', 'super_admin']
     },
     {
