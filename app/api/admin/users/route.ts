@@ -134,7 +134,7 @@ export async function PUT(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["super_admin", "regional_admin"].includes(profile.role)) {
+    if (!profile || !["super_admin", "registration_manager"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -146,8 +146,8 @@ export async function PUT(request: NextRequest) {
 
     // Check permissions for role assignment
     const assignableRoles = profile.role === 'super_admin' 
-      ? ['participant', 'event_organizer', 'group_leader', 'registration_manager', 'regional_admin', 'super_admin','cashier_role']
-      : ['participant', 'event_organizer', 'group_leader', 'regional_admin', 'registration_manager'];
+      ? ['participant', 'event_organizer', 'group_leader', 'registration_manager', 'registration_staff', 'super_admin','cashier_role']
+      : ['participant', 'event_organizer', 'group_leader', 'registration_staff', 'registration_manager'];
 
     if (!assignableRoles.includes(role)) {
       return NextResponse.json({ error: "Cannot assign this role" }, { status: 403 });
