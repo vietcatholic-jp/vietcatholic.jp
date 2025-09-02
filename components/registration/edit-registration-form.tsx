@@ -153,7 +153,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
         facebook_link: r.facebook_link || "",
         phone: r.phone || "",
         shirt_size: r.shirt_size,
-        event_role: r.event_role || "participant",
+        event_role: typeof r.event_role === 'string' ? r.event_role : (r.event_role?.name || "participant"),
         is_primary: r.is_primary || false,
         go_with: r.go_with || false,
         second_day_only: r.second_day_only || false,

@@ -99,8 +99,8 @@ export function GroupLeaderRegistrations() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {registrations.reduce((sum, reg) => 
-                sum + (reg.registrants?.filter(r => r.event_role?.includes('organizer')).length || 0), 0
+              {registrations.reduce((sum, reg) =>
+                sum + (reg.registrants?.filter(r => r.event_role?.name?.toLowerCase().includes('organizer')).length || 0), 0
               )}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -118,8 +118,8 @@ export function GroupLeaderRegistrations() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {registrations.reduce((sum, reg) => 
-                sum + (reg.registrants?.filter(r => r.event_role?.includes('volunteer')).length || 0), 0
+              {registrations.reduce((sum, reg) =>
+                sum + (reg.registrants?.filter(r => r.event_role?.name?.toLowerCase().includes('volunteer')).length || 0), 0
               )}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -194,10 +194,10 @@ export function GroupLeaderRegistrations() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge 
-                                className={`text-xs ${getRoleBadgeColor(registrant.event_role || 'participant')}`}
+                              <Badge
+                                className={`text-xs ${getRoleBadgeColor(registrant.event_role?.name || 'participant')}`}
                               >
-                                {getRoleLabel(registrant.event_role || 'participant')}
+                                {getRoleLabel(registrant.event_role?.name || 'participant')}
                               </Badge>
                             </div>
                           </div>

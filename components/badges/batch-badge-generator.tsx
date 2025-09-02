@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,12 +138,7 @@ export function BatchBadgeGenerator() {
                   </div>
                 ` : `
                   <!-- Regular participant layout -->
-                  ${registrant.team_name ? `
-                    <!-- Team name -->
-                    <div style="color: #1e40af; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; max-width: 100%; min-height: 50px; padding: 5px 0; font-size: 18px;">
-                      ${registrant.team_name.toUpperCase()}
-                    </div>
-                  ` : ''}
+                  <!-- Team name section temporarily disabled for build -->
 
                   <!-- Saint name - always reserve space -->
                   <div style="color: #1e40af; font-weight: bold; margin-bottom: 12px; height: 25%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
@@ -242,7 +237,7 @@ export function BatchBadgeGenerator() {
             // CRITICAL: Role badge SVG rendering
             const roleBadges = clonedDoc.querySelectorAll('[data-role-badge]');
 
-            roleBadges.forEach((badge, index) => {
+            roleBadges.forEach((badge) => {
               const badgeElement = badge as HTMLElement;
               const w = badgeElement.offsetWidth;
               const h = badgeElement.offsetHeight || 40;
@@ -295,7 +290,6 @@ export function BatchBadgeGenerator() {
             });
 
             // Font size scaling compensation for scale = 4
-            const SCALE_FACTOR = 4;
             const textDivs = clonedDoc.querySelectorAll('div.text-blue-800[style*="fontSize"]');
             textDivs.forEach((textElement) => {
               const element = textElement as HTMLElement;

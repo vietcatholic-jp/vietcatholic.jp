@@ -130,9 +130,15 @@ export interface Registrant {
   shirt_size: ShirtSizeType;
   event_team_id?: string;
   event_role_id?: string;
-  // Backward compatibility: some legacy components may still expect this
-  event_role?: string;
-  // Event role object from database join
+  // Event role object from database join (can be either event_role or event_roles depending on query)
+  event_role?: {
+    id?: string;
+    name: string;
+    description?: string | null;
+    permissions?: Record<string, unknown> | null;
+    team_name?: string | null;
+  } | null;
+  // Alternative field name used in some queries
   event_roles?: {
     id: string;
     name: string;

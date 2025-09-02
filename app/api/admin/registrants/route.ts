@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         full_name,
         saint_name,
         portrait_url,
-        event_role:event_roles(name, description),
+        event_role:event_roles(name, description, team_name),
         registration:registrations!inner(status, invoice_code)
       `)
       .order('full_name')
