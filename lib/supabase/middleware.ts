@@ -101,16 +101,22 @@ export async function updateSession(request: NextRequest) {
 
   // If user is not authenticated and trying to access protected route
   if (!user && isProtectedRoute) {
-    url.pathname = "/auth/login";
-    url.searchParams.set('redirectTo', pathname);
-    return NextResponse.redirect(url);
+    // Avoid redirect loops
+    if (pathname !== '/auth/login') {
+      url.pathname = "/auth/login";
+      url.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   // If user is not authenticated and trying to access non-public route
   if (!user && !isPublicRoute && !isProtectedRoute) {
-    url.pathname = "/auth/login";
-    url.searchParams.set('redirectTo', pathname);
-    return NextResponse.redirect(url);
+    // Avoid redirect loops
+    if (pathname !== '/auth/login') {
+      url.pathname = "/auth/login";
+      url.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   // If user is authenticated, get their profile for role-based routing
