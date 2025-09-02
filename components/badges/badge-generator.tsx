@@ -312,6 +312,7 @@ export function BadgeGenerator({ registrant, onDownload, isTestPage = false }: B
         }}
       >
         {/* Background Image as IMG element for better html2canvas compatibility */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={backgroundImage}
           alt="Badge background"
@@ -448,6 +449,7 @@ export function BadgeGenerator({ registrant, onDownload, isTestPage = false }: B
                     position: 'relative'
                   }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={registrant.portrait_url}
                     alt={`${registrant.full_name} portrait`}
@@ -472,6 +474,7 @@ export function BadgeGenerator({ registrant, onDownload, isTestPage = false }: B
                     position: 'relative'
                   }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/logo-dh-2025.jpg"
                     alt="Logo Đại hội Năm Thánh 2025"

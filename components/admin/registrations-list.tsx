@@ -40,8 +40,8 @@ export function RegistrationsList({ registrations, userRole }: RegistrationsList
     
     const matchesStatus = statusFilter === "all" || registration.status === statusFilter;
     
-    const matchesRole = roleFilter === "all" || 
-      registration.registrants?.some(r => r.event_role === roleFilter);
+    const matchesRole = roleFilter === "all" ||
+      registration.registrants?.some(r => r.event_role?.name === roleFilter);
     
     return matchesSearch && matchesStatus && matchesRole;
   });
