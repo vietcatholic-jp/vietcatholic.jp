@@ -15,6 +15,7 @@ import {
   FileText
 } from 'lucide-react';
 import Link from 'next/link';
+import { Progress } from '@/components/ui/progress';
 
 interface FinanceStats {
   payments: {
@@ -32,6 +33,15 @@ interface FinanceStats {
     pledged: number;
     totalAmount: number;
   };
+  incomeSources: {
+    total: number;
+    pending: number;
+    received: number;
+    overdue: number;
+    totalAmount: number;
+    receivedAmount: number;
+    pendingAmount: number;
+  };
   expenses: {
     submitted: number;
     approved: number;
@@ -44,6 +54,11 @@ interface FinanceStats {
     totalApproved: number;
     processed: number;
     totalRefunds: number;
+  };
+  incomeBreakdown: {
+    registrations: { amount: number; percentage: number };
+    donations: { amount: number; percentage: number };
+    incomeSources: { amount: number; percentage: number };
   };
 }
 
@@ -66,15 +81,21 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
       setIsLoading(true);
       try {
         // Fetch stats from multiple API endpoints in parallel
-        const [registrationResponse, donationsResponse, expensesResponse] = await Promise.all([
+        const [registrationResponse, donationsResponse, expensesResponse, incomeSourcesResponse] = await Promise.all([
           fetch('/api/admin/registration-manager?limit=1'),
           fetch('/api/finance/donations?limit=1'),
-          fetch('/api/finance/expenses?limit=1')
+          fetch('/api/finance/expenses?limit=1'),
+          fetch('/api/finance/income-sources?limit=1')
         ]);
 
         const registrationData: RegistrationDataLite | null = registrationResponse.ok ? await registrationResponse.json() : null;
         const donationsData: { stats?: { total_donations?: number; received_donations?: number; pledged_donations?: number; received_amount?: number } } | null = donationsResponse.ok ? await donationsResponse.json() : null;
         const expensesData: { stats?: { pending_requests?: number; approved_requests?: number; transferred_requests?: number; total_amount?: number } } | null = expensesResponse.ok ? await expensesResponse.json() : null;
+        const incomeSourcesData: { stats?: { total_sources?: number; pending_sources?: number; received_sources?: number; overdue_sources?: number; total_amount?: number; received_amount?: number; pending_amount?: number } } | null = incomeSourcesResponse.ok ? await incomeSourcesResponse.json() : null;
+        const registrationIncome = registrationData?.stats?.confirmed_amount || 0;
+        const donationIncome = donationsData?.stats?.received_amount || 0;
+        const incomeSourcesIncome = incomeSourcesData?.stats?.received_amount || 0;
+        const totalIncome = registrationIncome + donationIncome + incomeSourcesIncome;
 
         // Map the API data to our stats structure
         const financeStats: FinanceStats = {
@@ -93,6 +114,15 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
             pledged: donationsData?.stats?.pledged_donations || 0,
             totalAmount: donationsData?.stats?.received_amount || 0,
           },
+          incomeSources: {
+            total: incomeSourcesData?.stats?.total_sources || 0,
+            pending: incomeSourcesData?.stats?.pending_sources || 0,
+            received: incomeSourcesData?.stats?.received_sources || 0,
+            overdue: incomeSourcesData?.stats?.overdue_sources || 0,
+            totalAmount: incomeSourcesData?.stats?.total_amount || 0,
+            receivedAmount: incomeSourcesData?.stats?.received_amount || 0,
+            pendingAmount: incomeSourcesData?.stats?.pending_amount || 0,
+          },
           expenses: {
             submitted: expensesData?.stats?.pending_requests || 0,
             approved: expensesData?.stats?.approved_requests || 0,
@@ -107,7 +137,21 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
             totalRefunds: (registrationData?.cancelRequests || [])
               .filter((req) => req.status === 'processed')
               .reduce((sum, req) => sum + (req.registration?.total_amount || 0), 0) || 0,
-          }
+          },
+           incomeBreakdown: {
+            registrations: {
+              amount: registrationIncome,
+              percentage: totalIncome > 0 ? (registrationIncome / totalIncome) * 100 : 0,
+            },
+            donations: {
+              amount: donationIncome,
+              percentage: totalIncome > 0 ? (donationIncome / totalIncome) * 100 : 0,
+            },
+            incomeSources: {
+              amount: incomeSourcesIncome,
+              percentage: totalIncome > 0 ? (incomeSourcesIncome / totalIncome) * 100 : 0,
+            },
+          },
         };
         
         setStats(financeStats);
@@ -117,8 +161,13 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
         setStats({
           payments: { pending: 0, totalPendingPayments: 0, tmpConfirmed:0, totalTempConfirmed:0, confirmed: 0, rejected: 0, totalAmount: 0 },
           donations: { total: 0, received: 0, pledged: 0, totalAmount: 0 },
+          incomeSources: { total: 0, pending: 0, received: 0, overdue: 0, totalAmount: 0, receivedAmount: 0, pendingAmount: 0 },
           expenses: { submitted: 0, approved: 0, transferred: 0, totalRequested: 0 },
-          cancelRequests: { pending: 0, approved: 0, totalApproved: 0, processed: 0, totalRefunds: 0 }
+          cancelRequests: { pending: 0, approved: 0, totalApproved: 0, processed: 0, totalRefunds: 0 },
+          incomeBreakdown: { registrations: { amount: 0, percentage: 0 },
+            donations: { amount: 0, percentage: 0 },
+            incomeSources: { amount: 0, percentage: 0 },
+          }
         });
       } finally {
         setIsLoading(false);
@@ -186,6 +235,16 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
           action: { href: '/finance/donations', label: 'Quản lý' }
         },
         {
+          title: "Nguồn thu khác",
+          value: stats.incomeSources.received,
+          description: `${formatJPY(stats.incomeSources.receivedAmount)} đã thu`,
+          icon: TrendingUp,
+          color: "bg-purple-50 text-purple-600",
+          iconBg: "bg-purple-500",
+          priority: stats.incomeSources.overdue > 0,
+          action: { href: '/finance/income-sources', label: 'Quản lý' }
+        },
+        {
           title: "Chi tiêu chờ duyệt",
           value: stats.expenses.submitted,
           description: `${formatJPY(stats.expenses.totalRequested)} yêu cầu`,
@@ -208,8 +267,8 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
     return [
       {
         title: "Tổng thu",
-        value: formatJPY(stats.payments.totalAmount + stats.donations.totalAmount),
-        description: `${stats.payments.confirmed} thanh toán + ${stats.donations.received} quyên góp`,
+        value: formatJPY(stats.payments.totalAmount + stats.donations.totalAmount + stats.incomeSources.receivedAmount),
+        description: `${stats.payments.confirmed} thanh toán + ${stats.donations.received} quyên góp + ${stats.incomeSources.received} nguồn thu khác`,
         icon: TrendingUp,
         color: "text-green-600"
       },
@@ -234,7 +293,7 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
       },
       {
         title: "Tổng quyên góp",
-        value: formatJPY(stats.donations.total),
+        value: formatJPY(stats.donations.totalAmount),
         description: `${stats.donations.received} đã nhận + ${stats.donations.pledged} cam kết`,
         icon: Heart,
         color: "text-green-600"
@@ -322,6 +381,76 @@ export default function FinanceOverview({ userRole }: { userRole?: string }) {
           );
         })}
       </div>
+      {stats &&  (
+      <div>
+        <Card>
+        <CardHeader>
+          <CardTitle>Phân tích nguồn thu</CardTitle>
+          <CardDescription>
+            Chi tiết các nguồn thu của sự kiện
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <CreditCard className="h-4 w-4 text-blue-600" />
+                <span className="font-medium">Phí tham gia</span>
+                <Badge variant="outline">
+                  {stats.incomeBreakdown.registrations.percentage.toFixed(1)}%
+                </Badge>
+              </div>
+              <span className="font-medium text-blue-600">
+                {formatJPY(stats.payments.totalAmount)}
+              </span>
+            </div>
+            <Progress 
+              value={stats.incomeBreakdown.registrations.percentage} 
+              className="h-2"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Heart className="h-4 w-4 text-red-600" />
+                <span className="font-medium">Quyên góp</span>
+                <Badge variant="outline">
+                  {stats.incomeBreakdown.donations.percentage.toFixed(1)}%
+                </Badge>
+              </div>
+              <span className="font-medium text-red-600">
+                {formatJPY(stats.donations.totalAmount)}
+              </span>
+            </div>
+            <Progress 
+              value={stats.incomeBreakdown.donations.percentage} 
+              className="h-2"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="h-4 w-4 text-purple-600" />
+                <span className="font-medium">Nguồn thu khác</span>
+                <Badge variant="outline">
+                  {stats.incomeBreakdown.incomeSources.percentage.toFixed(1)}%
+                </Badge>
+              </div>
+              <span className="font-medium text-purple-600">
+                {formatJPY(stats.incomeSources.receivedAmount)}
+              </span>
+            </div>
+            <Progress 
+              value={stats.incomeBreakdown.incomeSources.percentage} 
+              className="h-2"
+            />
+          </div>
+        </CardContent>
+      </Card>
+        </div>
+      )}
     </div>
   );
 }

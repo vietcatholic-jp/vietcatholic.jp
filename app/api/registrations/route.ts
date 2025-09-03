@@ -363,7 +363,7 @@ export async function GET() {
       .eq("id", user.id)
       .single();
 
-    if (!profile || !["super_admin", "regional_admin"].includes(profile.role)) {
+    if (!profile || !["super_admin", "regional_admin", "registration_manager"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

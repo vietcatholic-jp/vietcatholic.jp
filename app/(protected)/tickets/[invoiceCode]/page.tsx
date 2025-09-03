@@ -6,8 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { TicketGenerator } from "@/components/tickets/ticket-generator";
 import { AvatarPortraitUpload } from "@/components/tickets/avatar-portrait-upload";
 import { Registrant } from "@/lib/types";
-import { 
-  QrCode, 
+import {
   User,
   Calendar,
   MapPin
@@ -177,19 +176,10 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
 
                       {/* Ticket Generation */}
                       <div>
-                        {registrant.portrait_url ? (
-                          <TicketGenerator
+                        <TicketGenerator
                             registrant={registrant}
                             existingTicket={existingTicket}
                           />
-                        ) : (
-                          <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
-                            <QrCode className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <p className="text-muted-foreground">
-                              Vui lòng upload ảnh chân dung để tạo vé
-                            </p>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </CardContent>

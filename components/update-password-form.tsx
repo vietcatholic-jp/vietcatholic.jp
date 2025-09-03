@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Loader2, CheckCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import Link from "next/link";
 
 export function UpdatePasswordForm({
   className,
@@ -25,7 +26,56 @@ export function UpdatePasswordForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [sessionValid, setSessionValid] = useState<boolean | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check if user has a valid session for password reset
+  useEffect(() => {
+    const checkSession = async () => {
+      const supabase = createClient();
+      
+      // Check if this is coming from a password reset link
+      const accessToken = searchParams.get('access_token');
+      const refreshToken = searchParams.get('refresh_token');
+      const type = searchParams.get('type');
+      
+      if (type === 'recovery' && accessToken && refreshToken) {
+        try {
+          // Set the session from the URL parameters
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (error) {
+            console.error('Session error:', error);
+            setError('Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn');
+            setSessionValid(false);
+            return;
+          }
+          
+          setSessionValid(true);
+        } catch (err) {
+          console.error('Session validation error:', err);
+          setError('Không thể xác thực phiên làm việc');
+          setSessionValid(false);
+        }
+      } else {
+        // Check if user already has a valid session
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+          setError('Phiên làm việc không hợp lệ. Vui lòng thử đặt lại mật khẩu lại');
+          setSessionValid(false);
+        } else {
+          setSessionValid(true);
+        }
+      }
+    };
+
+    checkSession();
+  }, [searchParams]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +101,13 @@ export function UpdatePasswordForm({
 
     try {
       const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      if (error) {
+        // Handle specific auth errors
+        if (error.message.includes('session')) {
+          throw new Error('Phiên làm việc đã hết hạn. Vui lòng thử đặt lại mật khẩu lại');
+        }
+        throw error;
+      }
 
       // Show success message
       setSuccess(true);
@@ -61,11 +117,67 @@ export function UpdatePasswordForm({
         router.push("/dashboard");
       }, 1500);
     } catch (error: unknown) {
+      console.error('Password update error:', error);
       setError(error instanceof Error ? error.message : "Đã xảy ra lỗi");
       setIsLoading(false);
     }
     // Note: Don't set isLoading(false) in finally block to keep loading state during redirect
   };
+
+  // Show loading while checking session
+  if (sessionValid === null) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Đang xác thực...</CardTitle>
+            <CardDescription>
+              Vui lòng đợi trong khi chúng tôi xác thực yêu cầu của bạn
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error if session is invalid
+  if (sessionValid === false) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <AlertCircle className="h-6 w-6 text-red-500" />
+              Lỗi xác thực
+            </CardTitle>
+            <CardDescription>
+              Không thể xác thực yêu cầu đặt lại mật khẩu
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-md dark:bg-red-950 dark:border-red-800">
+                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Button asChild className="w-full">
+                <Link href="/auth/forgot-password">Yêu cầu đặt lại mật khẩu mới</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/auth/login">Đăng nhập</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (success) {
     return (

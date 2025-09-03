@@ -7,6 +7,7 @@ export interface TeamMemberForExport {
   full_name: string;
   gender: string;
   age_group: string;
+  shirt_size?: string;
   province: string;
   diocese?: string;
   email?: string;
@@ -29,6 +30,7 @@ export function createTeamMembersWorkbook(
     'Họ và tên': member.full_name || '',
     'Giới tính': formatGender(member.gender),
     'Nhóm tuổi': formatAgeGroup(member.age_group),
+    'Kích thước áo': member.shirt_size || '',
     'Tỉnh/Thành phố': member.province || '',
     'Giáo phận': member.diocese || '',
     'Email': member.email || '',

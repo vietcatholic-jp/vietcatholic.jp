@@ -10,6 +10,7 @@ interface SupabaseMember {
   full_name: string;
   gender: string;
   age_group: string;
+  shirt_size?: string;
   province: string;
   diocese?: string;
   email?: string;
@@ -72,6 +73,7 @@ export async function GET(
         full_name,
         gender,
         age_group,
+        shirt_size,
         province,
         diocese,
         email,
@@ -106,6 +108,7 @@ export async function GET(
         full_name: typedMember.full_name,
         gender: typedMember.gender,
         age_group: typedMember.age_group,
+        shirt_size: typedMember.shirt_size,
         province: typedMember.province,
         diocese: typedMember.diocese,
         email: typedMember.email,

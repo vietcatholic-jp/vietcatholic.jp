@@ -2,19 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RegistrationManagerStats } from "./RegistrationManagerStats";
 import { RegistrationManagerList } from "./RegistrationManagerList";
 //import { CancelRequestsManager } from "./CancelRequestsManager";
-import { QuickActions } from "./QuickActions";
 import { 
-  BarChart3, 
   Users, 
   Loader2,
-  RefreshCw
+  RefreshCw,
+  UserPlus
 } from "lucide-react";
 import { Registration, CancelRequest, EventConfig } from "@/lib/types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface RegistrationManagerData {
   stats: {
@@ -37,7 +36,7 @@ export function RegistrationManagerDashboard() {
   const [data, setData] = useState<RegistrationManagerData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("registrations");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -117,12 +116,7 @@ export function RegistrationManagerDashboard() {
     setCurrentPage(1);
   };
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    if (tab === "registrations") {
-      setStatusFilter("report_paid");
-    }
-  };
+
 
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
@@ -172,6 +166,12 @@ export function RegistrationManagerDashboard() {
                   Cập nhật lần cuối: {lastRefresh.toLocaleTimeString('vi-VN')}
                 </span>
               )}
+              <Link href="/admin/registrations/create">
+                <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Tạo đăng ký mới
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 size="sm"
@@ -188,10 +188,10 @@ export function RegistrationManagerDashboard() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+            {/*<TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 hidden sm:flex" />
               Tổng quan
-            </TabsTrigger>
+            </TabsTrigger>*/}
             <TabsTrigger value="registrations" className="flex items-center gap-2">
               <Users className="h-4 w-4 hidden sm:flex" />
               Đăng ký
@@ -202,12 +202,11 @@ export function RegistrationManagerDashboard() {
             </TabsTrigger>*/}
           </TabsList>
 
-          <TabsContent value="overview" className="mt-6">
+          {/*<TabsContent value="overview" className="mt-6">
             <div className="space-y-6">
               <RegistrationManagerStats stats={data.stats} />
-              <QuickActions stats={data.stats} onTabChange={handleTabChange} />
             </div>
-          </TabsContent>
+          </TabsContent>*/}
 
           <TabsContent value="registrations" className="mt-6">
             <RegistrationManagerList 

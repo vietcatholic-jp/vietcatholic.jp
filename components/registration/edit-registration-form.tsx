@@ -24,29 +24,32 @@ import {
   EventConfig
 } from "@/lib/types";
 import { toast } from "sonner";
-import { cleanPhoneNumber, isValidJapanesePhoneNumber, PHONE_VALIDATION_MESSAGES } from "@/lib/phone-validation";
 import { createClient } from "@/lib/supabase/client";
 
 const RegistrantSchema = z.object({
   id: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
   saint_name: z.string().optional(),
   full_name: z.string().min(1, "Họ và tên là bắt buộc"),
-  gender: z.enum(['male', 'female', 'other'] as const),
-  age_group: z.enum(['under_12', '12_17', '18_25', '26_35', '36_50', 'over_50'] as const),
+  gender: z.enum(['male', 'female', 'other'] as const, {
+    required_error: "Vui lòng chọn giới tính"
+  }),
+  age_group: z.enum(['under_12', '12_17', '18_25', '26_35', '36_50', 'over_50'] as const, {
+    required_error: "Vui lòng chọn độ tuổi"
+  }),
   province: z.string().optional(),
   diocese: z.string().optional(),
   address: z.string().optional(),
   facebook_link: z.string().optional().or(z.literal("")),
-  phone: z.string()
-    .optional()
-    .transform((val) => val ? cleanPhoneNumber(val) : val)
-    .refine((val) => !val || isValidJapanesePhoneNumber(val), {
-      message: PHONE_VALIDATION_MESSAGES.INVALID_JAPANESE_FORMAT
-    }),
-  shirt_size: z.enum(['1','2','3','4','5','XS','S','M','L','XL','XXL','3XL','4XL','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const),
+  phone: z.string().optional().refine((val) => {
+    if (!val || val === "") return true;
+    return val.length >= 10 && /^\+?[0-9\s\-\(\)]+$/.test(val);
+  }, "Số điện thoại không hợp lệ"),
+  shirt_size: z.enum(['1','2','3','4','5','XS','S','M','L','XL','XXL','3XL','4XL','M-XS', 'M-S', 'M-M', 'M-L', 'M-XL', 'M-XXL', 'M-3XL', 'M-4XL', 'F-XS', 'F-S', 'F-M', 'F-L', 'F-XL', 'F-XXL'] as const, {
+    required_error: "Vui lòng chọn size áo"
+  }),
   event_role: z.string() as z.ZodType<EventParticipationRole>,
-  go_with: z.boolean(),
+  go_with: z.boolean().optional(),
   second_day_only: z.boolean().optional(),
   selected_attendance_day: z.string().optional(),
   is_primary: z.boolean(),
@@ -57,7 +60,7 @@ const FormSchema = z.object({
   registrants: z.array(RegistrantSchema).min(1, "Phải có ít nhất 1 người tham gia"),
   notes: z.string().optional(),
 }).superRefine((data, ctx) => {
-  // Validate Facebook link for each registrant
+  // Validate required fields for primary registrant
   data.registrants.forEach((registrant, index) => {
     if (registrant.is_primary) {
       // For primary registrant, Facebook link is required
@@ -78,6 +81,24 @@ const FormSchema = z.object({
             path: ["registrants", index, "facebook_link"],
           });
         }
+      }
+      
+      // Province is required for primary registrant
+      if (!registrant.province || registrant.province.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Tỉnh/Phủ là bắt buộc cho người đăng ký chính",
+          path: ["registrants", index, "province"],
+        });
+      }
+      
+      // Diocese is required for primary registrant
+      if (!registrant.diocese || registrant.diocese.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Giáo phận là bắt buộc cho người đăng ký chính",
+          path: ["registrants", index, "diocese"],
+        });
       }
     } else {
       // For non-primary registrants, if provided, must be valid URL
@@ -132,7 +153,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
         facebook_link: r.facebook_link || "",
         phone: r.phone || "",
         shirt_size: r.shirt_size,
-        event_role: r.event_role || "participant",
+        event_role: typeof r.event_role === 'string' ? r.event_role : (r.event_role?.name || "participant"),
         is_primary: r.is_primary || false,
         go_with: r.go_with || false,
         second_day_only: r.second_day_only || false,
@@ -216,16 +237,43 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
       address: "",
       facebook_link: "",
       phone: "",
+      email: "",
       shirt_size: "F-M" as const,
       event_role: "participant",
       is_primary: false,
       go_with: false,
+      second_day_only: false,
+      selected_attendance_day: "",
       notes: "",
     });
   };
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
+    const primary = data.registrants[0];
+    if (!primary.province || primary.province.trim() === "") {
+      toast.error("Người đăng ký chính phải chọn Tỉnh/Phủ.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!primary.facebook_link || primary.facebook_link.trim() === "") {
+      toast.error("Người đăng ký chính phải nhập Link Facebook.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (registration.status === 'confirmed' || registration.status === 'report_paid' || registration.status === 'confirm_paid') {
+      if (data.registrants.length > registration.participant_count) {
+        toast.error("Không thể thêm người tham gia mới khi đăng ký đã được xác nhận hoặc đã đóng phí. Số người đã đóng phí đã đăng ký: " + registration.participant_count);
+        setIsSubmitting(false);
+        return;
+      }
+      if (data.registrants.length < registration.participant_count) {
+        toast.error("Không thể giảm số người tham gia khi đăng ký đã được xác nhận hoặc đã đóng phí. Số người đã đóng phí đã đăng ký: " + registration.participant_count);
+        setIsSubmitting(false);
+        return;
+      }
+    }
     
     try {
       const response = await fetch(`/api/registrations/${registration.id}`, {
@@ -233,7 +281,19 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          registrants: data.registrants.map(registrant => ({
+            ...registrant,
+            saint_name: registrant.saint_name?.toUpperCase() || "",
+            full_name: registrant.full_name.toUpperCase(),
+            email: registrant.is_primary ? registrant.email : data.registrants[0].email,
+            phone: registrant.is_primary ? registrant.phone : data.registrants[0].phone,
+            address: registrant.is_primary ? registrant.address : data.registrants[0].address,
+            province: registrant.is_primary ? registrant.province : data.registrants[0].province,
+            diocese: registrant.is_primary ? registrant.diocese : data.registrants[0].diocese,
+          })),
+          notes: data.notes,
+        }),
       });
 
       const result = await response.json();
@@ -278,133 +338,67 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Registrants */}
-        <Card>
+        <Card className="border-blue-200 dark:border-blue-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Thông tin người tham gia ({registrants.length})
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full">
+                  <Users className="h-5 w-5 text-white" />
+                </div>
+                Thông tin đăng ký ({registration.participant_count > registrants.length ? `${registration.participant_count} người` : `${registrants.length} người`})
               </CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addRegistrant}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Thêm người
-              </Button>
+              {((registration.status === 'pending') || (registration.participant_count > registrants.length)) && (
+                  <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addRegistrant}
+                  className="hidden sm:flex bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-600 text-blue-600 hover:from-blue-100 hover:to-purple-100 hover:border-blue-700 transform hover:scale-105 transition-all shadow-md"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Thêm người
+                </Button>
+              )}
             </div>
+            {/* Mobile add button */}
+            {((registration.status === 'pending') || (registration.participant_count > registrants.length)) && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addRegistrant}
+              className="sm:hidden w-full mt-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-600 text-blue-600 hover:from-blue-100 hover:to-purple-100 hover:border-blue-700 shadow-md"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm người
+            </Button>)}
+
           </CardHeader>
           <CardContent className="space-y-8">
             {fields.map((field, index) => {
               const isPrimary = registrants[index]?.is_primary;
               
               return (
-                <div key={field.id} className="border rounded-lg p-6 relative">
+                <div key={field.id} id={`registrant-${index}`} className="border border-gray-600 rounded-lg p-4 sm:p-6 relative">
                   {registrants.length > 1 && !isPrimary && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute top-2 right-2"
+                      className="absolute top-2 right-2 h-8 w-8 p-0"
                       onClick={() => remove(index)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                   
-                  <h4 className="font-medium mb-4">
-                    {isPrimary ? `Người đăng ký chính` : `Tham dự viên ${index + 1}`}
-                  </h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium text-sm sm:text-base">
+                      {isPrimary ? `Người đăng ký chính` : `Người tham gia ${index + 1}`}
+                    </h4>
+                  </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Primary registrant gets full form */}
-                    {isPrimary && (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.email`}>Email *</Label>
-                          <Input
-                            id={`registrants.${index}.email`}
-                            {...register(`registrants.${index}.email`)}
-                            placeholder="example@email.com"
-                          />
-                          {errors.registrants?.[index]?.email && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.email?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.phone`}>Số điện thoại *</Label>
-                          <Input
-                            id={`registrants.${index}.phone`}
-                            {...register(`registrants.${index}.phone`)}
-                            placeholder="090-1234-5678"
-                          />
-                          {errors.registrants?.[index]?.phone && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.phone?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.province`}>Tỉnh/Phủ *</Label>
-                          <select
-                            id={`registrants.${index}.province`}
-                            {...register(`registrants.${index}.province`)}
-                            onChange={(e) => handleProvinceChange(index, e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value="">Chọn tỉnh/phủ</option>
-                            {JAPANESE_PROVINCES.map((province) => (
-                              <option key={province.value} value={province.value}>
-                                {province.label}
-                              </option>
-                            ))}
-                          </select>
-                          {errors.registrants?.[index]?.province && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.province?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`registrants.${index}.diocese`}>Giáo phận *</Label>
-                          <Input
-                            id={`registrants.${index}.diocese`}
-                            {...register(`registrants.${index}.diocese`)}
-                            placeholder="Tự động điền khi chọn tỉnh"
-                            readOnly
-                            className="bg-muted"
-                          />
-                          {errors.registrants?.[index]?.diocese && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.diocese?.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor={`registrants.${index}.address`}>Địa chỉ *</Label>
-                          <Input
-                            id={`registrants.${index}.address`}
-                            {...register(`registrants.${index}.address`)}
-                            placeholder="Địa chỉ hiện tại tại Nhật Bản"
-                          />
-                          {errors.registrants?.[index]?.address && (
-                            <p className="text-sm text-destructive">
-                              {errors.registrants[index]?.address?.message}
-                            </p>
-                          )}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Common fields for all registrants */}
                     <div className="space-y-2">
                       <Label htmlFor={`registrants.${index}.saint_name`}>Tên Thánh</Label>
                       <Input
@@ -472,6 +466,53 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                       )}
                     </div>
 
+                    {/* Primary registrant gets full form */}
+                    {isPrimary && (
+                      <>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.province`}>Tỉnh/Phủ *</Label>
+                          <select
+                            id={`registrants.${index}.province`}
+                            {...register(`registrants.${index}.province`)}
+                            onChange={(e) => handleProvinceChange(index, e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Chọn tỉnh/phủ</option>
+                            {JAPANESE_PROVINCES.map((province) => (
+                              <option key={province.value} value={province.value}>
+                                {province.label}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.registrants?.[index]?.province && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.province?.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`registrants.${index}.diocese`}>Giáo phận *</Label>
+                          <Input
+                            id={`registrants.${index}.diocese`}
+                            {...register(`registrants.${index}.diocese`)}
+                            placeholder="Tự động điền khi chọn tỉnh"
+                            readOnly
+                            className="bg-muted"
+                          />
+                          {errors.registrants?.[index]?.diocese && (
+                            <p className="text-sm text-destructive">
+                              {errors.registrants[index]?.diocese?.message}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Common fields for all registrants */}
+                    
+
                     <div className="space-y-2">
                       <Label htmlFor={`registrants.${index}.shirt_size`}>Size áo *</Label>
                       <select
@@ -506,21 +547,6 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor={`registrants.${index}.go_with`}>Bạn có nhu cầu đi xe chung không?</Label>
-                      <Input
-                        type="checkbox"
-                        id={`registrants.${index}.go_with`}
-                        {...register(`registrants.${index}.go_with`)}
-                        className="h-4 w-4"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Lưu ý: Nếu bạn muốn đi chung với nhóm hoặc cộng đoàn ở gần bạn, hãy chọn ô này.
-                        Thông tin về các nhóm hoặc cộng đoàn có tổ chức xe chung sẽ được cập nhật sau,
-                        vui lòng theo dõi trang web hoặc nhóm Facebook của sự kiện để biết thêm chi tiết.
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
                       <Label htmlFor={`registrants.${index}.facebook_link`}>
                         Link Facebook {isPrimary ? "*" : ""}
                       </Label>
@@ -534,7 +560,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                           {errors.registrants[index]?.facebook_link?.message}
                         </p>
                       )}
-                      {isPrimary && !registrants?.[index]?.facebook_link && (
+                      {isPrimary && (
                         <div className="text-xs text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
                           Link facebook được lấy ở phần cài đặt trong trang cá nhân → 
                           Bấm vào dấu ... bên cạnh nút chỉnh sửa trang cá nhân → Kéo xuống phía dưới cùng, bạn sẽ thấy chữ copy link, bấm vào đó để sao chép → dán vào đây.
@@ -543,6 +569,25 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor={`registrants.${index}.second_day_only`}>Tùy chọn tham gia</Label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`registrants.${index}.second_day_only`}
+                          checked={registrants[index]?.second_day_only || false}
+                          onChange={(e) => {
+                            setValue(`registrants.${index}.second_day_only`, e.target.checked);
+                            if (!e.target.checked) {
+                              setValue(`registrants.${index}.selected_attendance_day`, "");
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <Label htmlFor={`registrants.${index}.second_day_only`} className="text-sm font-normal">
+                          Chỉ tham gia một ngày
+                        </Label>
+                      </div>
+                      
                       {/* Day selection when one day only is checked */}
                       {registrants[index]?.second_day_only && eventConfig?.start_date && eventConfig?.end_date && (
                         <div className="mt-3 ml-6 space-y-2">
@@ -554,7 +599,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                                 id={`registrants.${index}.first_day`}
                                 name={`registrants.${index}.attendance_day`}
                                 value={eventConfig.start_date}
-                                checked={eventConfig.start_date.includes(registrants[index]?.selected_attendance_day || 'NONE')}
+                                checked={registrants[index]?.selected_attendance_day === eventConfig.start_date}
                                 onChange={(e) => onAttendanceDayChange(index, e.target.value)}
                                 className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                               />
@@ -573,7 +618,7 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                                 id={`registrants.${index}.second_day`}
                                 name={`registrants.${index}.attendance_day`}
                                 value={eventConfig.end_date}
-                                checked={eventConfig.end_date.includes(registrants[index]?.selected_attendance_day || 'NONE')}
+                                checked={registrants[index]?.selected_attendance_day === eventConfig.end_date}
                                 onChange={(e) => onAttendanceDayChange(index, e.target.value)}
                                 className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                               />
@@ -596,14 +641,95 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                       </p>
                     </div>
 
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Ghi chú</Label>
-                      <Textarea
-                        id={`registrants.${index}.notes`}
-                        {...register(`registrants.${index}.notes`)}
-                        placeholder="Ý kiến đóng góp hoặc yêu cầu đặc biệt"
-                        className="min-h-[80px]"
-                      />
+                    <div className="space-y-2 mt-2">
+                      <Label htmlFor={`registrants.${index}.go_with`}>Bạn có nhu cầu đi xe chung không?</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="checkbox"
+                          id={`registrants.${index}.go_with`}
+                          {...register(`registrants.${index}.go_with`)}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor={`registrants.${index}.go_with`} className="text-sm font-normal">
+                          Tôi muốn đi chung với nhóm
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Lưu ý: Nếu bạn muốn đi chung với nhóm hoặc cộng đoàn ở gần bạn, hãy chọn ô này.
+                        Thông tin về các nhóm hoặc cộng đoàn có tổ chức xe chung sẽ được cập nhật sau,
+                        vui lòng theo dõi trang web hoặc nhóm Facebook của sự kiện để biết thêm chi tiết.
+                      </p>
+                    </div>
+
+                    {/* Optional contact information section */}
+                    <div className="md:col-span-2 border-t border-gray-800 pt-4 mt-6">
+                      <h5 className="font-medium mb-3">
+                        Phần thông tin không bắt buộc (tùy chọn)
+                      </h5>
+                      {isPrimary && (
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor={`registrants.${index}.email`}>Email</Label>
+                            <Input
+                              id={`registrants.${index}.email`}
+                              {...register(`registrants.${index}.email`)}
+                              placeholder="example@email.com"
+                            />
+                            {errors.registrants?.[index]?.email && (
+                              <p className="text-sm text-destructive">
+                                {errors.registrants[index]?.email?.message}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              Nếu bạn không có facebook hoặc không muốn cung cấp, hãy nhập email để ban tổ chức có thể liên hệ với bạn.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor={`registrants.${index}.phone`}>Số điện thoại</Label>
+                            <Input
+                              id={`registrants.${index}.phone`}
+                              {...register(`registrants.${index}.phone`)}
+                              placeholder="090-1234-5678"
+                            />
+                            {errors.registrants?.[index]?.phone && (
+                              <p className="text-sm text-destructive">
+                                {errors.registrants[index]?.phone?.message}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              Ít nhất 10 số, có thể bao gồm +, dấu cách, dấu gạch ngang
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor={`registrants.${index}.address`}>Địa chỉ</Label>
+                            <Input
+                              id={`registrants.${index}.address`}
+                              {...register(`registrants.${index}.address`)}
+                              placeholder="Địa chỉ hiện tại tại Nhật Bản"
+                            />
+                            {errors.registrants?.[index]?.address && (
+                              <p className="text-sm text-destructive">
+                                {errors.registrants[index]?.address?.message}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <div className="space-y-2 md:col-span-2 mt-2">
+                        <Label htmlFor={`registrants.${index}.notes`}>Ý kiến/Nguyện vọng</Label>
+                        <Textarea
+                          id={`registrants.${index}.notes`}
+                          {...register(`registrants.${index}.notes`)}
+                          placeholder="Ý kiến đóng góp hoặc Nguyện vọng chia đội"
+                          className="min-h-[80px]"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Nếu bạn muốn được chia đội cùng với bạn bè, xin hãy ghi rõ tên của họ ở đây.
+                          Nếu bạn có yêu cầu đặc biệt nào khác, hãy ghi chú để ban tổ chức có thể hỗ trợ bạn tốt nhất.
+                        </p>
+                      </div>
                     </div>
 
                     {/* Hidden fields */}
@@ -615,6 +741,21 @@ export function EditRegistrationForm({ registration, onSave, onCancel }: EditReg
                 </div>
               );
             })}
+            
+            {/* Final add button at the bottom */}
+            {((registration.status === 'pending') || (registration.participant_count > registrants.length))&& (
+            <div className="flex justify-center pt-4 border-t border-dashed">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addRegistrant}
+                className="w-full sm:w-auto border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transform hover:scale-105 transition-all"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Thêm người tham gia
+              </Button>
+            </div>
+            )}
           </CardContent>
         </Card>
 

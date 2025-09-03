@@ -3,7 +3,7 @@ import { CheckInScanner } from "@/components/check-in/check-in-scanner";
 
 export default async function CheckInPage() {
   // Only allow registration managers and admins
-  await requireRole(['registration_manager', 'event_organizer', 'super_admin']);
+  await requireRole(['registration_manager', 'super_admin']);
 
   return (
     <div className="min-h-screen bg-background">

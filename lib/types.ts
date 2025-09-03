@@ -1,4 +1,4 @@
-export type UserRole = 'participant' | 'registration_manager' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin' | 'cashier_role';
+export type UserRole = 'participant' | 'registration_manager' | 'registration_staff' | 'event_organizer' | 'group_leader' | 'regional_admin' | 'super_admin' | 'cashier_role';
 export type RegionType = 'kanto' | 'kansai' | 'chubu' | 'kyushu' | 'chugoku' | 'shikoku' | 'tohoku' | 'hokkaido';
 export type GenderType = 'male' | 'female' | 'other';
 export type AgeGroupType = 'under_12' | '12_17' | '18_25' | '26_35' | '36_50' | 'over_50';
@@ -130,9 +130,15 @@ export interface Registrant {
   shirt_size: ShirtSizeType;
   event_team_id?: string;
   event_role_id?: string;
-  // Backward compatibility: some legacy components may still expect this
-  event_role?: string;
-  // Event role object from database join
+  // Event role object from database join (can be either event_role or event_roles depending on query)
+  event_role?: {
+    id?: string;
+    name: string;
+    description?: string | null;
+    permissions?: Record<string, unknown> | null;
+    team_name?: string | null;
+  } | null;
+  // Alternative field name used in some queries
   event_roles?: {
     id: string;
     name: string;
@@ -482,6 +488,7 @@ export const REGIONS: { value: RegionType; label: string }[] = [
 export const ROLES: { value: UserRole; label: string }[] = [
   { value: 'participant', label: 'Participant' },
   { value: 'registration_manager', label: 'Registration Manager' },
+  { value: 'registration_staff', label: 'Registration Staff' },
   { value: 'event_organizer', label: 'Event Organizer' },
   { value: 'group_leader', label: 'Group Leader' },
   { value: 'regional_admin', label: 'Regional Admin' },
@@ -771,3 +778,28 @@ export interface AvatarManagerConfig {
 
 // Legacy role definitions removed - now using dynamic event_roles from database
 // All role information is fetched from the event_roles table
+
+export type IncomeCategory =
+  | 'ticket_sales'     // Bán vé sự kiện
+  | 'merchandise'      // Bán sản phẩm lưu niệm
+  | 'food_beverage'    // Bán đồ ăn thức uống
+  | 'other';           // Khác
+
+export interface IncomeSource {
+  id: string;
+  event_config_id: string;
+  category: IncomeCategory;
+  title: string;
+  description?: string;
+  amount: number;
+  expected_amount?: number;
+  status: 'pending' | 'received' | 'overdue';
+  contact_person?: string;
+  contact_info?: string;
+  due_date?: string;
+  received_date?: string;
+  notes?: string;
+  created_by: string;
+  created_at: string;
+  updated_at?: string;
+}

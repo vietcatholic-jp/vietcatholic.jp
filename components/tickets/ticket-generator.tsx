@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, MapPin } from "lucide-react";
-import QRCode from "qrcode";
 import { Registrant, Ticket } from "@/lib/types";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import { generateQRCodeForRegistrant, createTicketElement } from "@/lib/ticket-utils";
 import html2canvas from "html2canvas";
 
 interface TicketGeneratorProps {
@@ -21,20 +21,7 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
   useEffect(() => {
     const generateQRCode = async () => {
       try {
-        const qrData = {
-          id: registrant.id,
-          name: registrant.full_name,
-          event: "Đại hội Công giáo Việt Nam 2025",
-        };
-
-        const url = await QRCode.toDataURL(JSON.stringify(qrData), {
-          width: 256,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
+        const url = await generateQRCodeForRegistrant(registrant);
         setQrCodeUrl(url);
       } catch (error) {
         console.error('QR code generation error:', error);
@@ -44,35 +31,51 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
     generateQRCode();
   }, [registrant]);
 
-  const handleSaveTicket = () => {
-    if (typeof window !== 'undefined' && ticketRef.current) {
-      html2canvas(ticketRef.current, { useCORS: true }).then(canvas => {
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = `DaiHoiCongGiao2025-Ticket-${registrant.id}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+  const handleSaveTicket = async () => {
+    try {
+      const ticketElement = createTicketElement(registrant, qrCodeUrl);
+      
+      // Temporarily add to DOM for rendering
+      document.body.appendChild(ticketElement);
+      
+      const canvas = await html2canvas(ticketElement, { 
+        useCORS: true,
+        allowTaint: true,
+        scale: 2,
+        backgroundColor: '#ffffff'
       });
+      
+      // Remove from DOM
+      document.body.removeChild(ticketElement);
+      
+      // Download the image
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `DaiHoiCongGiao2025-Ticket-${registrant.id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error saving ticket:', error);
     }
   };
 
   return (
     <div className="w-full max-w-sm mx-auto font-sans">
       <Card ref={ticketRef} className="bg-white shadow-lg rounded-2xl overflow-hidden">
-        <div className="bg-gray-800 text-white p-4 text-center">
-          <h1 className="text-xl font-bold">ĐẠI HỘI TOÀN QUỐC 2025</h1>
+        <div className={(registrant.event_role_id ? "bg-blue-500 " : "bg-green-500 ") + `text-white p-4 text-center`}>
+          <h1 className="text-xl font-bold">ĐẠI HỘI NĂM THÁNH TOÀN QUỐC 2025</h1>
         </div>
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
             {registrant.portrait_url && (
-              <div className="size-48 rounded-full overflow-hidden border-4 border-gray-200">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200">
                 <Image
                   src={registrant.portrait_url}
                   alt="Portrait"
                   width={128}
                   height={128}
-                  className="object-fill w-full h-full"
+                  className="object-cover w-full h-full"
                   crossOrigin="anonymous"
                 />
               </div>
@@ -82,7 +85,12 @@ export function TicketGenerator({ registrant }: TicketGeneratorProps) {
               <p className="text-2xl font-semibold">{registrant.full_name}</p>
               {registrant.second_day_only && (
                 <div className="mt-2 inline-block px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
-                  Chỉ tham gia ngày 15/09
+                  Chỉ tham dự :
+                  {new Date(registrant.selected_attendance_day || '2025-09-15').toLocaleDateString('vi-VN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
                 </div>
               )}
             </div>

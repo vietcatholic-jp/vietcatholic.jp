@@ -58,7 +58,7 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
       registration_id: registration.id,
       email: userInfo?.email || user.email,
       saint_name: '',
-      full_name: userInfo?.full_name || 'Vui lòng cập nhật tên',
+      full_name: userInfo?.full_name || '',
       gender: 'other' as const,
       age_group: '18_25' as const,
       province: '',
@@ -70,7 +70,7 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
       event_team_id: null,
       event_role_id: null,
       is_primary: true,
-      notes: 'Vui lòng cập nhật tất cả thông tin',
+      notes: '',
       portrait_url: null,
       group_id: null,
       created_at: new Date().toISOString(),
@@ -78,6 +78,30 @@ export default async function EditRegistrationPage({ params }: EditRegistrationP
     };
     
     registration.registrants = [defaultRegistrant];
+    // add more registrants to equal registration.participant_count - 1
+    for (let i = 1; i < registration.participant_count; i++) {
+      registration.registrants.push({
+        saint_name: "",
+        full_name: "",
+        gender: "male" as const,
+        age_group: "26_35" as const,
+        shirt_size: "M-M" as const,
+        event_role: 'participant',
+        is_primary: false,
+        go_with: false,
+        second_day_only: false,
+        selected_attendance_day: "",
+        notes: "",
+        // Optional fields
+        email: "",
+        phone: "",
+        address: "",
+        facebook_link: "",
+        province: "",
+        diocese: "",
+      });
+    }
+
   }
 
   // Check if registration can be modified (check for tickets separately)
