@@ -9,10 +9,13 @@ import {
   CameraOff, 
   QrCode, 
   CheckCircle, 
-  Clock
+  Clock,
+  UserCheck,
+  Users
 } from "lucide-react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { CheckInDialog } from "./check-in-dialog";
+import { useCheckInStats } from "@/hooks/use-checkin-stats";
 
 interface ScanResult {
   success: boolean;
@@ -44,6 +47,9 @@ export function CheckInScanner() {
   const lastScanTimeRef = useRef<number>(0);
   const processingQueueRef = useRef<Set<string>>(new Set());
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Get overall check-in statistics
+  const { stats, loading: statsLoading, refetch: refetchStats } = useCheckInStats();
 
   useEffect(() => {
     const processingQueue = processingQueueRef.current;
@@ -219,6 +225,8 @@ export function CheckInScanner() {
       if (result.success) {
         setScanCount(prev => prev + 1);
         setLastScanTime(new Date());
+        // Refetch overall statistics when a new check-in is successful
+        refetchStats();
       }
 
     } catch (error) {
@@ -268,10 +276,13 @@ export function CheckInScanner() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <QrCode className="h-5 w-5 text-purple-600" />
               <div>
-                <p className="text-sm text-muted-foreground">Đã Check-in</p>
+                <p className="text-sm text-muted-foreground">Phiên quét này</p>
                 <p className="text-2xl font-bold">{scanCount}</p>
+                <p className="text-xs text-muted-foreground">
+                  {lastScanTime ? `Lần cuối: ${lastScanTime.toLocaleTimeString('vi-VN')}` : 'Chưa quét'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -280,12 +291,15 @@ export function CheckInScanner() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-blue-600" />
+              <UserCheck className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm text-muted-foreground">Lần quét cuối</p>
-                <p className="text-sm font-medium">
-                  {lastScanTime ? lastScanTime.toLocaleTimeString('vi-VN') : 'Chưa có'}
+                <p className="text-sm text-muted-foreground">Tổng đã check-in</p>
+                <p className="text-2xl font-bold">
+                  {statsLoading ? '...' : stats.totalCheckedIn.toLocaleString()}
                 </p>
+                <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                  {isProcessing ? "Đang xử lý..." : isScanning ? "Đang quét" : "Sẵn sàng"}
+                </Badge>
               </div>
             </div>
           </CardContent>
@@ -293,15 +307,18 @@ export function CheckInScanner() {
 
         <Card>
           <CardContent className="p-4">
-                            <div className="flex items-center space-x-2">
-                  <QrCode className="h-5 w-5 text-purple-600" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Trạng thái</p>
-                    <Badge variant={isScanning ? "default" : "secondary"}>
-                      {isProcessing ? "Đang xử lý..." : isScanning ? "Đang quét" : "Dừng"}
-                    </Badge>
-                  </div>
-                </div>
+            <div className="flex items-center space-x-2">
+              <Clock className="h-5 w-5 text-orange-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Chờ check-in</p>
+                <p className="text-2xl font-bold">
+                  {statsLoading ? '...' : stats.waitingCheckIn.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Tổng: {statsLoading ? '...' : stats.totalConfirmed.toLocaleString()} người
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

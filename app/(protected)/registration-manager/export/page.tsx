@@ -160,6 +160,28 @@ function getStatusLabel(status: RegistrationStatus): string {
   return statusMap[status] || status;
 }
 
+// Function to get the actual status label based on both registration status and registrant check-in status
+function getActualStatusLabel(registrationStatus: RegistrationStatus, isCheckedIn?: boolean): string {
+  // Special case: if registration status is checked_in but registrant is not actually checked in
+  if (registrationStatus === 'checked_in' && isCheckedIn === false) {
+    return 'Đã xác nhận';
+  }
+  
+  // Default case: use the registration status
+  return getStatusLabel(registrationStatus);
+}
+
+// Function to get the actual status badge variant based on both registration status and registrant check-in status
+function getActualStatusBadgeVariant(registrationStatus: RegistrationStatus, isCheckedIn?: boolean): "default" | "secondary" | "destructive" | "outline" {
+  // Special case: if registration status is checked_in but registrant is not actually checked in
+  if (registrationStatus === 'checked_in' && isCheckedIn === false) {
+    return 'default'; // Same as 'confirmed' status
+  }
+  
+  // Default case: use the registration status
+  return getStatusBadgeVariant(registrationStatus);
+}
+
 function getStatusBadgeVariant(status: RegistrationStatus) {
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     'pending': 'outline',
@@ -373,13 +395,28 @@ export default function ExportPage() {
 
     // Status filter
     if (state.filters.status !== 'all' && state.filters.status !== 'all_confirmed') {
-      filteredRegs = filteredRegs.filter(reg => reg.status === state.filters.status);
-      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.status === state.filters.status);
+      if (state.filters.status === 'checked_in') {
+        // For checked_in status, filter by is_checked_in column in registrants table
+        filteredRegs = filteredRegs.filter(reg => 
+          reg.registrants?.some(registrant => registrant.is_checked_in === true)
+        );
+        filteredRegsts = filteredRegsts.filter(reg => reg.is_checked_in === true);
+      } else {
+        // For other statuses, filter by registration status
+        filteredRegs = filteredRegs.filter(reg => reg.status === state.filters.status);
+        filteredRegsts = filteredRegsts.filter(reg => reg.registration?.status === state.filters.status);
+      }
     }
 
     if (state.filters.status === 'all_confirmed') {
-      filteredRegs = filteredRegs.filter(reg => ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.status));
-      filteredRegsts = filteredRegsts.filter(reg => ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.registration?.status || ""));
+      filteredRegs = filteredRegs.filter(reg => 
+        ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.status) ||
+        reg.registrants?.some(registrant => registrant.is_checked_in === true)
+      );
+      filteredRegsts = filteredRegsts.filter(reg => 
+        ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.registration?.status || "") ||
+        reg.is_checked_in === true
+      );
     }
 
     // Date range
@@ -1083,8 +1120,8 @@ export default function ExportPage() {
                         })()}
                       </td>
                       <td className="border border-gray-300 p-2">
-                        <Badge variant={getStatusBadgeVariant(registrant.registration?.status as RegistrationStatus)}>
-                          {getStatusLabel(registrant.registration?.status as RegistrationStatus)}
+                        <Badge variant={getActualStatusBadgeVariant(registrant.registration?.status as RegistrationStatus, registrant.is_checked_in)}>
+                          {getActualStatusLabel(registrant.registration?.status as RegistrationStatus, registrant.is_checked_in)}
                         </Badge>
                       </td>
                     </tr>

@@ -92,6 +92,21 @@ export function calculateSummaryStats(registrations: Registration[]) {
   );
   const individualCount = totalRegistrants - goWithCount;
   
+  // Check-in statistics
+  // Count registrants who actually checked in (is_checked_in = true)
+  const totalCheckedIn = registrations.reduce((sum, reg) => 
+    sum + (reg.registrants?.filter(r => r.is_checked_in === true).length || 0), 0
+  );
+  
+  // Count registrants who are expected to attend but haven't checked in yet
+  // These are confirmed registrants who haven't checked in
+  const waitingCheckIn = registrations.reduce((sum, reg) => {
+    if (['confirm_paid', 'confirmed', 'checked_in', 'checked_out'].includes(reg.status)) {
+      return sum + (reg.registrants?.filter(r => r.is_checked_in !== true).length || 0);
+    }
+    return sum;
+  }, 0);
+  
   return {
     totalRegistrations,
     totalParticipants,
@@ -105,6 +120,8 @@ export function calculateSummaryStats(registrations: Registration[]) {
     totalRegistrants,
     goWithCount,
     individualCount,
+    totalCheckedIn,
+    waitingCheckIn,
     averageParticipantsPerRegistration: totalRegistrations > 0 ? 
       Math.round((totalParticipants / totalRegistrations) * 10) / 10 : 0
   };
