@@ -8,10 +8,8 @@ import {
   Camera, 
   CameraOff, 
   QrCode, 
-  CheckCircle, 
   Clock,
-  UserCheck,
-  Users
+  UserCheck
 } from "lucide-react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { CheckInDialog } from "./check-in-dialog";

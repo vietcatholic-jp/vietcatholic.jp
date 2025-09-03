@@ -170,7 +170,7 @@ export function ReceiptUpload({
           notes: uploadedData.length > 1 
             ? `Multiple files uploaded: ${uploadedData.map(d => d.fileName).join(', ')}. Compression saved ${formatFileSize(uploadedData.reduce((sum, d) => sum + (d.originalSize - d.compressedSize), 0))} total.`
             : uploadedData[0].compressionRatio > 0 
-              ? `File compressed from ${formatFileSize(uploadedData[0].originalSize)} to ${formatFileSize(uploadedData[0].compressedSize)} (${Math.round(uploadedData[0].compressionRatio * 100)}% reduction)`
+              ? `File compressed from ${formatFileSize(uploadedData[0].originalSize)} to ${formatFileSize(uploadedData[0].compressedSize)} (${(uploadedData[0].compressionRatio * 100).toFixed(1)}% reduction)`
               : undefined,
         }),
       });
@@ -188,9 +188,11 @@ export function ReceiptUpload({
       toast.success("Upload hóa đơn thành công! Đăng ký sẽ được xem xét trong vòng 24 giờ.");
       
       // Refresh the page to show updated status
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      if (typeof window !== 'undefined') {
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
 
     } catch (error) {
       console.error('Upload error:', error);
