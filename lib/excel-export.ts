@@ -16,13 +16,16 @@ export interface TeamMemberForExport {
   event_role_name?: string;
   registration_status?: string;
   invoice_code?: string;
+  second_day_only?: boolean;
+  selected_attendance_day?: string;
   joined_date?: string;
+  event_team_name?: string;
 }
 
 // Create Excel workbook for team members
 export function createTeamMembersWorkbook(
-  teamName: string,
-  members: TeamMemberForExport[]
+  members: TeamMemberForExport[],
+  teamName?: string,
 ): XLSX.WorkBook {
   // Prepare data for Excel
   const excelData = members.map((member, index) => ({
@@ -39,7 +42,10 @@ export function createTeamMembersWorkbook(
     'Vai trò': member.event_role_name || '',
     'Trạng thái đăng ký': getStatusLabel(member.registration_status) || '',
     'Mã hóa đơn': member.invoice_code || '',
-    'Ngày tham gia': member.joined_date ? formatDate(member.joined_date) : ''
+    'Tham gia chỉ một ngày': member.second_day_only ? 'Có' : 'Không',
+    'Ngày tham gia': member.selected_attendance_day ? formatDate(member.selected_attendance_day) : '',
+    'Tên đội': member.event_team_name || '',
+    'Ngày tham gia đội': member.joined_date ? formatDate(member.joined_date) : ''
   }));
 
   // Create workbook and worksheet
@@ -60,6 +66,9 @@ export function createTeamMembersWorkbook(
     { wch: 20 },  // Vai trò
     { wch: 18 },  // Trạng thái đăng ký
     { wch: 15 },  // Mã hóa đơn
+    { wch: 20 },  // Kích thước áo
+    { wch: 20 },  // Tham gia chỉ một ngày
+    { wch: 25 },  // Tên đội
     { wch: 15 }   // Ngày tham gia
   ];
   worksheet['!cols'] = columnWidths;
@@ -85,20 +94,20 @@ export function createTeamMembersWorkbook(
 }
 
 // Generate filename for team export
-export function generateTeamExportFilename(teamName: string): string {
-  const today = format(new Date(), 'yyyy-MM-dd');
+export function generateTeamExportFilename(teamName?: string): string {
+  const today = format(new Date(), 'yyyy-MM-dd-HHmm');
   const sanitizedTeamName = teamName
-    .replace(/[^a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/g, '_') // Replace special chars with underscore
+    ?.replace(/[^a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/g, '_') // Replace special chars with underscore
     .replace(/_{2,}/g, '_') // Replace multiple underscores with single
-    .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+    .replace(/^_|_$/g, '') || ''; // Remove leading/trailing underscores
   
   return `Danh_sach_${sanitizedTeamName}_${today}.xlsx`;
 }
 
 // Export team members to Excel file
 export function exportTeamMembersToExcel(
-  teamName: string,
-  members: TeamMemberForExport[]
+  members: TeamMemberForExport[],
+  teamName?: string,
 ): void {
   if (!members || members.length === 0) {
     throw new Error('Không có dữ liệu thành viên để xuất');
@@ -106,7 +115,7 @@ export function exportTeamMembersToExcel(
 
   try {
     // Create workbook
-    const workbook = createTeamMembersWorkbook(teamName, members);
+    const workbook = createTeamMembersWorkbook(members, teamName);
     
     // Generate filename
     const filename = generateTeamExportFilename(teamName);
@@ -134,6 +143,7 @@ function getStatusLabel(status?: string): string {
     'pending': 'Chờ xử lý',
     'confirmed': 'Đã xác nhận',
     'confirm_paid': 'Đã thanh toán',
+    'temp_confirmed': 'Tạm xác nhận',
     'checked_in': 'Đã check-in',
     'checked_out': 'Đã check-out',
     'cancelled': 'Đã hủy',
