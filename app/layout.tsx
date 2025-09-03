@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
+import { Suspense } from "react";
+import { PasswordResetHandler } from "@/components/password-reset-handler";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -34,6 +36,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Suspense fallback={null}>
+            <PasswordResetHandler />
+          </Suspense>
           {children}
           <Toaster position="top-right" richColors />
         </ThemeProvider>
