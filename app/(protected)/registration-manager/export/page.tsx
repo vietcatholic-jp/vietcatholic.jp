@@ -319,13 +319,27 @@ export default function ExportPage() {
 
     // Status filter
     if (state.filters.status !== 'all' && state.filters.status !== 'all_confirmed') {
-      filteredRegs = filteredRegs.filter(reg => reg.status === state.filters.status);
-      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.status === state.filters.status);
+      if (state.filters.status === 'checked_in') {
+        // Special handling for checked_in status - check the is_checked_in field in registrants
+        filteredRegs = filteredRegs.filter(reg => 
+          reg.registrants?.some(registrant => registrant.is_checked_in === true)
+        );
+        filteredRegsts = filteredRegsts.filter(reg => reg.is_checked_in === true);
+      } else {
+        filteredRegs = filteredRegs.filter(reg => reg.status === state.filters.status);
+        filteredRegsts = filteredRegsts.filter(reg => reg.registration?.status === state.filters.status);
+      }
     }
 
     if (state.filters.status === 'all_confirmed') {
-      filteredRegs = filteredRegs.filter(reg => ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.status));
-      filteredRegsts = filteredRegsts.filter(reg => ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.registration?.status || ""));
+      filteredRegs = filteredRegs.filter(reg => 
+        ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.status) ||
+        reg.registrants?.some(registrant => registrant.is_checked_in === true)
+      );
+      filteredRegsts = filteredRegsts.filter(reg => 
+        ['report_paid','confirm_paid','confirmed', 'temp_confirmed', 'checked_in'].includes(reg.registration?.status || "") ||
+        reg.is_checked_in === true
+      );
     }
 
     // Date range
@@ -652,9 +666,12 @@ export default function ExportPage() {
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {state.filteredRegistrants.filter(r => ['report_paid','temp_confirmed','confirm_paid', 'confirmed', 'checked_in'].includes(r.registration?.status ?? "")).length}
+                {state.filteredRegistrants.filter(r => 
+                  ['report_paid','temp_confirmed','confirm_paid', 'confirmed', 'checked_in'].includes(r.registration?.status ?? "") ||
+                  r.is_checked_in === true
+                ).length}
               </div>
-              <div className="text-sm text-muted-foreground">Đã chuyển khoản + Đã xác nhận + Xác nhận tạm</div>
+              <div className="text-sm text-muted-foreground">Đã chuyển khoản + Đã xác nhận + Xác nhận tạm + Đã check-in</div>
             </div>
           </div>
           ):(
@@ -674,9 +691,12 @@ export default function ExportPage() {
             </div>)}
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {state.filteredRegistrations.filter(r => ['report_paid','temp_confirmed','confirm_paid', 'confirmed', 'checked_in'].includes(r.status)).length}
+                {state.filteredRegistrations.filter(r => 
+                  ['report_paid','temp_confirmed','confirm_paid', 'confirmed', 'checked_in'].includes(r.status) ||
+                  r.registrants?.some(registrant => registrant.is_checked_in === true)
+                ).length}
               </div>
-              <div className="text-sm text-muted-foreground">Đã chuyển khoản + Đã xác nhận + Xác nhận tạm</div>
+              <div className="text-sm text-muted-foreground">Đã chuyển khoản + Đã xác nhận + Xác nhận tạm + Đã check-in</div>
             </div>
           </div>
           )}

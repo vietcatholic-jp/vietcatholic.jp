@@ -44,14 +44,20 @@ export function OrganizerTools({ registrations, userRole }: OrganizerToolsProps)
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
 
   useEffect(() => {
-    // Calculate check-in statistics
+    // Calculate check-in statistics based on individual registrants
     const stats = registrations.reduce((acc, reg) => {
-      acc.total += reg.participant_count;
+      // Count total registrants
+      const registrants = reg.registrants || [];
+      acc.total += registrants.length;
       
-      if (reg.status === 'checked_in') {
-        acc.checkedIn += reg.participant_count;
-      } else if (reg.status === 'confirmed') {
-        acc.pending += reg.participant_count;
+      // Count checked-in registrants based on is_checked_in field
+      const checkedInCount = registrants.filter(r => r.is_checked_in === true).length;
+      acc.checkedIn += checkedInCount;
+      
+      // Count pending registrants (confirmed registration but not checked in yet)
+      if (['confirmed', 'confirm_paid', 'checked_in', 'checked_out'].includes(reg.status)) {
+        const pendingCount = registrants.filter(r => r.is_checked_in !== true).length;
+        acc.pending += pendingCount;
       }
       
       return acc;
