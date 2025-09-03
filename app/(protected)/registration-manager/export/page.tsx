@@ -529,6 +529,50 @@ export default function ExportPage() {
     }));
   };
 
+  const handleExportExcel = async (status: string) => {
+      try {
+        const response = await fetch(`/api/admin/registrations/export?status=${encodeURIComponent(status)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Không thể xuất file Excel');
+        }
+  
+        // Get filename from response headers
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = `Danh_sach_${status}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''));
+          }
+        }
+  
+        // Download file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+  
+        toast.success('Xuất file Excel thành công!');
+      } catch (error) {
+        console.error('Export error:', error);
+        toast.error(error instanceof Error ? error.message : 'Đã xảy ra lỗi khi xuất file');
+      } 
+    };
+
   const handleBatchTicketDownload = async () => {
     if (state.filteredRegistrants.length === 0) {
       toast.error('Không có dữ liệu để tải vé');
@@ -837,6 +881,11 @@ export default function ExportPage() {
           <p className="text-center text-sm text-muted-foreground">
             Ngày xuất: {format(new Date(), 'dd/MM/yyyy HH:mm')}
           </p>
+          {/* Export data */}
+
+          <Button className="float-right no-print max-w-64 mx-auto" onClick={handleExportExcel.bind(null, state.filters.status)}>
+            Xuất dữ liệu
+          </Button>
         </CardHeader>
         <CardContent>
           

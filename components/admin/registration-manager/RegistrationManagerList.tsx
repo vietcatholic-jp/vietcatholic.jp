@@ -152,9 +152,14 @@ export function RegistrationManagerList({
                   <option value="report_paid">Đã báo thanh toán</option>
                   <option value="confirm_paid">Đã xác nhận thanh toán</option>
                   <option value="payment_rejected">Thanh toán bị từ chối</option>
+                  <option value="temp_confirmed">Đã xác nhận (thanh toán sau)</option>
                   <option value="confirmed">Đã xác nhận</option>
-                  <option value="cancel_pending">Chờ hủy</option>
                   <option value="cancelled">Đã hủy</option>
+                  <option value="be_cancelled">Đã bị hủy</option>
+                  <option value="cancel_pending">Chờ hủy</option>
+                  <option value="cancel_accepted">Đã chấp nhận huỷ</option>
+                  <option value="cancel_rejected">Đã từ chối huỷ</option>
+                  <option value="cancel_pending">Chờ hủy</option>
                 </select>
               </div>
             </div>

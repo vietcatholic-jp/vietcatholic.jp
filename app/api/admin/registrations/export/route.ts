@@ -17,7 +17,8 @@ interface SupabaseMember {
   phone?: string;
   facebook_link?: string;
   second_day_only?: boolean;
-  selected_attendance_days?: string;
+  selected_attendance_day?: string;
+  team_name?: string;
   registration?: {
     id: string;
     invoice_code: string;
@@ -28,11 +29,13 @@ interface SupabaseMember {
     id: string;
     name: string;
   } | null;
+  event_team?: {
+    name: string;
+  } | null;
 }
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest
 ) {
   try {
     // Check authentication
@@ -53,20 +56,14 @@ export async function GET(
     if (!profile || !["registration_manager", "super_admin","cashier_role"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
-    const { id: teamId } = await params;
-
-    // Get team details
-    const { data: team, error: teamError } = await supabase
-      .from("event_teams")
-      .select("id, name, description")
-      .eq("id", teamId)
-      .single();
-
-    if (teamError || !team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    
+    // Extract status from query parameters
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    
+    if (!status) {
+      return NextResponse.json({ error: 'Status parameter is required' }, { status: 400 });
     }
-
     // Get team members with all required information
     const { data: members, error: membersError } = await supabase
       .from("registrants")
@@ -81,7 +78,7 @@ export async function GET(
         email,
         phone,
         facebook_link,
-        selected_attendance_days,
+        selected_attendance_day,
         second_day_only,
         registration:registrations!registrants_registration_id_fkey(
           id,
@@ -92,10 +89,12 @@ export async function GET(
         event_role:event_roles!registrants_event_role_id_fkey(
           id,
           name
-        )
+        ),
+        event_team:event_teams!registrants_event_team_id_fkey(name)
       `)
-      .eq("event_team_id", teamId)
-      .order("created_at");
+      .eq("registration.status", status) // Only include confirmed statuses
+      .order("full_name", { ascending: true })
+      .order("created_at", { ascending: true });
 
     if (membersError) {
       console.error("Members query error:", membersError);
@@ -119,10 +118,33 @@ export async function GET(
         phone: typedMember.phone,
         facebook_link: typedMember.facebook_link,
         event_role_name: typedMember.event_role?.name,
+        selected_attendance_day: typedMember.selected_attendance_day,
+        second_day_only: typedMember.second_day_only,
         registration_status: registration?.status,
         invoice_code: registration?.invoice_code,
-        joined_date: registration?.created_at
+        joined_date: registration?.created_at,
+        event_team_name: typedMember.event_team?.name
       };
+    });
+
+    // Sort by team name, then by invoice code, then by name
+    membersForExport.sort((a, b) => {
+      // First sort by team name
+      const teamA = a.event_team_name || '';
+      const teamB = b.event_team_name || '';
+      if (teamA !== teamB) {
+        return teamA.localeCompare(teamB);
+      }
+      
+      // Then by invoice code
+      const invoiceA = a.invoice_code || '';
+      const invoiceB = b.invoice_code || '';
+      if (invoiceA !== invoiceB) {
+        return invoiceA.localeCompare(invoiceB);
+      }
+      
+      // Finally by name
+      return a.full_name.localeCompare(b.full_name);
     });
 
     if (membersForExport.length === 0) {
@@ -130,10 +152,10 @@ export async function GET(
     }
 
     // Create Excel workbook
-    const workbook = createTeamMembersWorkbook(membersForExport,team.name);
+    const workbook = createTeamMembersWorkbook(membersForExport, status);
     
     // Generate filename
-    const filename = generateTeamExportFilename(team.name);
+    const filename = generateTeamExportFilename(status);
     
     // Convert workbook to buffer
     const excelBuffer = XLSX.write(workbook, { 
