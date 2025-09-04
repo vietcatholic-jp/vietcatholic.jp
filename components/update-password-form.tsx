@@ -36,9 +36,9 @@ export function UpdatePasswordForm({
       const supabase = createClient();
       
       // Check if this is coming from a password reset link
-      const accessToken = searchParams.get('access_token');
-      const refreshToken = searchParams.get('refresh_token');
-      const type = searchParams.get('type');
+      const accessToken = searchParams?.get('access_token');
+      const refreshToken = searchParams?.get('refresh_token');
+      const type = searchParams?.get('type');
       
       if (type === 'recovery' && accessToken && refreshToken) {
         try {

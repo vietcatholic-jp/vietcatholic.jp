@@ -9,12 +9,13 @@ import { Input } from "@/components/ui/input";
 import {
   Download,
   Search,
-  Users,
   CreditCard,
   Loader2
 } from "lucide-react";
-import { toast } from "sonner";
 import { BadgeGenerator } from "./badge-generator";
+import { EnhancedFilterTabs } from "./enhanced-filter-tabs";
+import { ProgressDialog } from "./progress-dialog";
+import { getEventRoleCategory, RoleCategory } from "@/lib/role-utils";
 import JSZip from "jszip";
 
 interface Registrant {
@@ -30,15 +31,30 @@ interface Registrant {
     status: string;
     invoice_code: string;
   };
+  event_team_id?: string;
 }
 
 export function BatchBadgeGenerator() {
   const [registrants, setRegistrants] = useState<Registrant[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<RoleCategory | 'all'>('all');
+  const [selectedTeam, setSelectedTeam] = useState<string | 'all'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
   const [previewRegistrant, setPreviewRegistrant] = useState<Registrant | null>(null);
+
+  // Progress Dialog State
+  const [progressDialog, setProgressDialog] = useState({
+    isOpen: false,
+    title: '',
+    total: 0,
+    current: 0,
+    status: 'processing' as 'processing' | 'success' | 'error',
+    statusText: '',
+    errorMessage: ''
+  });
+  const [cancelGeneration, setCancelGeneration] = useState(false);
 
   useEffect(() => {
     fetchRegistrants();
@@ -47,7 +63,7 @@ export function BatchBadgeGenerator() {
   const fetchRegistrants = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/registrants?status=all&limit=2000');
+      const response = await fetch('/api/admin/registrants?status=confirmed');
       if (!response.ok) {
         throw new Error('Failed to fetch registrants');
       }
@@ -55,17 +71,31 @@ export function BatchBadgeGenerator() {
       setRegistrants(data.registrants || []);
     } catch (error) {
       console.error('Error fetching registrants:', error);
-      toast.error('Không thể tải danh sách người tham dự');
+      // Error handling moved to progress dialog system
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredRegistrants = registrants.filter(registrant =>
-    registrant.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (registrant.saint_name && registrant.saint_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (registrant.event_role?.name && registrant.event_role.name.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredRegistrants = registrants.filter(registrant => {
+    // Text search filter
+    const matchesSearch = registrant.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (registrant.saint_name && registrant.saint_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (registrant.event_role?.name && registrant.event_role.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    // Apply filters based on which one is active
+    let matchesFilter = true;
+
+    if (selectedCategory !== 'all') {
+      // Category filter is active
+      matchesFilter = getEventRoleCategory(registrant.event_role?.name) === selectedCategory;
+    } else if (selectedTeam !== 'all') {
+      // Team filter is active
+      matchesFilter = registrant.event_team_id === selectedTeam;
+    }
+
+    return matchesSearch && matchesFilter;
+  });
 
   const handleSelectAll = () => {
     if (selectedIds.length === filteredRegistrants.length) {
@@ -81,6 +111,59 @@ export function BatchBadgeGenerator() {
         ? prev.filter(selectedId => selectedId !== id)
         : [...prev, id]
     );
+  };
+
+  // Mutual exclusive handlers
+  const handleCategoryChange = (category: RoleCategory | 'all') => {
+    setSelectedCategory(category);
+    if (category !== 'all') {
+      setSelectedTeam('all'); // Reset team filter when category is selected
+    }
+  };
+
+  const handleTeamChange = (team: string | 'all') => {
+    setSelectedTeam(team);
+    if (team !== 'all') {
+      setSelectedCategory('all'); // Reset category filter when team is selected
+    }
+  };
+
+  const handleQuickSelectCategory = (category: RoleCategory | 'all') => {
+    if (category === 'all') {
+      setSelectedIds(registrants.map(r => r.id));
+    } else {
+      const categoryRegistrants = registrants.filter(registrant =>
+        getEventRoleCategory(registrant.event_role?.name) === category
+      );
+      const categoryIds = categoryRegistrants.map(r => r.id);
+
+      // Toggle selection: if all are selected, deselect; otherwise select all
+      const allSelected = categoryIds.every(id => selectedIds.includes(id));
+      if (allSelected) {
+        setSelectedIds(prev => prev.filter(id => !categoryIds.includes(id)));
+      } else {
+        setSelectedIds(prev => [...new Set([...prev, ...categoryIds])]);
+      }
+    }
+  };
+
+  const handleQuickSelectTeam = (team: string | 'all') => {
+    if (team === 'all') {
+      setSelectedIds(registrants.map(r => r.id));
+    } else {
+      const teamRegistrants = registrants.filter(registrant =>
+        registrant.event_team_id === team
+      );
+      const teamIds = teamRegistrants.map(r => r.id);
+
+      // Toggle selection: if all are selected, deselect; otherwise select all
+      const allSelected = teamIds.every(id => selectedIds.includes(id));
+      if (allSelected) {
+        setSelectedIds(prev => prev.filter(id => !teamIds.includes(id)));
+      } else {
+        setSelectedIds(prev => [...new Set([...prev, ...teamIds])]);
+      }
+    }
   };
 
   const generateBadgeImage = async (registrant: Registrant): Promise<string> => {
@@ -317,40 +400,68 @@ export function BatchBadgeGenerator() {
   const handleGenerateZip = async () => {
     if (selectedIds.length === 0) return;
 
+    const selectedRegistrants = registrants.filter(r => selectedIds.includes(r.id));
+    setCancelGeneration(false);
     setIsGeneratingZip(true);
+
+    // Initialize progress dialog
+    setProgressDialog({
+      isOpen: true,
+      title: 'Tạo thẻ tham dự',
+      total: selectedRegistrants.length,
+      current: 0,
+      status: 'processing',
+      statusText: `Đang chuẩn bị tạo ${selectedRegistrants.length} thẻ...`,
+      errorMessage: ''
+    });
 
     try {
       const zip = new JSZip();
-      const selectedRegistrants = registrants.filter(r => selectedIds.includes(r.id));
+      let successCount = 0;
+      let errorCount = 0;
 
-      toast.info(`Đang tạo ${selectedRegistrants.length} thẻ...`);
+      // Generate badges one by one for better progress tracking
+      for (let i = 0; i < selectedRegistrants.length; i++) {
+        // Check if user cancelled
+        if (cancelGeneration) {
+          setProgressDialog(prev => ({
+            ...prev,
+            status: 'error',
+            statusText: 'Đã hủy tạo thẻ',
+            errorMessage: 'Quá trình tạo thẻ đã được hủy bởi người dùng'
+          }));
+          return;
+        }
 
-      // Generate badges in batches to avoid overwhelming the browser
-      const batchSize = 5;
-      for (let i = 0; i < selectedRegistrants.length; i += batchSize) {
-        const batch = selectedRegistrants.slice(i, i + batchSize);
+        const registrant = selectedRegistrants[i];
 
-        await Promise.all(
-          batch.map(async (registrant, index) => {
-            try {
-              const imageUrl = await generateBadgeImage(registrant);
-              const imageData = imageUrl.split(',')[1]; // Remove data:image/png;base64,
-              const fileName = `Badge-${registrant.full_name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
-              zip.file(fileName, imageData, { base64: true });
+        // Update progress
+        setProgressDialog(prev => ({
+          ...prev,
+          current: i,
+          statusText: `Đang tạo thẻ ${i + 1}/${selectedRegistrants.length}: ${registrant.full_name}`
+        }));
 
-              // Update progress
-              const progress = i + index + 1;
-              toast.info(`Đã tạo ${progress}/${selectedRegistrants.length} thẻ...`);
-            } catch (error) {
-              console.error(`Failed to generate badge for ${registrant.full_name}:`, error);
-              toast.error(`Lỗi tạo thẻ cho ${registrant.full_name}`);
-            }
-          })
-        );
+        try {
+          const imageUrl = await generateBadgeImage(registrant);
+          const imageData = imageUrl.split(',')[1]; // Remove data:image/png;base64,
+          const fileName = `Badge-${registrant.full_name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+          zip.file(fileName, imageData, { base64: true });
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to generate badge for ${registrant.full_name}:`, error);
+          errorCount++;
+        }
       }
 
+      // Update progress for ZIP generation
+      setProgressDialog(prev => ({
+        ...prev,
+        current: selectedRegistrants.length,
+        statusText: 'Đang tạo file ZIP...'
+      }));
+
       // Generate and download ZIP
-      toast.info('Đang tạo file ZIP...');
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
       const link = document.createElement('a');
@@ -360,13 +471,32 @@ export function BatchBadgeGenerator() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success(`Đã tạo thành công ${selectedRegistrants.length} thẻ!`);
+      // Success
+      setProgressDialog(prev => ({
+        ...prev,
+        status: 'success',
+        statusText: `Đã tạo thành công ${successCount} thẻ!${errorCount > 0 ? ` (${errorCount} lỗi)` : ''}`
+      }));
+
     } catch (error) {
       console.error('Error generating ZIP:', error);
-      toast.error('Có lỗi xảy ra khi tạo file ZIP');
+      setProgressDialog(prev => ({
+        ...prev,
+        status: 'error',
+        statusText: 'Có lỗi xảy ra khi tạo file ZIP',
+        errorMessage: error instanceof Error ? error.message : 'Lỗi không xác định'
+      }));
     } finally {
       setIsGeneratingZip(false);
     }
+  };
+
+  const handleCancelGeneration = () => {
+    setCancelGeneration(true);
+  };
+
+  const handleCloseProgressDialog = () => {
+    setProgressDialog(prev => ({ ...prev, isOpen: false }));
   };
 
   return (
@@ -378,7 +508,19 @@ export function BatchBadgeGenerator() {
             Tạo thẻ tham dự hàng loạt
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Enhanced Filter Tabs */}
+          <EnhancedFilterTabs
+            registrants={registrants}
+            selectedCategory={selectedCategory}
+            selectedTeam={selectedTeam}
+            selectedIds={selectedIds}
+            onCategoryChange={handleCategoryChange}
+            onTeamChange={handleTeamChange}
+            onQuickSelectCategory={handleQuickSelectCategory}
+            onQuickSelectTeam={handleQuickSelectTeam}
+          />
+
           {/* Search and Actions */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -418,14 +560,7 @@ export function BatchBadgeGenerator() {
             </div>
           </div>
 
-          {/* Statistics */}
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              Tổng: {filteredRegistrants.length}
-            </span>
-            <span>Đã chọn: {selectedIds.length}</span>
-          </div>
+
 
           {/* Registrants List */}
           {isLoading ? (
@@ -490,6 +625,20 @@ export function BatchBadgeGenerator() {
           </CardContent>
         </Card>
       )}
+
+      {/* Progress Dialog */}
+      <ProgressDialog
+        isOpen={progressDialog.isOpen}
+        onClose={handleCloseProgressDialog}
+        title={progressDialog.title}
+        total={progressDialog.total}
+        current={progressDialog.current}
+        status={progressDialog.status}
+        statusText={progressDialog.statusText}
+        errorMessage={progressDialog.errorMessage}
+        onCancel={handleCancelGeneration}
+        canCancel={progressDialog.status === 'processing'}
+      />
     </div>
   );
 }
