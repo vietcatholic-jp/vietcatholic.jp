@@ -14,17 +14,19 @@ import {
   MapPin,
   Church,
   ArrowUpDown,
-  Ticket
+  Ticket,
+  CreditCard
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES, AGE_GROUPS, EventConfig } from "@/lib/types";
 import { format } from "date-fns";
 import JSZip from "jszip";
-import { generateTicketImage as generateTicketImageUtil } from "@/lib/ticket-utils";
+import { generateTicketImage as generateTicketImageUtil, generateBadgeImage} from "@/lib/ticket-utils";
 
 import {  RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
 import { AvatarManager } from "@/components/avatar";
+import { Registrant } from "@/lib/types";
 
 
 interface ExportFilters {
@@ -53,6 +55,7 @@ interface ExportPageState {
   filteredRegistrants: RegistrantWithRoleAndRegistration[];
   loading: boolean;
   downloading: boolean; // Add downloading state
+  downloadingBadges: boolean;
   filters: ExportFilters;
   availableTeams: string[];
   availableDioceses: string[]; // new
@@ -287,6 +290,7 @@ export default function ExportPage() {
     filteredRegistrants: [],
     loading: true,
     downloading: false,
+    downloadingBadges: false,
     availableTeams: [],
     availableDioceses: [],
     eventConfig: null,
@@ -392,7 +396,6 @@ export default function ExportPage() {
     // Filter registrations
     let filteredRegs = [...state.registrations];
     let filteredRegsts = [...state.registrants];
-
     // Status filter
     if (state.filters.status !== 'all' && state.filters.status !== 'all_confirmed') {
       if (state.filters.status === 'checked_in') {
@@ -451,8 +454,11 @@ export default function ExportPage() {
     }
 
     // Team
-    if (state.filters.teamName !== 'all') {
+    if (state.filters.teamName !== 'all' && state.filters.teamName !== 'btc') {
       filteredRegsts = filteredRegsts.filter(reg => reg.event_roles?.team_name === state.filters.teamName);
+    }
+    if (state.filters.teamName === 'btc') {
+      filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null);
     }
 
     // Age group
@@ -678,6 +684,104 @@ export default function ExportPage() {
     }
   };
 
+  const handleBatchBadgeDownload = async () => {
+    if (state.filteredRegistrants.length === 0) {
+      toast.error('Không có dữ liệu để tải thẻ');
+      return;
+    }
+
+    setState(prev => ({ ...prev, downloadingBadges: true }));
+    
+    try {
+      const zip = new JSZip();
+      const badgesFolder = zip.folder('badges');
+      
+      toast.info(`Đang tạo ${state.filteredRegistrants.length} thẻ...`);
+      
+      // Process registrants in batches to avoid browser hanging
+      const batchSize = 5;
+      const batches = [];
+      for (let i = 0; i < state.filteredRegistrants.length; i += batchSize) {
+        batches.push(state.filteredRegistrants.slice(i, i + batchSize));
+      }
+      
+      let processed = 0;
+      for (const batch of batches) {
+        const promises = batch.map(async (registrant) => {
+          try {
+            // Convert RegistrantWithRoleAndRegistration to Registrant format
+            const registrantForBadge: Registrant = {
+              id: registrant.id,
+              registration_id: registrant.registration_id,
+              email: registrant.email,
+              saint_name: registrant.saint_name,
+              full_name: registrant.full_name,
+              gender: registrant.gender,
+              age_group: registrant.age_group,
+              province: registrant.province,
+              diocese: registrant.diocese,
+              address: registrant.address,
+              facebook_link: registrant.facebook_link,
+              phone: registrant.phone,
+              shirt_size: registrant.shirt_size,
+              event_team_id: registrant.event_team_id,
+              event_role_id: registrant.event_role_id,
+              event_role: registrant.event_roles || registrant.event_role,
+              portrait_url: registrant.portrait_url,
+              go_with: registrant.go_with,
+              second_day_only: registrant.second_day_only,
+              selected_attendance_day: registrant.selected_attendance_day,
+              notes: registrant.notes,
+              created_at: registrant.created_at,
+              updated_at: registrant.updated_at,
+              is_checked_in: registrant.is_checked_in,
+              checked_in_at: registrant.checked_in_at
+            };
+
+            const imageUrl = await generateBadgeImage(registrantForBadge);
+            if (imageUrl && badgesFolder) {
+              const imageData = imageUrl.split(',')[1]; // Remove data:image/png;base64,
+              const fileName = `Badge-${registrant.full_name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+              badgesFolder.file(fileName, imageData, { base64: true });
+            }
+            processed++;
+            
+            // Update progress
+            if (processed % 5 === 0) {
+              toast.info(`Đã tạo ${processed}/${state.filteredRegistrants.length} thẻ...`);
+            }
+          } catch (error) {
+            console.error(`Error generating badge for ${registrant.full_name}:`, error);
+          }
+        });
+        
+        await Promise.all(promises);
+        
+        // Small delay between batches to prevent browser blocking
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      toast.info('Đang nén file...');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // Download the zip file
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = `DaiHoiCongGiao2025-Badges-${format(new Date(), 'yyyy-MM-dd-HHmm')}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      
+      toast.success(`Đã tải xuống ${processed} thẻ thành công!`);
+    } catch (error) {
+      console.error('Error during batch badge download:', error);
+      toast.error('Có lỗi xảy ra khi tải thẻ. Vui lòng thử lại.');
+    } finally {
+      setState(prev => ({ ...prev, downloadingBadges: false }));
+    }
+  };
+
   const totalAmount = state.filteredRegistrations.reduce((sum, reg) => sum + reg.total_amount, 0);
   const totalParticipants = state.filteredRegistrations.reduce((sum, reg) => sum + reg.participant_count, 0);
 
@@ -756,6 +860,7 @@ export default function ExportPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tất cả mọi người</SelectItem>
+                  <SelectItem value="btc">Người BTC</SelectItem>
                   {state.availableTeams.map(team => (
                     <SelectItem key={team} value={team}>
                       {team}
@@ -887,23 +992,43 @@ export default function ExportPage() {
               Xóa bộ lọc
             </Button>
             {state.filters.reportType === 'registrants' && state.filteredRegistrants.length > 0 && (
-              <Button 
-                onClick={handleBatchTicketDownload} 
-                disabled={state.downloading}
-                className="flex items-center gap-2"
-              >
-                {state.downloading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Đang tải...
-                  </>
-                ) : (
-                  <>
-                    <Ticket className="w-4 h-4" />
-                    Tải tất cả vé ({state.filteredRegistrants.length})
-                  </>
-                )}
-              </Button>
+              <>
+                <Button 
+                  onClick={handleBatchTicketDownload} 
+                  disabled={state.downloading}
+                  className="flex items-center gap-2"
+                >
+                  {state.downloading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Đang tải...
+                    </>
+                  ) : (
+                    <>
+                      <Ticket className="w-4 h-4" />
+                      Tải tất cả vé ({state.filteredRegistrants.length})
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={handleBatchBadgeDownload} 
+                  disabled={state.downloadingBadges}
+                  className="flex items-center gap-2"
+                  variant="outline"
+                >
+                  {state.downloadingBadges ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      Đang tải...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4" />
+                      Tải tất cả thẻ ({state.filteredRegistrants.length})
+                    </>
+                  )}
+                </Button>
+              </>
             )}
           </div>
         </CardContent>
