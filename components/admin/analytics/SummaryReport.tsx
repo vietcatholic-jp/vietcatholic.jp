@@ -12,14 +12,27 @@ export function SummaryReport() {
   
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-16 bg-gray-200 rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-6">
+        {/* Main stats skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-16 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {/* Check-in stats skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(2)].map((_, i) => (
+            <Card key={`checkin-${i}`} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-16 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -86,6 +99,24 @@ export function SummaryReport() {
     }
   ];
 
+  // Check-in statistics cards
+  const checkInCards = [
+    {
+      title: "Tổng đã check-in",
+      value: stats.totalCheckedIn,
+      icon: UserCheck,
+      color: "text-green-600",
+      bgColor: "bg-green-50"
+    },
+    {
+      title: "Chờ check-in",
+      value: stats.waitingCheckIn,
+      icon: Clock,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50"
+    }
+  ];
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -105,6 +136,32 @@ export function SummaryReport() {
                     </p>
                     <p className={`text-2xl font-bold ${card.color}`}>
                       {card.isAmount ? card.value : typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Check-in Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {checkInCards.map((card, index) => {
+          const Icon = card.icon;
+          return (
+            <Card key={`checkin-${index}`}>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <div className={`${card.bgColor} p-3 rounded-lg`}>
+                    <Icon className={`h-6 w-6 ${card.color}`} />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {card.title}
+                    </p>
+                    <p className={`text-2xl font-bold ${card.color}`}>
+                      {typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
                     </p>
                   </div>
                 </div>

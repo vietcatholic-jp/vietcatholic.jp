@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Check if registration is confirmed
-    if (!['confirmed', 'temp_confirmed'].includes(registration.status)) {
+    // Check if registration is confirmed or already has some people checked in
+    if (!['confirmed', 'temp_confirmed', 'checked_in'].includes(registration.status)) {
       return NextResponse.json({
         success: false,
         registrant: {
@@ -172,6 +172,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Update the registration status to 'checked_in' if it's not already checked_in
+    if (registration.status !== 'checked_in') {
+      try {
+        await supabase
+          .from('registrations')
+          .update({
+            status: 'checked_in',
+            updated_at: currentTime
+          })
+          .eq('id', registrant.registration_id);
+      } catch (regUpdateError) {
+        // Don't fail the whole operation if registration update fails
+        console.log('Registration status update failed (non-critical):', regUpdateError);
+      }
+    }
+
     // Optional: Log the check-in event (if event_logs table exists)
     try {
       await supabase
@@ -238,11 +254,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get check-in statistics
+    // Get check-in statistics - include both confirmed and checked_in statuses
     const { data: stats, error } = await supabase
       .from('registrants')
       .select('is_checked_in, checked_in_at, registration:registrations!inner(status)')
-      .eq('registrations.status', 'confirmed');
+      .in('registrations.status', ['confirmed', 'temp_confirmed', 'checked_in']);
 
     if (error) {
       console.error('Stats query error:', error);

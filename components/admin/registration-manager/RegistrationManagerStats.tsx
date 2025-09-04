@@ -8,7 +8,8 @@ import {
   CheckCircle, 
   XCircle,
   AlertCircle,
-  DollarSign
+  DollarSign,
+  UserCheck
 } from "lucide-react";
 
 interface RegistrationManagerStatsProps {
@@ -20,6 +21,8 @@ interface RegistrationManagerStatsProps {
     cancel_requests: number;
     total_amount: number;
     confirmed_amount: number;
+    total_participants: number;
+    checked_in_participants: number;
   };
 }
 
@@ -31,6 +34,22 @@ export function RegistrationManagerStats({ stats }: RegistrationManagerStatsProp
       icon: Users,
       variant: "default" as const,
       description: "Tổng số đăng ký",
+      priority: false
+    },
+    {
+      title: "Tổng người tham gia dự kiến",
+      value: stats.total_participants,
+      icon: Users,
+      variant: "default" as const,
+      description: "Tổng số người đăng ký",
+      priority: false
+    },
+    {
+      title: "Số người đã check-in",
+      value: stats.checked_in_participants,
+      icon: UserCheck,
+      variant: "success" as const,
+      description: "Đã có mặt tại sự kiện",
       priority: false
     },
     {
@@ -92,7 +111,7 @@ export function RegistrationManagerStats({ stats }: RegistrationManagerStatsProp
       )}
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2 md:gap-4">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (

@@ -24,6 +24,8 @@ interface RegistrationManagerData {
     cancel_requests: number;
     total_amount: number;
     confirmed_amount: number;
+    total_participants: number;
+    checked_in_participants: number;
   };
   registrations: Registration[];
   cancelRequests: CancelRequest[];
