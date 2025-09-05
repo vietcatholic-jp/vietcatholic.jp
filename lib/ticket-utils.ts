@@ -117,38 +117,53 @@ export async function generateTicketImage(registrant: RegistrantWithRoleAndRegis
   }
 }
 
-
-
-// Helper function to get optimal object position for avatar images
-  const getOptimalObjectPosition = async (imageUrl: string): Promise<string> => {
-    return new Promise((resolve) => {
+// Helper: center (slightly top-biased) crop to square and return data URL to avoid relying on object-fit in html2canvas
+  const centerCropToSquare = async (url: string, size = 240): Promise<string> => {
+    return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      
       img.onload = () => {
-        const aspectRatio = img.width / img.height;
-        
-        if (aspectRatio < 0.8) {
-          // Portrait image (taller than wide) - focus on upper part for faces
-          resolve('center 25%');
-        } else if (aspectRatio > 1.2) {
-          // Landscape image (wider than tall) - center it
-          resolve('center center');
-        } else {
-          // Square-ish image (0.8-1.2) - keep as center, user cropped it correctly
-          resolve('center center');
+        try {
+          const aspectRatio = img.width / img.height;
+          if (aspectRatio === 1) {
+            // If the image is already square, just return it
+            console.log('Image is square, returning original');
+            return resolve(url);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('Canvas context not available'));
+          const w = img.naturalWidth || img.width;
+            const h = img.naturalHeight || img.height;
+          // Square already
+          if (w === h) {
+            ctx.drawImage(img, 0, 0, w, h, 0, 0, size, size);
+            return resolve(canvas.toDataURL('image/png'));
+          }
+          // Determine crop square
+          let sx = 0, sy = 0, sw = w, sh = h;
+          if (w > h) {
+            // Landscape: crop sides
+            const diff = w - h;
+            sx = diff / 2;
+            sw = h;
+          } else if (h > w) {
+            // Portrait: crop vertically with slight top bias (keep a bit more top for faces)
+            const diff = h - w;
+            sy = Math.max(0, diff * 0.35); // 35% bias to keep more upper area (face)
+            if (sy + w > h) sy = h - w; // safety
+            sh = w;
+          }
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) {
+          reject(e);
         }
       };
-      
-      img.onerror = () => {
-        // Fallback to center for any errors
-        resolve('center center');
-      };
-      
-      // Set a timeout to avoid hanging
-      setTimeout(() => resolve('center center'), 5000);
-      
-      img.src = imageUrl;
+      img.onerror = (e) => reject(e);
+      img.src = url;
     });
   };
 
@@ -183,13 +198,20 @@ export const generateBadgeImage = async (registrant: Registrant): Promise<string
         const safeName = escapeHtml(registrant.full_name);
         const safeSaintName = registrant.saint_name ? escapeHtml(registrant.saint_name) : '';
         const safeRoleName = registrant.event_role?.name ? escapeHtml(registrant.event_role.name) : '';
+        const teamName = registrant.event_team?.name ? escapeHtml(registrant.event_team.name) : '';
+        // Preprocess portrait to a square data URL to avoid html2canvas object-fit issues
+        let processedPortrait: string | null = null;
+        if (registrant.portrait_url) {
+          try {
+            processedPortrait = await centerCropToSquare(registrant.portrait_url);
+            console.log('Processed portrait to square for', registrant.full_name);
+          } catch (e) {
+            console.warn('Portrait preprocessing failed, fallback to original URL for', registrant.full_name, e);
+            processedPortrait = registrant.portrait_url;
+          }
+        }
 
-        // Get optimal object position for portrait images
-        const objectPosition = registrant.portrait_url 
-          ? await getOptimalObjectPosition(registrant.portrait_url)
-          : 'center';
-
-        // Create EXACT same structure as BadgeGenerator
+        // Create EXACT same structure as BadgeGenerator, but avatar uses pre-cropped square image without object-fit reliance
         const htmlContent = `
           <div style="position: relative; width: 400px; height: 600px; font-family: Arial, sans-serif;">
             <!-- Background Image -->
@@ -214,9 +236,7 @@ export const generateBadgeImage = async (registrant: Registrant): Promise<string
 
                     <!-- Role - phần dưới, aligned to right -->
                     <div style="height: 60px; width: 100%; display: flex; align-items: center;">
-                      <!-- Div trống bên trái chiếm hết chiều ngang -->
                       <div style="flex: 1;"></div>
-                      <!-- Badge bên phải -->
                       ${registrant.event_role?.name ? `
                         <div data-role-badge style="background-color: white; border: 2px solid #16a34a; border-radius: 9999px; padding: 0 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); display: flex; align-items: center; justify-content: center; text-align: center; height: 40px; white-space: nowrap; color: #15803d; font-weight: bold; font-size: 16px; line-height: 1;">
                           ${safeRoleName.toUpperCase()}
@@ -226,25 +246,16 @@ export const generateBadgeImage = async (registrant: Registrant): Promise<string
                   </div>
                 ` : `
                   <!-- Regular participant layout -->
-                  <!-- Team name section temporarily disabled for build -->
-
-                  <!-- Saint name - always reserve space -->
                   <div style="color: #1e40af; font-weight: bold; margin-bottom: 12px; height: 25%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
                     ${safeSaintName || '\u00A0'}
                   </div>
-
-                  <!-- Full name -->
                   <div style="color: #1e40af; font-weight: bold; line-height: 1.2; margin-bottom: 12px; height: 25%; display: flex; align-items: center; justify-content: center; font-size: 28px;">
                     ${safeName.toUpperCase()}
                   </div>
-
-                  <!-- Participant badge - aligned to right -->
                   <div style="width: 100%; display: flex;">
-                    <!-- Div trống bên trái chiếm hết chiều ngang -->
                     <div style="flex: 1;"></div>
-                    <!-- Badge bên phải -->
                     <div data-role-badge style="background-color: white; border: 2px solid #16a34a; border-radius: 9999px; padding: 0 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); display: flex; align-items: center; justify-content: center; text-align: center; height: 40px; white-space: nowrap; color: #15803d; font-weight: bold; font-size: 16px; line-height: 1;">
-                      THAM DỰ VIÊN
+                      THAM DỰ VIÊN - ${teamName}
                     </div>
                   </div>
                 `}
@@ -252,23 +263,18 @@ export const generateBadgeImage = async (registrant: Registrant): Promise<string
 
               <!-- Section 2: Middle 1/2 (300px) - Avatar or Logo -->
               <div style="display: flex; align-items: center; justify-content: center; padding: 0 24px; height: 300px;">
-                ${registrant.portrait_url ? `
-                  <!-- Avatar - circular, 60% width of card (240px) -->
+                ${processedPortrait ? `
                   <div style="width: 240px; height: 240px; border-radius: 50%; overflow: hidden; border: 2px solid white; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); position: relative;">
-                    <img src="${registrant.portrait_url}" alt="${safeName} portrait" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover; object-position: ${objectPosition}; display: block;" />
+                    <img src="${processedPortrait}" alt="${safeName} portrait" crossorigin="anonymous" style="width: 240px; height: 240px; display: block;" />
                   </div>
                 ` : `
-                  <!-- Fallback Logo - circular, 60% width of card (240px) -->
                   <div style="width: 240px; height: 240px; border-radius: 50%; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); position: relative;">
-                    <img src="/logo-dh-2025.jpg" alt="Logo Đại hội Năm Thánh 2025" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" />
+                    <img src="/logo-dh-2025.jpg" alt="Logo Đại hội Năm Thánh 2025" crossorigin="anonymous" style="width: 240px; height: 240px; display: block;" />
                   </div>
                 `}
               </div>
 
-              <!-- Section 3: Bottom 1/6 (100px) - Empty (background only) -->
-              <div style="height: 100px;">
-                <!-- Empty section - only background image visible -->
-              </div>
+              <div style="height: 100px;"></div>
             </div>
           </div>
         `;
@@ -319,15 +325,13 @@ export const generateBadgeImage = async (registrant: Registrant): Promise<string
               clonedElement.style.fontFamily = 'Arial, sans-serif';
             }
 
-            // Đảm bảo tất cả ảnh có crossOrigin và object-fit
+            // Đảm bảo tất cả ảnh có crossOrigin
             const images = clonedDoc.querySelectorAll('img');
             images.forEach((img) => {
               if (!img) return;
               img.crossOrigin = 'anonymous';
-              if (img.style && img.style.objectFit === 'cover') {
-                img.style.objectFit = 'cover';
-                img.style.objectPosition = 'center';
-              }
+              // Keep all existing styles intact - don't modify object-fit or object-position
+              console.log('Image in onclone - src:', img.src, 'object-position:', img.style.objectPosition, 'object-fit:', img.style.objectFit);
             });
 
             // CRITICAL: Role badge SVG rendering

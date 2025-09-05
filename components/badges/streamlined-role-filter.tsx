@@ -17,22 +17,8 @@ import {
 } from "@/components/ui/popover";
 import { Crown, UserCheck, Star, Users, Zap, ChevronDown } from "lucide-react";
 import { getEventRoleCategory, RoleCategory } from "@/lib/role-utils";
+import { Registrant } from "@/lib/types";
 
-interface Registrant {
-  id: string;
-  full_name: string;
-  saint_name?: string;
-  portrait_url?: string;
-  event_role?: {
-    name: string;
-    description?: string;
-  };
-  registration?: {
-    status: string;
-    invoice_code: string;
-  };
-  event_team_id?: string;
-}
 
 interface StreamlinedRoleFilterProps {
   registrants: Registrant[];

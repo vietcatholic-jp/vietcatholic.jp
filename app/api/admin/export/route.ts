@@ -53,6 +53,10 @@ export async function GET(request: NextRequest) {
             name,
             team_name,
             description
+          ),
+          event_team:event_team_id(
+            id,
+            name
           )
         `)
         .order('created_at', { ascending: false });
