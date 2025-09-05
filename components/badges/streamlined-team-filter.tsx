@@ -161,9 +161,7 @@ export function StreamlinedTeamFilter({
   }
 
   return (
-    <div className="space-y-3">
-      {/* Main Filter Dropdown */}
-      <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3">
         <div className="flex-1">
           <Select value={selectedTeam} onValueChange={onTeamChange}>
             <SelectTrigger className="h-10">
@@ -264,30 +262,6 @@ export function StreamlinedTeamFilter({
             </div>
           </PopoverContent>
         </Popover>
-      </div>
-
-      {/* Active Filter Summary */}
-      {selectedTeam !== 'all' && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            {isBTCTeam(getSelectedTeamName()) && <Crown className="h-3 w-3 text-yellow-600" />}
-            <Users className="h-3 w-3" />
-            <span>Đang hiển thị:</span>
-            <strong className="text-foreground">
-              {teamStats[selectedTeam]?.total || 0} người
-            </strong>
-          </div>
-          {(teamStats[selectedTeam]?.selected || 0) > 0 && (
-            <div className="flex items-center gap-1">
-              <span>•</span>
-              <span>Đã chọn:</span>
-              <strong className="text-foreground">
-                {teamStats[selectedTeam]?.selected || 0}
-              </strong>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

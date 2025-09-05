@@ -202,18 +202,13 @@ export function EnhancedFilterTabs({
               </TabsContent>
 
               <TabsContent value="team" className="mt-0 space-y-0">
-                <div className="space-y-3">
-                  <div className="text-sm text-muted-foreground">
-                    Lọc theo đội được phân công
-                  </div>
-                  <StreamlinedTeamFilter
-                    registrants={registrants}
-                    selectedTeam={selectedTeam}
-                    onTeamChange={onTeamChange}
-                    selectedIds={selectedIds}
-                    onQuickSelect={onQuickSelectTeam}
-                  />
-                </div>
+                <StreamlinedTeamFilter
+                  registrants={registrants}
+                  selectedTeam={selectedTeam}
+                  onTeamChange={onTeamChange}
+                  selectedIds={selectedIds}
+                  onQuickSelect={onQuickSelectTeam}
+                />
               </TabsContent>
             </div>
           </Tabs>
