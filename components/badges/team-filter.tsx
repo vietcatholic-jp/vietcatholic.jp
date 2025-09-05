@@ -89,7 +89,7 @@ export function TeamFilter({
           throw new Error('Failed to fetch teams');
         }
         const data = await response.json();
-        setTeams(data.teams || []);
+        setTeams(data || []);
       } catch (error) {
         console.error('Error fetching teams:', error);
         setTeams([]);

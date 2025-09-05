@@ -64,7 +64,7 @@ export function EventTeamManager({ eventConfig }: EventTeamManagerProps) {
           if (!response.ok) throw new Error('Failed to fetch teams');
           
           const data = await response.json();
-          setTeams(data.teams || []);
+          setTeams(data || []);
         } catch (error) {
           console.error('Error fetching teams:', error);
           toast.error('Không thể tải danh sách nhóm');
@@ -406,7 +406,7 @@ export function EventTeamManager({ eventConfig }: EventTeamManagerProps) {
                   const response = await fetch(`/api/admin/teams?event_config_id=${eventConfig.id}`);
                   if (response.ok) {
                     const data = await response.json();
-                    setTeams(data.teams || []);
+                    setTeams(data || []);
                   }
                 } catch (error) {
                   console.error('Error refreshing teams:', error);
