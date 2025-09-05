@@ -39,8 +39,18 @@ export async function GET(request: NextRequest) {
         full_name,
         saint_name,
         portrait_url,
-        event_role:event_roles(name, description, team_name),
-        registration:registrations!inner(status, invoice_code)
+        event_team_id,
+        event_role_id,
+        event_role:event_roles(
+          id,
+          name,
+          description
+        ),
+        registration:registrations!inner(
+          id,
+          status,
+          invoice_code
+        )
       `)
       .order('full_name')
       .range(offset, offset + limit - 1);

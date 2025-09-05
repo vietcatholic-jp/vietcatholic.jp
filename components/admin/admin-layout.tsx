@@ -13,6 +13,7 @@ import {
   Wrench,
   Truck,
   Badge,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -112,6 +113,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/badges',
       label: 'Tạo thẻ tham dự',
       icon: Badge,
+      roles: ['event_organizer','registration_manager', 'super_admin']
+    },
+    {
+      href: '/admin/card-generator',
+      label: 'Tạo thẻ ID',
+      icon: CreditCard,
       roles: ['event_organizer','registration_manager', 'super_admin']
     },
     {
