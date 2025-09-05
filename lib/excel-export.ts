@@ -144,9 +144,16 @@ function getStatusLabel(status?: string): string {
     'confirmed': 'Đã xác nhận',
     'confirm_paid': 'Đã thanh toán',
     'temp_confirmed': 'Tạm xác nhận',
+    'donation': 'Đã quyên góp',
+    'payment_rejected': 'Thanh toán bị từ chối',
+    'report_paid': 'Chờ xác nhận thanh toán',
+    'cancel_pending': 'Yêu cầu hủy đang chờ xử lý',
+    'cancel_accepted': 'Yêu cầu hủy đã được chấp nhận',
+    'cancel_rejected': 'Yêu cầu hủy đã bị từ chối',
     'checked_in': 'Đã check-in',
     'checked_out': 'Đã check-out',
     'cancelled': 'Đã hủy',
+    'be_cancelled': 'Đã bị hủy',
     'rejected': 'Bị từ chối'
   };
 
