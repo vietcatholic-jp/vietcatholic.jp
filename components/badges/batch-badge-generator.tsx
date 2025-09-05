@@ -196,6 +196,39 @@ export function BatchBadgeGenerator() {
     }
   };
 
+  // Helper function to get optimal object position for avatar images
+  const getOptimalObjectPosition = async (imageUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+        
+        if (aspectRatio < 0.8) {
+          // Portrait image (taller than wide) - focus on upper part for faces
+          resolve('center 25%');
+        } else if (aspectRatio > 1.2) {
+          // Landscape image (wider than tall) - center it
+          resolve('center center');
+        } else {
+          // Square-ish image (0.8-1.2) - keep as center, user cropped it correctly
+          resolve('center center');
+        }
+      };
+      
+      img.onerror = () => {
+        // Fallback to center for any errors
+        resolve('center center');
+      };
+      
+      // Set a timeout to avoid hanging
+      setTimeout(() => resolve('center center'), 5000);
+      
+      img.src = imageUrl;
+    });
+  };
+
   const generateBadgeImage = async (registrant: Registrant): Promise<string> => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -227,6 +260,11 @@ export function BatchBadgeGenerator() {
         const safeName = escapeHtml(registrant.full_name);
         const safeSaintName = registrant.saint_name ? escapeHtml(registrant.saint_name) : '';
         const safeRoleName = registrant.event_role?.name ? escapeHtml(registrant.event_role.name) : '';
+
+        // Get optimal object position for portrait images
+        const objectPosition = registrant.portrait_url 
+          ? await getOptimalObjectPosition(registrant.portrait_url)
+          : 'center';
 
         // Create EXACT same structure as BadgeGenerator
         const htmlContent = `
@@ -294,7 +332,7 @@ export function BatchBadgeGenerator() {
                 ${registrant.portrait_url ? `
                   <!-- Avatar - circular, 60% width of card (240px) -->
                   <div style="width: 240px; height: 240px; border-radius: 50%; overflow: hidden; border: 2px solid white; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); position: relative;">
-                    <img src="${registrant.portrait_url}" alt="${safeName} portrait" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" />
+                    <img src="${registrant.portrait_url}" alt="${safeName} portrait" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover; object-position: ${objectPosition}; display: block;" />
                   </div>
                 ` : `
                   <!-- Fallback Logo - circular, 60% width of card (240px) -->
