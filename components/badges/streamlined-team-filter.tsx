@@ -16,22 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Crown, Users, Zap, ChevronDown, Loader2 } from "lucide-react";
-
-interface Registrant {
-  id: string;
-  full_name: string;
-  saint_name?: string;
-  portrait_url?: string;
-  event_role?: {
-    name: string;
-    description?: string;
-  };
-  registration?: {
-    status: string;
-    invoice_code: string;
-  };
-  event_team_id?: string;
-}
+import { Registrant } from "@/lib/types";
 
 interface Team {
   id: string;
