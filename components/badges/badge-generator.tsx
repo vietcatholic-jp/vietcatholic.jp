@@ -248,7 +248,9 @@ export function BadgeGenerator({ registrant, onDownload, isTestPage = false }: B
           // 1. Saint name và Full name (có fontSize trong style)
           const textDivs = clonedDoc.querySelectorAll('div.text-blue-800[style*="fontSize"]');
           textDivs.forEach((textElement) => {
+            if (!textElement) return;
             const element = textElement as HTMLElement;
+            if (!element || !element.style) return;
             const style = element.style.fontSize;
             if (style === '24px') { // Saint name
               element.style.fontSize = '6px'; // 24/4 = 6
@@ -260,14 +262,18 @@ export function BadgeGenerator({ registrant, onDownload, isTestPage = false }: B
           // 2. Role badge text (fontSize: 16px)
           const roleBadgeTexts = clonedDoc.querySelectorAll('[data-role-badge][style*="fontSize: 16px"]');
           roleBadgeTexts.forEach((badge) => {
+            if (!badge) return;
             const badgeElement = badge as HTMLElement;
+            if (!badgeElement || !badgeElement.style) return;
             badgeElement.style.fontSize = '4px'; // 16/4 = 4
           });
 
           // 3. AutoSizeText elements (dynamic fontSize)
           const autoSizeSpans = clonedDoc.querySelectorAll('span[style*="fontSize"][style*="lineHeight: 1.4"]');
           autoSizeSpans.forEach((span) => {
+            if (!span) return;
             const spanElement = span as HTMLElement;
+            if (!spanElement || !spanElement.style) return;
             const currentSize = spanElement.style.fontSize;
             if (currentSize && currentSize.includes('px')) {
               const sizeValue = parseInt(currentSize.replace('px', ''));

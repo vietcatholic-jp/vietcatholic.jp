@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,35 +49,14 @@ export function EnhancedFilterTabs({
   onQuickSelectCategory,
   onQuickSelectTeam
 }: EnhancedFilterTabsProps) {
-  // Determine active filter type based on selections
-  const getActiveFilterType = (): FilterType => {
-    if (selectedCategory !== 'all') return 'role';
-    if (selectedTeam !== 'all') return 'team';
-    return 'role'; // default
-  };
-
-  const [activeTab, setActiveTab] = useState<FilterType>(getActiveFilterType());
-
-  // Sync activeTab with filter states
-  useEffect(() => {
-    // Determine active filter type based on selections
-    const getCurrentActiveType = (): FilterType => {
-      if (selectedCategory !== 'all') return 'role';
-      if (selectedTeam !== 'all') return 'team';
-      return 'role'; // default
-    };
-
-    const currentActiveType = getCurrentActiveType();
-    if (currentActiveType !== activeTab) {
-      setActiveTab(currentActiveType);
-    }
-  }, [selectedCategory, selectedTeam, activeTab]);
+  // Simple state management for active tab
+  const [activeTab, setActiveTab] = useState<FilterType>('role');
 
   // Handle tab change with mutual exclusive logic
   const handleTabChange = (value: FilterType) => {
     setActiveTab(value);
 
-    // Always reset the other filter when switching tabs to ensure mutual exclusivity
+    // Reset the other filter when switching tabs to ensure mutual exclusivity
     if (value === 'role') {
       // Switching to role tab - reset team filter
       onTeamChange('all');
@@ -173,7 +152,11 @@ export function EnhancedFilterTabs({
           )}
 
           {/* Tab Interface */}
-          <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as FilterType)} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => handleTabChange(value as FilterType)}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-2 h-auto p-1">
               <TabsTrigger 
                 value="role" 

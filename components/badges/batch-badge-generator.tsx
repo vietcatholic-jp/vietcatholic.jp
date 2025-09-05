@@ -6,16 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Download,
   Search,
   CreditCard,
-  Loader2
+  Loader2,
+  FileText,
+  Users
 } from "lucide-react";
 import { BadgeGenerator } from "./badge-generator";
 import { EnhancedFilterTabs } from "./enhanced-filter-tabs";
 import { ProgressDialog } from "./progress-dialog";
 import { getEventRoleCategory, RoleCategory } from "@/lib/role-utils";
+import { cardGeneratorService } from "@/lib/services/card-generator-service";
 import JSZip from "jszip";
 
 interface Registrant {
@@ -34,14 +38,23 @@ interface Registrant {
   event_team_id?: string;
 }
 
+interface Team {
+  id: string;
+  name: string;
+  member_count: number;
+}
+
 export function BatchBadgeGenerator() {
   const [registrants, setRegistrants] = useState<Registrant[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<RoleCategory | 'all'>('all');
   const [selectedTeam, setSelectedTeam] = useState<string | 'all'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [previewRegistrant, setPreviewRegistrant] = useState<Registrant | null>(null);
 
   // Progress Dialog State
@@ -58,6 +71,7 @@ export function BatchBadgeGenerator() {
 
   useEffect(() => {
     fetchRegistrants();
+    fetchTeams();
   }, []);
 
   const fetchRegistrants = async () => {
@@ -74,6 +88,22 @@ export function BatchBadgeGenerator() {
       // Error handling moved to progress dialog system
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchTeams = async () => {
+    setIsLoadingTeams(true);
+    try {
+      const response = await fetch('/api/admin/teams');
+      if (!response.ok) {
+        throw new Error('Failed to fetch teams');
+      }
+      const data = await response.json();
+      setTeams(data || []);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    } finally {
+      setIsLoadingTeams(false);
     }
   };
 
@@ -184,8 +214,22 @@ export function BatchBadgeGenerator() {
           ? '/assets/organizer-with-photo.png'
           : '/assets/no-organizer.png';
 
+        // Escape HTML to prevent template string issues
+        const escapeHtml = (text: string) => {
+          return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+        };
+
+        const safeName = escapeHtml(registrant.full_name);
+        const safeSaintName = registrant.saint_name ? escapeHtml(registrant.saint_name) : '';
+        const safeRoleName = registrant.event_role?.name ? escapeHtml(registrant.event_role.name) : '';
+
         // Create EXACT same structure as BadgeGenerator
-        tempDiv.innerHTML = `
+        const htmlContent = `
           <div style="position: relative; width: 400px; height: 600px; font-family: Arial, sans-serif;">
             <!-- Background Image -->
             <img src="${backgroundImage}" alt="Badge background" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;" crossorigin="anonymous" />
@@ -199,12 +243,12 @@ export function BatchBadgeGenerator() {
                   <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
                     <!-- Saint name - phần trên -->
                     <div style="color: #1e40af; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 24px; height: 60px;">
-                      ${registrant.saint_name || '\u00A0'}
+                      ${safeSaintName || '\u00A0'}
                     </div>
 
                     <!-- Full name - phần giữa -->
                     <div style="color: #1e40af; font-weight: bold; line-height: 1.2; display: flex; align-items: center; justify-content: center; font-size: 28px; height: 60px;">
-                      ${registrant.full_name.toUpperCase()}
+                      ${safeName.toUpperCase()}
                     </div>
 
                     <!-- Role - phần dưới, aligned to right -->
@@ -214,7 +258,7 @@ export function BatchBadgeGenerator() {
                       <!-- Badge bên phải -->
                       ${registrant.event_role?.name ? `
                         <div data-role-badge style="background-color: white; border: 2px solid #16a34a; border-radius: 9999px; padding: 0 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); display: flex; align-items: center; justify-content: center; text-align: center; height: 40px; white-space: nowrap; color: #15803d; font-weight: bold; font-size: 16px; line-height: 1;">
-                          ${registrant.event_role.name.toUpperCase()}
+                          ${safeRoleName.toUpperCase()}
                         </div>
                       ` : ''}
                     </div>
@@ -225,12 +269,12 @@ export function BatchBadgeGenerator() {
 
                   <!-- Saint name - always reserve space -->
                   <div style="color: #1e40af; font-weight: bold; margin-bottom: 12px; height: 25%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
-                    ${registrant.saint_name || '\u00A0'}
+                    ${safeSaintName || '\u00A0'}
                   </div>
 
                   <!-- Full name -->
                   <div style="color: #1e40af; font-weight: bold; line-height: 1.2; margin-bottom: 12px; height: 25%; display: flex; align-items: center; justify-content: center; font-size: 28px;">
-                    ${registrant.full_name.toUpperCase()}
+                    ${safeName.toUpperCase()}
                   </div>
 
                   <!-- Participant badge - aligned to right -->
@@ -250,7 +294,7 @@ export function BatchBadgeGenerator() {
                 ${registrant.portrait_url ? `
                   <!-- Avatar - circular, 60% width of card (240px) -->
                   <div style="width: 240px; height: 240px; border-radius: 50%; overflow: hidden; border: 2px solid white; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); position: relative;">
-                    <img src="${registrant.portrait_url}" alt="${registrant.full_name} portrait" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" />
+                    <img src="${registrant.portrait_url}" alt="${safeName} portrait" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" />
                   </div>
                 ` : `
                   <!-- Fallback Logo - circular, 60% width of card (240px) -->
@@ -267,6 +311,9 @@ export function BatchBadgeGenerator() {
             </div>
           </div>
         `;
+
+        // Set innerHTML and validate
+        tempDiv.innerHTML = htmlContent;
 
         document.body.appendChild(tempDiv);
 
@@ -289,7 +336,11 @@ export function BatchBadgeGenerator() {
 
         // Capture with html2canvas - SAME SETTINGS AS BadgeGenerator
         const html2canvas = (await import('html2canvas')).default;
-        const canvasResult = await html2canvas(tempDiv.firstElementChild as HTMLElement, {
+        const firstElement = tempDiv.firstElementChild;
+        if (!firstElement) {
+          throw new Error(`No element found to capture for ${registrant.full_name}`);
+        }
+        const canvasResult = await html2canvas(firstElement as HTMLElement, {
           scale: 4,
           backgroundColor: '#ffffff',
           useCORS: true,
@@ -310,8 +361,9 @@ export function BatchBadgeGenerator() {
             // Đảm bảo tất cả ảnh có crossOrigin và object-fit
             const images = clonedDoc.querySelectorAll('img');
             images.forEach((img) => {
+              if (!img) return;
               img.crossOrigin = 'anonymous';
-              if (img.style.objectFit === 'cover') {
+              if (img.style && img.style.objectFit === 'cover') {
                 img.style.objectFit = 'cover';
                 img.style.objectPosition = 'center';
               }
@@ -321,7 +373,9 @@ export function BatchBadgeGenerator() {
             const roleBadges = clonedDoc.querySelectorAll('[data-role-badge]');
 
             roleBadges.forEach((badge) => {
+              if (!badge) return;
               const badgeElement = badge as HTMLElement;
+              if (!badgeElement) return;
               const w = badgeElement.offsetWidth;
               const h = badgeElement.offsetHeight || 40;
               const label = (badgeElement.textContent || '').trim();
@@ -375,7 +429,9 @@ export function BatchBadgeGenerator() {
             // Font size scaling compensation for scale = 4
             const textDivs = clonedDoc.querySelectorAll('div.text-blue-800[style*="fontSize"]');
             textDivs.forEach((textElement) => {
+              if (!textElement) return;
               const element = textElement as HTMLElement;
+              if (!element || !element.style) return;
               const style = element.style.fontSize;
               if (style === '24px') {
                 element.style.fontSize = '6px'; // 24/4 = 6
@@ -491,6 +547,69 @@ export function BatchBadgeGenerator() {
     }
   };
 
+  const handleGeneratePdf = async () => {
+    if (selectedIds.length === 0) return;
+
+    const selectedRegistrants = registrants.filter(r => selectedIds.includes(r.id));
+    setCancelGeneration(false);
+    setIsGeneratingPdf(true);
+
+    // Show progress dialog
+    setProgressDialog({
+      isOpen: true,
+      title: 'Tạo PDF thẻ tham dự',
+      total: selectedRegistrants.length,
+      current: 0,
+      status: 'processing',
+      statusText: 'Đang chuẩn bị...',
+      errorMessage: ''
+    });
+
+    try {
+      // Generate PDF using cardGeneratorService
+      const result = await cardGeneratorService.generateAndExportPDF(
+        selectedRegistrants as import('@/lib/types').Registrant[], // Type cast - interface mismatch
+        `DaiHoiCongGiao2025-Badges-${new Date().toISOString().split('T')[0]}.pdf`,
+        (completed, total) => {
+          if (cancelGeneration) return;
+
+          setProgressDialog(prev => ({
+            ...prev,
+            current: completed,
+            statusText: `Đang tạo thẻ ${completed}/${total}...`
+          }));
+        }
+      );
+
+      if (result.success) {
+        // Success
+        setProgressDialog(prev => ({
+          ...prev,
+          status: 'success',
+          statusText: 'Tạo PDF thành công!'
+        }));
+
+        // Auto close after 2 seconds
+        setTimeout(() => {
+          setProgressDialog(prev => ({ ...prev, isOpen: false }));
+        }, 2000);
+      } else {
+        throw new Error(result.error || 'Lỗi không xác định');
+      }
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setProgressDialog(prev => ({
+        ...prev,
+        status: 'error',
+        statusText: 'Có lỗi xảy ra',
+        errorMessage: error instanceof Error ? error.message : 'Lỗi không xác định'
+      }));
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   const handleCancelGeneration = () => {
     setCancelGeneration(true);
   };
@@ -521,8 +640,54 @@ export function BatchBadgeGenerator() {
             onQuickSelectTeam={handleQuickSelectTeam}
           />
 
-          {/* Search and Actions */}
+          {/* Team Filter and Search */}
           <div className="flex flex-col sm:flex-row gap-4">
+            {/* Team Filter */}
+            <div className="w-full sm:w-64">
+              <Select
+                value={selectedTeam}
+                onValueChange={(value) => {
+                  setSelectedTeam(value as string | 'all');
+                  // Reset category filter when selecting team
+                  if (value !== 'all') {
+                    setSelectedCategory('all');
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn đội..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Tất cả đội
+                    </div>
+                  </SelectItem>
+                  {isLoadingTeams ? (
+                    <SelectItem value="loading" disabled>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Đang tải...
+                      </div>
+                    </SelectItem>
+                  ) : (
+                    teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{team.name}</span>
+                          <Badge variant="secondary" className="ml-2">
+                            {team.member_count}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -542,7 +707,7 @@ export function BatchBadgeGenerator() {
               </Button>
               <Button
                 onClick={handleGenerateZip}
-                disabled={selectedIds.length === 0 || isGeneratingZip}
+                disabled={selectedIds.length === 0 || isGeneratingZip || isGeneratingPdf}
                 size="sm"
               >
                 {isGeneratingZip ? (
@@ -554,6 +719,24 @@ export function BatchBadgeGenerator() {
                   <>
                     <Download className="h-4 w-4 mr-2" />
                     Tạo ZIP ({selectedIds.length})
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleGeneratePdf}
+                disabled={selectedIds.length === 0 || isGeneratingPdf || isGeneratingZip}
+                size="sm"
+                variant="outline"
+              >
+                {isGeneratingPdf ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Đang tạo PDF...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Tạo PDF ({selectedIds.length})
                   </>
                 )}
               </Button>
@@ -587,7 +770,7 @@ export function BatchBadgeGenerator() {
                     </div>
                     {registrant.event_role?.name && (
                       <Badge variant="secondary" className="text-xs mt-1">
-                        {registrant.event_role.name}
+                        {registrant.event_role?.name}
                       </Badge>
                     )}
                   </div>
