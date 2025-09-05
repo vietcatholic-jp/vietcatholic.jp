@@ -114,7 +114,7 @@ export function BulkAssignmentDialog({
       const response = await fetch("/api/admin/teams");
       if (response.ok) {
         const data = await response.json();
-        setTeams(data.teams || []);
+        setTeams(data || []);
       }
     } catch (error) {
       console.error("Error fetching teams:", error);
