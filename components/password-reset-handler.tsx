@@ -9,9 +9,9 @@ export function PasswordResetHandler() {
 
   useEffect(() => {
     // Check if we have a password reset code on any page
-    const code = searchParams.get('code');
-    const error = searchParams.get('error');
-    const errorDescription = searchParams.get('error_description');
+    const code = searchParams?.get('code');
+    const error = searchParams?.get('error');
+    const errorDescription = searchParams?.get('error_description');
 
     // If we have a code but we're not on the callback page, redirect to callback
     if (code && !window.location.pathname.includes('/auth/callback')) {

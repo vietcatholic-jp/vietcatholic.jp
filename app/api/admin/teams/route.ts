@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json({ teams: teamsWithCounts });
+    return NextResponse.json(teamsWithCounts);
   } catch (error) {
     console.error("Teams API error:", error);
     return NextResponse.json({ error: "Lỗi hệ thống" }, { status: 500 });

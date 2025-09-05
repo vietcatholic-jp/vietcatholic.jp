@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { Registration, Registrant, RegistrationStatus } from './types';
+import { A4_LAYOUT, CARD_POSITIONS, A4CardPage, CardLayout, CardImageData } from './card-constants';
 
 // Vietnamese font support
 const VIETNAMESE_FONT = 'helvetica';
@@ -285,4 +286,139 @@ export async function exportPaymentReport(registrations: Registration[]): Promis
   // Save the PDF
   const fileName = `bao-cao-thanh-toan-${format(new Date(), 'dd-MM-yyyy')}.pdf`;
   doc.save(fileName);
+}
+
+// ===== CARD PDF GENERATION FUNCTIONS =====
+
+// CardImageData interface is now imported from card-constants.ts
+
+/**
+ * Generate PDF with cards arranged in A4 layout (4 cards per page)
+ */
+export async function generateCardsPDF(cards: CardImageData[]): Promise<Blob> {
+  const doc = new jsPDF();
+
+  // Create A4 card layout
+  const cardPages = createA4CardLayout(cards);
+
+  // Add cards to PDF pages
+  for (let pageIndex = 0; pageIndex < cardPages.length; pageIndex++) {
+    if (pageIndex > 0) {
+      doc.addPage();
+    }
+
+    const page = cardPages[pageIndex];
+    await addCardsToPage(doc, page);
+  }
+
+  // Return PDF as blob
+  return new Promise((resolve) => {
+    const blob = doc.output('blob') as Blob;
+    resolve(blob);
+  });
+}
+
+/**
+ * Create A4 card layout - arrange cards into pages with 4 cards each
+ */
+export function createA4CardLayout(cards: CardImageData[]): A4CardPage[] {
+  const pages: A4CardPage[] = [];
+
+  // Group cards into pages of 4
+  for (let i = 0; i < cards.length; i += 4) {
+    const pageCards = cards.slice(i, i + 4);
+    const layout: CardLayout[] = [];
+
+    // Assign positions to cards
+    pageCards.forEach((card, index) => {
+      if (index < CARD_POSITIONS.length) {
+        layout.push({
+          card,
+          position: CARD_POSITIONS[index]
+        });
+      }
+    });
+
+    pages.push({
+      cards: pageCards,
+      layout
+    });
+  }
+
+  return pages;
+}
+
+/**
+ * Add cards to a PDF page
+ */
+async function addCardsToPage(doc: jsPDF, page: A4CardPage): Promise<void> {
+  for (const cardLayout of page.layout) {
+    await addCardToPage(doc, cardLayout.card, cardLayout.position.x, cardLayout.position.y);
+  }
+}
+
+/**
+ * Add a single card image to PDF page at specified position
+ */
+async function addCardToPage(
+  doc: jsPDF,
+  card: CardImageData,
+  x: number,
+  y: number
+): Promise<void> {
+  try {
+    // Add card image to PDF
+    doc.addImage(
+      card.imageDataUrl,
+      'PNG',
+      x,
+      y,
+      A4_LAYOUT.CARD_WIDTH,
+      A4_LAYOUT.CARD_HEIGHT,
+      undefined,
+      'FAST'
+    );
+  } catch (error) {
+    console.error(`Error adding card ${card.id} to PDF:`, error);
+
+    // Add placeholder rectangle if image fails
+    doc.setDrawColor(200, 200, 200);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(x, y, A4_LAYOUT.CARD_WIDTH, A4_LAYOUT.CARD_HEIGHT, 'FD');
+
+    // Add error text
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Lỗi tải ảnh', x + A4_LAYOUT.CARD_WIDTH / 2, y + A4_LAYOUT.CARD_HEIGHT / 2, {
+      align: 'center'
+    });
+  }
+}
+
+/**
+ * Download cards PDF with specified filename
+ */
+export async function downloadCardsPDF(cards: CardImageData[], filename?: string): Promise<void> {
+  const pdfBlob = await generateCardsPDF(cards);
+
+  // Create download link
+  const url = URL.createObjectURL(pdfBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || `the-id-cards-${format(new Date(), 'dd-MM-yyyy-HH-mm')}.pdf`;
+
+  // Trigger download
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Clean up
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Preview cards layout for debugging
+ */
+export function previewCardsLayout(cards: CardImageData[]): A4CardPage[] {
+  return createA4CardLayout(cards);
 }
