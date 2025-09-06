@@ -48,7 +48,7 @@ export function TeamDownloads({ members, teamName }: TeamDownloadsProps) {
 
   // Filter confirmed members only
   const confirmedMembers = members.filter(member => 
-    member.registration && member.registration.status === 'confirmed'
+    member.registration && ['confirmed','temp_confirmed'].includes(member.registration.status)
   );
 
   const filteredMembers = confirmedMembers.filter(member => {
@@ -97,8 +97,8 @@ export function TeamDownloads({ members, teamName }: TeamDownloadsProps) {
       event_role: member.event_role,
       portrait_url: member.portrait_url,
       go_with: undefined,
-      second_day_only: false,
-      selected_attendance_day: undefined,
+      second_day_only: member.second_day_only || false,
+      selected_attendance_day: member.selected_attendance_day || undefined,
       notes: undefined,
       created_at: member.created_at,
       updated_at: member.updated_at,

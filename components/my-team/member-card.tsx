@@ -138,7 +138,7 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
   };
 
   const handleDownloadTicket = async () => {
-    if (!member.registration || member.registration.status !== 'confirmed') {
+    if (!member.registration || !['confirmed','temp_confirmed'].includes(member.registration.status)) {
       toast.error('Chỉ có thể tải vé cho thành viên đã xác nhận');
       return;
     }
@@ -167,7 +167,7 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
   };
 
   const handleDownloadBadge = async () => {
-    if (!member.registration || member.registration.status !== 'confirmed') {
+    if (!member.registration || !['confirmed','temp_confirmed'].includes(member.registration.status)) {
       toast.error('Chỉ có thể tải thẻ cho thành viên đã xác nhận');
       return;
     }
@@ -282,7 +282,7 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
             {/* Actions */}
             <div className="flex items-center justify-end gap-2 flex-wrap">
               {/* Download buttons - only show for confirmed members */}
-              {member.registration && member.registration.status === 'confirmed' && (
+              {member.registration && ['confirmed','temp_confirmed'].includes(member.registration.status) && (
                 <>
                   <Button
                     variant="outline"

@@ -106,6 +106,8 @@ async function getMyTeamData(userId: string): Promise<MyTeamData | null> {
         portrait_url,
         is_primary,
         created_at,
+        selected_attendance_day,
+        second_day_only,
         registration:registrations!registrants_registration_id_fkey(
           id,
           user_id,
