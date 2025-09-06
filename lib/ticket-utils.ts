@@ -42,8 +42,8 @@ export function createTicketElement(
 
   // Handle different types of registrant objects
   const eventRoleId = 'event_role_id' in registrant ? registrant.event_role_id : registrant.event_roles?.id;
-  const headerColor = eventRoleId ? '#3b82f6' : '#10b981';
-  
+  const headerColor = eventRoleId ? '#10b981' : '#3b82f6';
+
   ticketDiv.innerHTML = `
     <div style="background-color: ${headerColor}; color: white; padding: 16px; text-align: center;">
       <h1 style="font-size: 20px; font-weight: bold; margin: 0;">ĐẠI HỘI NĂM THÁNH TOÀN QUỐC 2025</h1>
