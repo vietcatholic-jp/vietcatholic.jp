@@ -418,16 +418,29 @@ export function BatchBadgeGenerator() {
                       </div>
                     </SelectItem>
                   ) : (
-                    teams.map((team) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        <div className="flex items-center justify-between w-full">
-                          <span>{team.name}</span>
-                          <Badge variant="secondary" className="ml-2">
-                            {team.member_count}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))
+                    teams.map((team) => {
+                      // Tính số người trong đội sau khi áp dụng tất cả filter
+                      const teamFilteredCount = registrants.filter(registrant => {
+                        const matchesSearch = registrant.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (registrant.saint_name && registrant.saint_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          (registrant.event_role?.name && registrant.event_role.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+                        const matchesTeam = registrant.event_team_id === team.id;
+
+                        return matchesSearch && matchesTeam;
+                      }).length;
+
+                      return (
+                        <SelectItem key={team.id} value={team.id}>
+                          <div className="flex items-center justify-between w-full">
+                            <span>{team.name}</span>
+                            <Badge variant="secondary" className="ml-2">
+                              {teamFilteredCount}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      );
+                    })
                   )}
                 </SelectContent>
               </Select>
