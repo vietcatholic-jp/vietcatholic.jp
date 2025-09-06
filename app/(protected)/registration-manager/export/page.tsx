@@ -16,7 +16,8 @@ import {
   ArrowUpDown,
   Ticket,
   CreditCard,
-  FileText
+  FileText,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -30,6 +31,12 @@ import {  RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
 import { AvatarManager } from "@/components/avatar";
 import { Registrant } from "@/lib/types";
 
+interface Team {
+  id: string;
+  name: string;
+  member_count: number;
+}
+
 
 interface ExportFilters {
   status: string;
@@ -40,6 +47,7 @@ interface ExportFilters {
   includePaymentInfo: boolean;
   includeRegistrants: boolean;
   reportType: string;
+  roleName: string; // new role name filter
   teamName: string;
   ageGroup: string; // added age group filter
   gender: string; // new gender filter
@@ -60,7 +68,9 @@ interface ExportPageState {
   downloadingBadges: boolean;
   downloadingPdf: boolean;
   filters: ExportFilters;
-  availableTeams: string[];
+  availableRoles: string[];
+  teams: Team[]; // Add teams array
+  isLoadingTeams: boolean; // Add loading state for teams
   availableDioceses: string[]; // new
   eventConfig: EventConfig | null; // add event config
 }
@@ -295,7 +305,9 @@ export default function ExportPage() {
     downloading: false,
     downloadingBadges: false,
     downloadingPdf: false,
-    availableTeams: [],
+    availableRoles: [],
+    teams: [],
+    isLoadingTeams: false,
     availableDioceses: [],
     eventConfig: null,
     filters: {
@@ -307,6 +319,7 @@ export default function ExportPage() {
       includePaymentInfo: true,
       includeRegistrants: true,
       reportType: 'registrants',
+      roleName: 'btc',
       teamName: 'all',
       ageGroup: 'all',
       gender: 'all',
@@ -340,6 +353,21 @@ export default function ExportPage() {
 
   // Fetch registration and registrants data
   useEffect(() => {
+    const fetchTeams = async () => {
+      setState(prev => ({ ...prev, isLoadingTeams: true }));
+      try {
+        const response = await fetch('/api/admin/teams');
+        if (!response.ok) {
+          throw new Error('Failed to fetch teams');
+        }
+        const data = await response.json();
+        setState(prev => ({ ...prev, teams: data || [], isLoadingTeams: false }));
+      } catch (error) {
+        console.error('Error fetching teams:', error);
+        setState(prev => ({ ...prev, teams: [], isLoadingTeams: false }));
+      }
+    };
+
     const fetchData = async () => {
       try {
         // Fetch registrations, registrants data, and event config
@@ -362,12 +390,12 @@ export default function ExportPage() {
         // Get active event config
         const activeEvent = eventConfigData.events?.find((event: EventConfig) => event.is_active) || eventConfigData.events?.[0] || null;
 
-        // Extract unique team names & dioceses for filtering
-        const teams = new Set<string>();
+        // Extract unique role names & dioceses for filtering
+        const roles = new Set<string>();
         const dioceses = new Set<string>();
         registrantsData.registrants?.forEach((r: RegistrantWithRoleAndRegistration) => {
           if (r.event_roles?.team_name) {
-            teams.add(r.event_roles.team_name);
+            roles.add(r.event_roles.team_name);
           }
           if (r.diocese) {
             dioceses.add(r.diocese.trim());
@@ -380,7 +408,7 @@ export default function ExportPage() {
           filteredRegistrations: registrationsData.registrations || [],
           registrants: registrantsData.registrants || [],
           filteredRegistrants: registrantsData.registrants || [],
-          availableTeams: Array.from(teams).sort((a,b)=>a.localeCompare(b,'vi',{sensitivity:'base'})),
+          availableRoles: Array.from(roles).sort((a,b)=>a.localeCompare(b,'vi',{sensitivity:'base'})),
           availableDioceses: Array.from(dioceses).sort((a,b)=>a.localeCompare(b,'vi',{sensitivity:'base'})),
           eventConfig: activeEvent,
           loading: false
@@ -392,6 +420,7 @@ export default function ExportPage() {
       }
     };
 
+    fetchTeams();
     fetchData();
   }, []);
 
@@ -456,16 +485,29 @@ export default function ExportPage() {
         reg.email?.toLowerCase().includes(searchTerm)
       );
     }
-
-    // Team
-    if (state.filters.teamName !== 'all' && state.filters.teamName !== 'btc'&& state.filters.teamName !== 'btc-no-team') {
-      filteredRegsts = filteredRegsts.filter(reg => reg.event_roles?.team_name === state.filters.teamName);
+    if (state.filters.roleName !== 'all' && state.filters.roleName !== 'btc' && state.filters.roleName !== 'btc-no-team') {
+      // Filter by specific role name
+      filteredRegsts = filteredRegsts.filter(reg => reg.event_roles?.team_name === state.filters.roleName);
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_roles?.team_name === state.filters.roleName));
     }
-    if (state.filters.teamName === 'btc') {
+    if (state.filters.roleName === 'btc') {
       filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null);
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_role_id !== null));
     }
-    if (state.filters.teamName === 'btc-no-team') {
+    if (state.filters.roleName === 'btc-no-team') {
       filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null && reg.event_team_id === null);
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_role_id !== null && r.event_team_id === null));
+    }
+    // Team
+    if (state.filters.teamName !== 'all' && state.filters.teamName !== 'no-team') {
+      // Filter by specific team ID
+      filteredRegsts = filteredRegsts.filter(reg => reg.event_team_id === state.filters.teamName);
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_team_id === state.filters.teamName));
+    }
+    if (state.filters.teamName === 'no-team') {
+      // Filter for registrants without a team (not BTC)
+      filteredRegsts = filteredRegsts.filter(reg => !reg.event_team_id && !reg.event_role_id);
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => !r.event_team_id && !r.event_role_id));
     }
     // Age group
     if (state.filters.ageGroup !== 'all') {
@@ -553,6 +595,16 @@ export default function ExportPage() {
     }));
   };
 
+  // Helper function to get team display name
+  const getTeamDisplayName = (teamValue: string) => {
+    if (teamValue === 'all') return '';
+    if (teamValue === 'no-team') return 'Không chia đội';
+    
+    // Find team by ID
+    const team = state.teams.find(t => t.id === teamValue);
+    return team ? team.name : teamValue;
+  };
+
 
   const clearFilters = () => {
     setState(prev => ({
@@ -566,6 +618,7 @@ export default function ExportPage() {
         includePaymentInfo: true,
         includeRegistrants: true,
         reportType: 'registrants',
+        roleName: 'all',
         teamName: 'all',
         ageGroup: 'all',
         gender: 'all',
@@ -918,12 +971,12 @@ export default function ExportPage() {
               />
             </div>
           </div>
-
+          
           {/* Team filter for registrants report */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t py-4">
-            <div>
+             <div>
               <Label htmlFor="teamName">Lọc theo Ban</Label>
-              <Select value={state.filters.teamName} onValueChange={(value) => updateFilter('teamName', value)}>
+              <Select value={state.filters.roleName} onValueChange={(value) => updateFilter('roleName', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Tất cả mọi người" />
                 </SelectTrigger>
@@ -931,11 +984,60 @@ export default function ExportPage() {
                   <SelectItem value="all">Tất cả mọi người</SelectItem>
                   <SelectItem value="btc">Người BTC</SelectItem>
                   <SelectItem value="btc-no-team">Người BTC không chia đội</SelectItem>
-                  {state.availableTeams.map(team => (
-                    <SelectItem key={team} value={team}>
-                      {team}
+                  {state.availableRoles.map(role => (
+                    <SelectItem key={role} value={role}>
+                      {role}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="teamName">Lọc theo Đội</Label>
+              <Select value={state.filters.teamName} onValueChange={(value) => updateFilter('teamName', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tất cả mọi người" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Tất cả
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="no-team">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Không chia đội
+                    </div>
+                  </SelectItem>
+                  {state.isLoadingTeams ? (
+                    <SelectItem value="loading" disabled>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Đang tải...
+                      </div>
+                    </SelectItem>
+                  ) : (
+                    state.teams.map((team) => {
+                      // Calculate team member count after applying filters
+                      const teamFilteredCount = state.filteredRegistrants.filter(registrant => 
+                        registrant.event_team_id === team.id
+                      ).length;
+
+                      return (
+                        <SelectItem key={team.id} value={team.id}>
+                          <div className="flex items-center justify-between w-full">
+                            <span>{team.name}</span>
+                            <Badge variant="secondary" className="ml-2">
+                              {teamFilteredCount}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      );
+                    })
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -1123,6 +1225,7 @@ export default function ExportPage() {
       </Card>
 
       {/* Summary Stats */}
+      {(state.filters.roleName !== 'all' || state.filters.teamName !== 'all') ? <> </> : (
       <Card className={`print-include print-header`}>
         <CardHeader>
           <CardTitle className="text-center text-3xl font-bold">
@@ -1156,7 +1259,7 @@ export default function ExportPage() {
           
         </CardContent>
       </Card>
-
+      ) }
 
       {/* Shirt Size Report */}
       {state.filters.reportType === 'shirt-size' && (
@@ -1288,7 +1391,7 @@ export default function ExportPage() {
           <CardHeader>
             <CardTitle>
               Danh sách người tham gia ({state.filteredRegistrants.length} người)
-              {state.filters.teamName !== 'all' && ` - Nhóm: ${state.filters.teamName}`}
+              {state.filters.teamName !== 'all' && ` - Nhóm: ${getTeamDisplayName(state.filters.teamName)}`}
               {state.filters.attendanceDay !== 'all' && state.eventConfig && (() => {
                 const attendanceOptions = generateAttendanceDayOptions(state.eventConfig);
                 const selectedOption = attendanceOptions.find(opt => opt.value === state.filters.attendanceDay);
