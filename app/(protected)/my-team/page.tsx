@@ -10,7 +10,9 @@ import {
 import Link from "next/link";
 import { TeamOverview } from "@/components/my-team/team-overview";
 import { MemberList } from "@/components/my-team/member-list";
+import { TeamDownloads } from "@/components/my-team/team-downloads";
 import TeamManagementErrorBoundary, { TeamOverviewErrorFallback, MemberListErrorFallback } from "@/components/my-team/error-boundary";
+import { TeamMember } from "@/lib/types/team-management";
 
 interface MyTeamData {
   team_info: {
@@ -253,6 +255,16 @@ export default async function MyTeamPage() {
         <TeamManagementErrorBoundary fallback={TeamOverviewErrorFallback}>
           <TeamOverview teamInfo={team_info} statistics={statistics} />
         </TeamManagementErrorBoundary>
+
+        {/* Team Downloads Component */}
+        <div className="mt-8">
+          <TeamManagementErrorBoundary fallback={TeamOverviewErrorFallback}>
+            <TeamDownloads 
+              members={teamData.members as TeamMember[]} 
+              teamName={team_info.name}
+            />
+          </TeamManagementErrorBoundary>
+        </div>
 
         {/* Member List Component */}
         <div className="mt-8">
