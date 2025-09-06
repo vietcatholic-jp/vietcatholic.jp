@@ -130,11 +130,7 @@ export function StreamlinedTeamFilter({
     setIsQuickSelectOpen(false);
   };
 
-  const getSelectedTeamName = () => {
-    if (selectedTeam === 'all') return 'Tất cả đội';
-    const team = teams.find(t => t.id === selectedTeam);
-    return team?.name || 'Không xác định';
-  };
+
 
   if (isLoading) {
     return (
