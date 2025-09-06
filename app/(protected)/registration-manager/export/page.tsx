@@ -15,7 +15,8 @@ import {
   Church,
   ArrowUpDown,
   Ticket,
-  CreditCard
+  CreditCard,
+  FileText
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ import {Registration, RegistrationStatus, SHIRT_SIZES, JAPANESE_PROVINCES, AGE_G
 import { format } from "date-fns";
 import JSZip from "jszip";
 import { generateTicketImage as generateTicketImageUtil, generateBadgeImage} from "@/lib/ticket-utils";
+import { cardGeneratorService } from "@/lib/services/card-generator-service";
 
 import {  RegistrantWithRoleAndRegistration } from "@/lib/csv-export";
 import { AvatarManager } from "@/components/avatar";
@@ -56,6 +58,7 @@ interface ExportPageState {
   loading: boolean;
   downloading: boolean; // Add downloading state
   downloadingBadges: boolean;
+  downloadingPdf: boolean;
   filters: ExportFilters;
   availableTeams: string[];
   availableDioceses: string[]; // new
@@ -291,6 +294,7 @@ export default function ExportPage() {
     loading: true,
     downloading: false,
     downloadingBadges: false,
+    downloadingPdf: false,
     availableTeams: [],
     availableDioceses: [],
     eventConfig: null,
@@ -782,6 +786,69 @@ export default function ExportPage() {
     }
   };
 
+  const handleBatchBadgePdfDownload = async () => {
+    if (state.filteredRegistrants.length === 0) {
+      toast.error('Không có dữ liệu để tải thẻ PDF');
+      return;
+    }
+
+    setState(prev => ({ ...prev, downloadingPdf: true }));
+    
+    try {
+      toast.info(`Đang tạo PDF với ${state.filteredRegistrants.length} thẻ...`);
+      
+      // Convert RegistrantWithRoleAndRegistration to Registrant format
+      const registrantsForPdf: Registrant[] = state.filteredRegistrants.map(registrant => ({
+        id: registrant.id,
+        registration_id: registrant.registration_id,
+        email: registrant.email,
+        saint_name: registrant.saint_name,
+        full_name: registrant.full_name,
+        gender: registrant.gender,
+        age_group: registrant.age_group,
+        province: registrant.province,
+        diocese: registrant.diocese,
+        address: registrant.address,
+        facebook_link: registrant.facebook_link,
+        phone: registrant.phone,
+        shirt_size: registrant.shirt_size,
+        event_team_id: registrant.event_team_id,
+        event_role_id: registrant.event_role_id,
+        event_role: registrant.event_roles || registrant.event_role,
+        portrait_url: registrant.portrait_url,
+        go_with: registrant.go_with,
+        second_day_only: registrant.second_day_only,
+        selected_attendance_day: registrant.selected_attendance_day,
+        notes: registrant.notes,
+        created_at: registrant.created_at,
+        updated_at: registrant.updated_at,
+        is_checked_in: registrant.is_checked_in,
+        checked_in_at: registrant.checked_in_at
+      }));
+
+      // Generate PDF using cardGeneratorService
+      const result = await cardGeneratorService.generateAndExportPDF(
+        registrantsForPdf,
+        `DaiHoiCongGiao2025-Badges-${format(new Date(), 'yyyy-MM-dd-HHmm')}.pdf`,
+        (completed, total) => {
+          toast.info(`Đang tạo thẻ ${completed}/${total}...`);
+        }
+      );
+
+      if (result.success) {
+        toast.success('Tạo PDF thẻ thành công!');
+      } else {
+        throw new Error(result.error || 'Lỗi không xác định');
+      }
+    } catch (error) {
+      console.error('Error during batch PDF badge download:', error);
+      toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi tạo PDF thẻ. Vui lòng thử lại.');
+    } finally {
+      setState(prev => ({ ...prev, downloadingPdf: false }));
+    }
+  };
+
+
   const totalAmount = state.filteredRegistrations.reduce((sum, reg) => sum + reg.total_amount, 0);
   const totalParticipants = state.filteredRegistrations.reduce((sum, reg) => sum + reg.participant_count, 0);
 
@@ -1012,7 +1079,7 @@ export default function ExportPage() {
                 </Button>
                 <Button 
                   onClick={handleBatchBadgeDownload} 
-                  disabled={state.downloadingBadges}
+                  disabled={state.downloadingBadges || state.downloadingPdf}
                   className="flex items-center gap-2"
                   variant="outline"
                 >
@@ -1025,6 +1092,24 @@ export default function ExportPage() {
                     <>
                       <CreditCard className="w-4 h-4" />
                       Tải tất cả thẻ ({state.filteredRegistrants.length})
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={handleBatchBadgePdfDownload} 
+                  disabled={state.downloadingPdf || state.downloadingBadges}
+                  className="flex items-center gap-2"
+                  variant="secondary"
+                >
+                  {state.downloadingPdf ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      Đang tạo PDF...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4" />
+                      Tải PDF thẻ ({state.filteredRegistrants.length})
                     </>
                   )}
                 </Button>

@@ -108,7 +108,12 @@ export function BatchBadgeGenerator() {
       matchesFilter = getEventRoleCategory(registrant.event_role?.name) === selectedCategory;
     } else if (selectedTeam !== 'all') {
       // Team filter is active
-      matchesFilter = registrant.event_team_id === selectedTeam;
+      if (selectedTeam === 'no-team') {
+        // Filter for registrants without a team
+        matchesFilter = !registrant.event_team_id;
+      } else {
+        matchesFilter = registrant.event_team_id === selectedTeam;
+      }
     }
 
     return matchesSearch && matchesFilter;
@@ -168,9 +173,14 @@ export function BatchBadgeGenerator() {
     if (team === 'all') {
       setSelectedIds(registrants.map(r => r.id));
     } else {
-      const teamRegistrants = registrants.filter(registrant =>
-        registrant.event_team_id === team
-      );
+      const teamRegistrants = registrants.filter(registrant => {
+        if (team === 'no-team') {
+          // Filter for registrants without a team
+          return !registrant.event_team_id;
+        } else {
+          return registrant.event_team_id === team;
+        }
+      });
       const teamIds = teamRegistrants.map(r => r.id);
 
       // Toggle selection: if all are selected, deselect; otherwise select all
@@ -392,6 +402,12 @@ export function BatchBadgeGenerator() {
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       Tất cả đội
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="no-team">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Không chia đội
                     </div>
                   </SelectItem>
                   {isLoadingTeams ? (
