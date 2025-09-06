@@ -2,6 +2,8 @@ import { Registrant } from '@/lib/types';
 import { generateBadgeImage } from '@/lib/ticket-utils';
 import { generateCardsPDF, downloadCardsPDF } from '@/lib/pdf-export';
 import { CardGenerationError, CardGenerationResult, CardImageData } from '@/lib/card-constants';
+import JSZip from 'jszip';
+import { format } from 'date-fns';
 
 /**
  * Service chính để orchestrate quá trình tạo thẻ ID và ghép vào PDF A4
@@ -9,6 +11,7 @@ import { CardGenerationError, CardGenerationResult, CardImageData } from '@/lib/
  */
 export class CardGeneratorService {
   private static instance: CardGeneratorService;
+  private static readonly MAX_CARDS_PER_PDF = 12;
 
   private constructor() {}
 
@@ -112,7 +115,7 @@ export class CardGeneratorService {
   }
 
   /**
-   * Tạo và xuất PDF với layout A4
+   * Tạo và xuất PDF với layout A4 - tự động split thành nhiều PDF nếu cần
    */
   public async generateAndExportPDF(
     registrants: Registrant[],
@@ -120,20 +123,23 @@ export class CardGeneratorService {
     onProgress?: (completed: number, total: number) => void
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Generate cards
-      const result = await this.generateCardsForUsers(registrants, onProgress);
-      
-      if (!result.success || !result.cards || result.cards.length === 0) {
-        return {
-          success: false,
-          error: 'Không thể tạo thẻ nào'
-        };
+      // Nếu ít hơn hoặc bằng MAX_CARDS_PER_PDF, tạo PDF đơn lẻ
+      if (registrants.length <= CardGeneratorService.MAX_CARDS_PER_PDF) {
+        const result = await this.generateCardsForUsers(registrants, onProgress);
+        
+        if (!result.success || !result.cards || result.cards.length === 0) {
+          return {
+            success: false,
+            error: 'Không thể tạo thẻ nào'
+          };
+        }
+
+        await downloadCardsPDF(result.cards, filename);
+        return { success: true };
       }
 
-      // Generate and download PDF
-      await downloadCardsPDF(result.cards, filename);
-      
-      return { success: true };
+      // Nếu nhiều hơn MAX_CARDS_PER_PDF, tạo và zip nhiều PDF
+      return await this.generateAndExportMultiplePDFs(registrants, filename, onProgress);
     } catch (error) {
       console.error('Error generating and exporting PDF:', error);
       return {
@@ -144,15 +150,119 @@ export class CardGeneratorService {
   }
 
   /**
-   * Tạo PDF blob (không download)
+   * Tạo và xuất nhiều PDF files trong một ZIP archive
+   */
+  public async generateAndExportMultiplePDFs(
+    registrants: Registrant[],
+    baseFilename?: string,
+    onProgress?: (completed: number, total: number) => void
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const batches = this.createBatches(registrants, CardGeneratorService.MAX_CARDS_PER_PDF);
+      const zip = new JSZip();
+      const timestamp = format(new Date(), 'yyyy-MM-dd-HHmm');
+      const zipFilename = baseFilename ? `${baseFilename}_${timestamp}.zip` : `cards_${timestamp}.zip`;
+
+      let completedCards = 0;
+      const totalCards = registrants.length;
+
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        const batchNumber = i + 1;
+        const pdfFilename = `cards_batch_${batchNumber.toString().padStart(2, '0')}.pdf`;
+
+        // Generate cards for this batch
+        const result = await this.generateCardsForUsers(batch, (batchCompleted) => {
+          const totalCompleted = completedCards + batchCompleted;
+          if (onProgress) {
+            onProgress(totalCompleted, totalCards);
+          }
+        });
+
+        if (!result.success || !result.cards || result.cards.length === 0) {
+          console.warn(`Failed to generate cards for batch ${batchNumber}`);
+          continue;
+        }
+
+        // Generate PDF blob for this batch
+        const pdfBlob = await generateCardsPDF(result.cards);
+        
+        // Add PDF to ZIP
+        zip.file(pdfFilename, pdfBlob);
+
+        completedCards += batch.length;
+
+        // Small delay between batches to prevent browser blocking
+        if (i < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+
+      // Generate and download ZIP file
+      const zipBlob = await zip.generateAsync({ 
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+      });
+
+      // Create download link and trigger download
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = zipFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error generating and exporting multiple PDFs:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Lỗi không xác định'
+      };
+    }
+  }
+
+  /**
+   * Chia registrants thành các batches với kích thước tối đa
+   */
+  private createBatches<T>(items: T[], batchSize: number): T[][] {
+    const batches: T[][] = [];
+    for (let i = 0; i < items.length; i += batchSize) {
+      batches.push(items.slice(i, i + batchSize));
+    }
+    return batches;
+  }
+
+  /**
+   * Tạo PDF blob (không download) - hỗ trợ batching nếu quá nhiều registrants
    */
   public async generatePDFBlob(
     registrants: Registrant[],
     onProgress?: (completed: number, total: number) => void
   ): Promise<{ blob?: Blob; error?: string }> {
     try {
-      // Generate cards
-      const result = await this.generateCardsForUsers(registrants, onProgress);
+      // Nếu ít hơn hoặc bằng MAX_CARDS_PER_PDF, tạo PDF đơn lẻ
+      if (registrants.length <= CardGeneratorService.MAX_CARDS_PER_PDF) {
+        const result = await this.generateCardsForUsers(registrants, onProgress);
+        
+        if (!result.success || !result.cards || result.cards.length === 0) {
+          return {
+            error: 'Không thể tạo thẻ nào'
+          };
+        }
+
+        const blob = await generateCardsPDF(result.cards);
+        return { blob };
+      }
+
+      // Nếu nhiều hơn MAX_CARDS_PER_PDF, cảnh báo và chỉ lấy 12 đầu tiên
+      console.warn(`Too many registrants (${registrants.length}), taking only first ${CardGeneratorService.MAX_CARDS_PER_PDF} for single PDF`);
+      const limitedRegistrants = registrants.slice(0, CardGeneratorService.MAX_CARDS_PER_PDF);
+      
+      const result = await this.generateCardsForUsers(limitedRegistrants, onProgress);
       
       if (!result.success || !result.cards || result.cards.length === 0) {
         return {
@@ -160,9 +270,7 @@ export class CardGeneratorService {
         };
       }
 
-      // Generate PDF blob
       const blob = await generateCardsPDF(result.cards);
-      
       return { blob };
     } catch (error) {
       console.error('Error generating PDF blob:', error);
@@ -235,6 +343,7 @@ export class CardGeneratorService {
     withPhoto: number;
     withoutPhoto: number;
     estimatedPages: number;
+    estimatedPDFs: number;
   } {
     const total = registrants.length;
     let organizers = 0;
@@ -262,7 +371,45 @@ export class CardGeneratorService {
       participants,
       withPhoto,
       withoutPhoto,
-      estimatedPages: this.estimatePDFPages(total)
+      estimatedPages: this.estimatePDFPages(total),
+      estimatedPDFs: Math.ceil(total / CardGeneratorService.MAX_CARDS_PER_PDF)
+    };
+  }
+
+  /**
+   * Kiểm tra xem có cần tạo nhiều PDF không
+   */
+  public requiresMultiplePDFs(registrantCount: number): boolean {
+    return registrantCount > CardGeneratorService.MAX_CARDS_PER_PDF;
+  }
+
+  /**
+   * Lấy số lượng PDF sẽ được tạo
+   */
+  public getEstimatedPDFCount(registrantCount: number): number {
+    return Math.ceil(registrantCount / CardGeneratorService.MAX_CARDS_PER_PDF);
+  }
+
+  /**
+   * Lấy thông tin về việc chia batch
+   */
+  public getBatchInfo(registrants: Registrant[]): {
+    totalRegistrants: number;
+    batchCount: number;
+    maxCardsPerBatch: number;
+    lastBatchSize: number;
+    willCreateZip: boolean;
+  } {
+    const totalRegistrants = registrants.length;
+    const batchCount = Math.ceil(totalRegistrants / CardGeneratorService.MAX_CARDS_PER_PDF);
+    const lastBatchSize = totalRegistrants % CardGeneratorService.MAX_CARDS_PER_PDF || CardGeneratorService.MAX_CARDS_PER_PDF;
+    
+    return {
+      totalRegistrants,
+      batchCount,
+      maxCardsPerBatch: CardGeneratorService.MAX_CARDS_PER_PDF,
+      lastBatchSize,
+      willCreateZip: this.requiresMultiplePDFs(totalRegistrants)
     };
   }
 }
