@@ -9,22 +9,7 @@ import { Crown, Users, Filter, X, BarChart3 } from "lucide-react";
 import { StreamlinedRoleFilter } from "./streamlined-role-filter";
 import { StreamlinedTeamFilter } from "./streamlined-team-filter";
 import { getEventRoleCategory, RoleCategory } from "@/lib/role-utils";
-
-interface Registrant {
-  id: string;
-  full_name: string;
-  saint_name?: string;
-  portrait_url?: string;
-  event_role?: {
-    name: string;
-    description?: string;
-  };
-  registration?: {
-    status: string;
-    invoice_code: string;
-  };
-  event_team_id?: string;
-}
+import { Registrant } from "@/lib/types";
 
 interface EnhancedFilterTabsProps {
   registrants: Registrant[];

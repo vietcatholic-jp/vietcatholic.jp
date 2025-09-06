@@ -64,6 +64,7 @@ export async function GET(
     if (!status) {
       return NextResponse.json({ error: 'Status parameter is required' }, { status: 400 });
     }
+
     // Get team members with all required information
     const { data: members, error: membersError } = await supabase
       .from("registrants")
@@ -80,7 +81,7 @@ export async function GET(
         facebook_link,
         selected_attendance_day,
         second_day_only,
-        registration:registrations!registrants_registration_id_fkey(
+        registration:registrations(
           id,
           invoice_code,
           status,
@@ -92,7 +93,6 @@ export async function GET(
         ),
         event_team:event_teams!registrants_event_team_id_fkey(name)
       `)
-      .eq("registration.status", status) // Only include confirmed statuses
       .order("full_name", { ascending: true })
       .order("created_at", { ascending: true });
 

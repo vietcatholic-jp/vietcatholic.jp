@@ -32,6 +32,8 @@ export interface TeamMember {
   phone?: string;
   facebook_link?: string;
   portrait_url?: string;
+  selected_attendance_day?: string; // New field for attendance day
+  second_day_only?: boolean; // New field for second day only
   is_primary: boolean;
   created_at: string;
   updated_at: string;

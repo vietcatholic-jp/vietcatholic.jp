@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'confirmed';
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const status = searchParams.get('status') || 'all';
+    const limit = parseInt(searchParams.get('limit') || '2000');
     const offset = parseInt(searchParams.get('offset') || '0');
 
     let query = supabase
@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
         portrait_url,
         event_team_id,
         event_role_id,
+
         event_role:event_roles(
           id,
           name,
@@ -50,6 +51,10 @@ export async function GET(request: NextRequest) {
           id,
           status,
           invoice_code
+        ),
+        event_team:event_team_id(
+          id,
+          name
         )
       `)
       .order('full_name')
@@ -57,7 +62,11 @@ export async function GET(request: NextRequest) {
 
     // Filter by registration status if specified
     if (status !== 'all') {
-      query = query.eq('registrations.status', status);
+      if (status === 'all_confirmed') {
+        query = query.in('registrations.status', ['confirmed', 'temp_confirmed', 'confirm_paid']);
+      }else{
+        query = query.eq('registrations.status', status);
+      }
     }
 
     const { data: registrants, error } = await query;

@@ -3,19 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { Registrant } from "@/lib/types";
 
-
-interface BadgeData {
-  id: string;
-  full_name: string;
-  saint_name?: string;
-  team_name?: string;
-  portrait_url?: string | null;
-  event_role?: {
-    name: string;
-    description?: string;
-  };
-}
 
 // AutoSizeText component - giống AutoSizeText trong Flutter
 interface AutoSizeTextProps {
@@ -78,7 +67,7 @@ const AutoSizeText: React.FC<AutoSizeTextProps> = ({
 };
 
 interface BadgeGeneratorProps {
-  registrant: BadgeData;
+  registrant: Registrant;
   onDownload?: (imageUrl: string) => void;
   isTestPage?: boolean; // For test page specific styling
 }
@@ -93,9 +82,17 @@ export function BadgeGenerator({ registrant, onDownload, isTestPage = false }: B
     ? '/assets/organizer-with-photo.png'
     : '/assets/no-organizer.png';
 
+  // Helper function to get optimal object position for avatar images
+  const getOptimalObjectPosition = (): string => {
+    // For the preview component, we'll use a simpler approach since we can't easily 
+    // async load and check dimensions in the render. We'll default to center for square images
+    // as users have already cropped them correctly, and favor upper part only for obvious portraits.
+    return 'center center'; // Keep square images centered, user cropped correctly
+  };
 
-
-
+  const objectPosition = registrant.portrait_url 
+    ? getOptimalObjectPosition()
+    : 'center';
 
   const handleGenerateBadge = async () => {
     setIsGenerating(true);
@@ -387,11 +384,11 @@ export function BadgeGenerator({ registrant, onDownload, isTestPage = false }: B
                 /* Regular participant layout, mỗi 1 item chiếm 1/3 chiều cao cố định, chữ dc căn giữa theo trục ngang và dọc */
                 <>
                   {/* Team name, 1/3 chiều cao, tối đa 1 dòng */}
-                  {registrant.team_name && (
+                  {registrant.event_team?.name && (
                     /* Tối đa 1 dòng text, tự co nhỏ text theo kích thước (giống tính năng auto_size_text Flutter)*/
                     <div className="text-blue-800 font-bold mb-2 flex items-center justify-center max-w-full" style={{ minHeight: '50px', paddingTop: '5px', paddingBottom: '5px' }}>
                       <AutoSizeText
-                        text={registrant.team_name.toUpperCase()}
+                        text={registrant.event_team.name.toUpperCase()}
                         className="text-blue-800 font-bold"
                         maxFontSize={20}
                         minFontSize={12}
@@ -464,7 +461,7 @@ export function BadgeGenerator({ registrant, onDownload, isTestPage = false }: B
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      objectPosition: 'center',
+                      objectPosition: objectPosition,
                       display: 'block'
                     }}
                   />

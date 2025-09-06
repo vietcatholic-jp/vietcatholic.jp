@@ -20,10 +20,10 @@ export const CARD_DIMENSIONS = {
 export const A4_LAYOUT = {
   PAGE_WIDTH: 210, // mm
   PAGE_HEIGHT: 297, // mm
-  MARGIN: 10, // mm
-  CARD_WIDTH: 95, // mm (converted from pixels)
-  CARD_HEIGHT: 130, // mm (converted from pixels)
-  CARD_SPACING: 4 // mm between cards
+  MARGIN: 8, // mm 
+  CARD_WIDTH: 90, // mm (slightly reduced to maintain aspect ratio)
+  CARD_HEIGHT: 135, // mm (maintains 2:3 aspect ratio: 90 * 1.5 = 135)
+  CARD_SPACING: 3 // mm between cards
 } as const;
 
 // Calculate positions for 4 cards on A4

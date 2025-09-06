@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,10 +12,16 @@ import {
   Eye,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  CreditCard,
+  Ticket,
+  Loader2
 } from "lucide-react";
 import { MemberCardProps } from "@/lib/types/team-management";
 import { AvatarManager } from "../avatar";
+import { generateTicketImage as generateTicketImageUtil, generateBadgeImage } from "@/lib/ticket-utils";
+import { Registrant, ShirtSizeType } from "@/lib/types";
+import { toast } from "sonner";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -87,9 +94,106 @@ const getAgeGroupText = (ageGroup: string) => {
 
 
 export function MemberCard({ member, onViewDetails }: MemberCardProps) {
+  const [isDownloadingTicket, setIsDownloadingTicket] = useState(false);
+  const [isDownloadingBadge, setIsDownloadingBadge] = useState(false);
+
   const handleViewDetails = () => {
     if (onViewDetails) {
       onViewDetails(member);
+    }
+  };
+
+  // Convert TeamMember to Registrant format for download
+  const convertToRegistrant = (member: MemberCardProps['member']): Registrant => {
+    return {
+      id: member.id,
+      registration_id: member.registration?.id || '',
+      email: member.email,
+      saint_name: undefined,
+      full_name: member.full_name,
+      gender: member.gender,
+      age_group: member.age_group === 'under_18' ? 'under_12' : 
+                 member.age_group === '18_25' ? '18_25' : 
+                 member.age_group === '26_35' ? '26_35' : 
+                 member.age_group === '36_50' ? '36_50' : 'over_50',
+      province: member.province,
+      diocese: member.diocese,
+      address: undefined,
+      facebook_link: member.facebook_link,
+      phone: member.phone,
+      shirt_size: 'M' as ShirtSizeType,
+      event_team_id: undefined,
+      event_role_id: member.event_role?.id,
+      event_role: member.event_role,
+      portrait_url: member.portrait_url,
+      go_with: undefined,
+      second_day_only: false,
+      selected_attendance_day: undefined,
+      notes: undefined,
+      created_at: member.created_at,
+      updated_at: member.updated_at,
+      is_checked_in: false,
+      checked_in_at: undefined
+    };
+  };
+
+  const handleDownloadTicket = async () => {
+    if (!member.registration || !['confirmed','temp_confirmed'].includes(member.registration.status)) {
+      toast.error('Chỉ có thể tải vé cho thành viên đã xác nhận');
+      return;
+    }
+
+    setIsDownloadingTicket(true);
+    try {
+      const registrant = convertToRegistrant(member);
+      const blob = await generateTicketImageUtil(registrant);
+      
+      if (blob) {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${member.registration.invoice_code || 'ticket'}-${member.full_name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        toast.success('Đã tải vé thành công!');
+      }
+    } catch (error) {
+      console.error('Error downloading ticket:', error);
+      toast.error('Có lỗi xảy ra khi tải vé');
+    } finally {
+      setIsDownloadingTicket(false);
+    }
+  };
+
+  const handleDownloadBadge = async () => {
+    if (!member.registration || !['confirmed','temp_confirmed'].includes(member.registration.status)) {
+      toast.error('Chỉ có thể tải thẻ cho thành viên đã xác nhận');
+      return;
+    }
+
+    setIsDownloadingBadge(true);
+    try {
+      const registrant = convertToRegistrant(member);
+      const imageUrl = await generateBadgeImage(registrant);
+      
+      if (imageUrl) {
+        const imageData = imageUrl.split(',')[1];
+        const blob = new Blob([Uint8Array.from(atob(imageData), c => c.charCodeAt(0))], { type: 'image/png' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Badge-${member.full_name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        toast.success('Đã tải thẻ thành công!');
+      }
+    } catch (error) {
+      console.error('Error downloading badge:', error);
+      toast.error('Có lỗi xảy ra khi tải thẻ');
+    } finally {
+      setIsDownloadingBadge(false);
     }
   };
 
@@ -176,7 +280,40 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-end gap-2 flex-wrap">
+              {/* Download buttons - only show for confirmed members */}
+              {member.registration && ['confirmed','temp_confirmed'].includes(member.registration.status) && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadTicket}
+                    disabled={isDownloadingTicket}
+                    className="text-xs"
+                  >
+                    {isDownloadingTicket ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <Ticket className="h-3 w-3 mr-1" />
+                    )}
+                    Vé
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadBadge}
+                    disabled={isDownloadingBadge}
+                    className="text-xs"
+                  >
+                    {isDownloadingBadge ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <CreditCard className="h-3 w-3 mr-1" />
+                    )}
+                    Thẻ
+                  </Button>
+                </>
+              )}
               <Button
                 variant="outline"
                 size="sm"

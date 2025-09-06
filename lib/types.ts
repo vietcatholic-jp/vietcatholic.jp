@@ -129,6 +129,10 @@ export interface Registrant {
   phone?: string;     // Optional for additional registrants
   shirt_size: ShirtSizeType;
   event_team_id?: string;
+  event_team?: {
+    id?: string;
+    name: string;
+  };
   event_role_id?: string;
   // Event role object from database join (can be either event_role or event_roles depending on query)
   event_role?: {
