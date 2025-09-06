@@ -458,13 +458,15 @@ export default function ExportPage() {
     }
 
     // Team
-    if (state.filters.teamName !== 'all' && state.filters.teamName !== 'btc') {
+    if (state.filters.teamName !== 'all' && state.filters.teamName !== 'btc'&& state.filters.teamName !== 'btc-no-team') {
       filteredRegsts = filteredRegsts.filter(reg => reg.event_roles?.team_name === state.filters.teamName);
     }
     if (state.filters.teamName === 'btc') {
       filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null);
     }
-
+    if (state.filters.teamName === 'btc-no-team') {
+      filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null && reg.event_team_id === null);
+    }
     // Age group
     if (state.filters.ageGroup !== 'all') {
       filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.age_group === state.filters.ageGroup));
@@ -928,6 +930,7 @@ export default function ExportPage() {
                 <SelectContent>
                   <SelectItem value="all">Tất cả mọi người</SelectItem>
                   <SelectItem value="btc">Người BTC</SelectItem>
+                  <SelectItem value="btc-no-team">Người BTC không chia đội</SelectItem>
                   {state.availableTeams.map(team => (
                     <SelectItem key={team} value={team}>
                       {team}
