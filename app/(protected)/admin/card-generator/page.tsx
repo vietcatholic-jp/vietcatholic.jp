@@ -121,6 +121,10 @@ export default function CardGeneratorPage() {
   };
 
   const filterUsers = () => {
+    if (!Array.isArray(state.availableUsers) || state.availableUsers.length <= 0) {
+      setState(prev => ({ ...prev, filteredUsers: [] }));
+      return;
+    }
     let filtered = [...state.availableUsers];
 
     // Filter by teams
@@ -246,7 +250,7 @@ export default function CardGeneratorPage() {
   };
 
   const cardStats = cardGeneratorService.getCardStats(
-    state.availableUsers.filter(user => state.selectedUsers.includes(user.id))
+    state.availableUsers.length > 0 ? state.availableUsers.filter(user => state.selectedUsers.includes(user.id)) : []
   );
 
   return (

@@ -64,7 +64,7 @@ export function BatchBadgeGenerator() {
   const fetchRegistrants = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/registrants?status=confirmed');
+      const response = await fetch('/api/admin/registrants?status=all_confirmed');
       if (!response.ok) {
         throw new Error('Failed to fetch registrants');
       }
