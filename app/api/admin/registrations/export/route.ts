@@ -94,6 +94,7 @@ export async function GET(
         event_team:event_teams!registrants_event_team_id_fkey(name)
       `)
       .eq('registration.status', status) // all_confirmed (in ["confirmed", "temp_confirmed"])
+      .limit(10000) // Explicitly set high limit to get all data
       .order("full_name", { ascending: true })
       .order("created_at", { ascending: true });
 

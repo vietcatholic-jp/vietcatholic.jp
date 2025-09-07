@@ -386,6 +386,16 @@ export default function ExportPage() {
         // Get active event config
         const activeEvent = eventConfigData.events?.find((event: EventConfig) => event.is_active) || eventConfigData.events?.[0] || null;
 
+        // Check for data truncation warnings
+        if (registrantsData.note) {
+          console.warn('Data truncation warning:', registrantsData.note);
+          toast.warning(`Cảnh báo: ${registrantsData.note}`);
+        }
+        if (registrationsData.note) {
+          console.warn('Data truncation warning:', registrationsData.note);
+          toast.warning(`Cảnh báo: ${registrationsData.note}`);
+        }
+
         // Extract unique role names & dioceses for filtering
         const roles = new Set<string>();
         const dioceses = new Set<string>();
@@ -395,6 +405,16 @@ export default function ExportPage() {
           }
           if (r.diocese) {
             dioceses.add(r.diocese.trim());
+          }
+        });
+        
+        // Log data counts for debugging
+        console.log('Data loaded:', {
+          registrations: registrationsData.registrations?.length || 0,
+          registrants: registrantsData.registrants?.length || 0,
+          totalCountReported: {
+            registrations: registrationsData.total_count,
+            registrants: registrantsData.total_count
           }
         });
         
@@ -1234,6 +1254,30 @@ export default function ExportPage() {
         </CardContent>
       </Card>
 
+      {/* Data Limits Information */}
+      {(state.registrants.length >= 10000 || state.registrations.length >= 5000) && (
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2">
+              <div className="text-amber-600 text-sm">
+                ⚠️ <strong>Thông báo về giới hạn dữ liệu:</strong> 
+              </div>
+            </div>
+            <div className="text-sm text-amber-800 mt-2">
+              Hệ thống hiện đang hiển thị tối đa {state.registrants.length >= 10000 ? '10,000 người tham gia' : ''} 
+              {state.registrants.length >= 10000 && state.registrations.length >= 5000 ? ' và ' : ''}
+              {state.registrations.length >= 5000 ? '5,000 đăng ký' : ''} để đảm bảo hiệu suất. 
+              Nếu bạn cần xem tất cả dữ liệu, vui lòng:
+              <ul className="list-disc list-inside mt-2 ml-4">
+                <li>Sử dụng bộ lọc để thu hẹp kết quả</li>
+                <li>Xuất dữ liệu Excel để có báo cáo đầy đủ</li>
+                <li>Liên hệ quản trị viên nếu cần hỗ trợ thêm</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Stats */}
       {(state.filters.roleName !== 'all' || state.filters.teamName !== 'all') ? <> </> : (
       <Card className={`print-include print-header`}>
@@ -1254,11 +1298,21 @@ export default function ExportPage() {
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-blue-600">{state.filteredRegistrations.length}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {state.filteredRegistrations.length}
+                {state.registrations.length >= 5000 && (
+                  <span className="text-xs text-amber-600 ml-1" title="Có thể bị giới hạn">⚠️</span>
+                )}
+              </div>
               <div className="text-sm text-muted-foreground">Tổng đăng ký</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-green-600">{totalParticipants}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {totalParticipants}
+                {state.registrants.length >= 10000 && (
+                  <span className="text-xs text-amber-600 ml-1" title="Có thể bị giới hạn">⚠️</span>
+                )}
+              </div>
               <div className="text-sm text-muted-foreground">Tổng người tham gia</div>
             </div>
             <div>
