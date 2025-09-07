@@ -81,7 +81,7 @@ export async function GET(
         facebook_link,
         selected_attendance_day,
         second_day_only,
-        registration:registrations(
+        registration:registrations!inner(
           id,
           invoice_code,
           status,
@@ -93,6 +93,7 @@ export async function GET(
         ),
         event_team:event_teams!registrants_event_team_id_fkey(name)
       `)
+      .eq('registration.status', status) // all_confirmed (in ["confirmed", "temp_confirmed"])
       .order("full_name", { ascending: true })
       .order("created_at", { ascending: true });
 
