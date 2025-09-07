@@ -35,13 +35,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('registrants')
       .select(`
-        id,
-        full_name,
-        saint_name,
-        portrait_url,
-        event_team_id,
-        event_role_id,
-
+        *,
         event_role:event_roles(
           id,
           name,
