@@ -369,7 +369,7 @@ export default function ExportPage() {
         // Fetch registrations, registrants data, and event config
         const [registrationsResponse, registrantsResponse, eventConfigResponse] = await Promise.all([
           fetch('/api/admin/export?type=registrations'),
-          fetch('/api/admin/export?type=registrants'),
+          fetch('/api/admin/registrants?status=all'),
           fetch('/api/admin/events')
         ]);
         
@@ -400,21 +400,11 @@ export default function ExportPage() {
         const roles = new Set<string>();
         const dioceses = new Set<string>();
         registrantsData.registrants?.forEach((r: RegistrantWithRoleAndRegistration) => {
-          if (r.event_roles?.team_name) {
-            roles.add(r.event_roles.team_name);
+          if (r.event_role?.team_name) {
+            roles.add(r.event_role.team_name);
           }
           if (r.diocese) {
             dioceses.add(r.diocese.trim());
-          }
-        });
-        
-        // Log data counts for debugging
-        console.log('Data loaded:', {
-          registrations: registrationsData.registrations?.length || 0,
-          registrants: registrantsData.registrants?.length || 0,
-          totalCountReported: {
-            registrations: registrationsData.total_count,
-            registrants: registrantsData.total_count
           }
         });
         
@@ -500,8 +490,8 @@ export default function ExportPage() {
     // Role name filtering
     if (state.filters.roleName !== 'all' && state.filters.roleName !== 'btc' && state.filters.roleName !== 'btc-no-team') {
       // Filter by specific role name
-      filteredRegsts = filteredRegsts.filter(reg => reg.event_roles?.team_name === state.filters.roleName);
-      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_roles?.team_name === state.filters.roleName));
+      filteredRegsts = filteredRegsts.filter(reg => reg.event_role?.team_name === state.filters.roleName);
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_role?.team_name === state.filters.roleName));
     }
     if (state.filters.roleName === 'btc') {
       filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null && reg.event_role_id !== undefined);
@@ -815,7 +805,7 @@ export default function ExportPage() {
               shirt_size: registrant.shirt_size,
               event_team_id: registrant.event_team_id,
               event_role_id: registrant.event_role_id,
-              event_role: registrant.event_roles || registrant.event_role,
+              event_role: registrant.event_role || registrant.event_roles,
               portrait_url: registrant.portrait_url,
               go_with: registrant.go_with,
               second_day_only: registrant.second_day_only,
@@ -899,7 +889,7 @@ export default function ExportPage() {
         shirt_size: registrant.shirt_size,
         event_team_id: registrant.event_team_id,
         event_role_id: registrant.event_role_id,
-        event_role: registrant.event_roles || registrant.event_role,
+        event_role: registrant.event_role || registrant.event_roles,
         portrait_url: registrant.portrait_url,
         go_with: registrant.go_with,
         second_day_only: registrant.second_day_only,
@@ -1532,7 +1522,7 @@ export default function ExportPage() {
                       </td>
                       <td className="border border-gray-300 p-2">
                         {(() => {
-                          const eventRole = registrant.event_roles?.name;
+                          const eventRole = registrant.event_role?.name;
                           if (!eventRole) {
                             return 'Tham dự viên';
                           }
@@ -1541,7 +1531,7 @@ export default function ExportPage() {
                       </td>
                       <td className="border border-gray-300 p-2">
                         {(() => {
-                          const teamName = registrant.event_roles?.team_name;
+                          const teamName = registrant.event_role?.team_name;
                           if (!teamName) {
                             return 'Tham dự viên';
                           }

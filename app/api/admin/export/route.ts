@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
             name
           )
         `)
-        .limit(10000) // Explicitly set a high limit to override Supabase default
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(0, 5000);
 
       // Apply team filter if specified
       if (team_name) {
