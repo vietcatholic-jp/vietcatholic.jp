@@ -29,22 +29,17 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all';
-    const limit = parseInt(searchParams.get('limit') || '2000');
+    const limit = parseInt(searchParams.get('limit') || '5000');
     const offset = parseInt(searchParams.get('offset') || '0');
 
     let query = supabase
       .from('registrants')
       .select(`
-        id,
-        full_name,
-        saint_name,
-        portrait_url,
-        event_team_id,
-        event_role_id,
-
+        *,
         event_role:event_roles(
           id,
           name,
+          team_name,
           description
         ),
         registration:registrations!inner(
