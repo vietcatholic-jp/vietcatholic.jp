@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
             name
           )
         `)
+        .limit(10000) // Explicitly set a high limit to override Supabase default
         .order('created_at', { ascending: false });
 
       // Apply team filter if specified
@@ -74,7 +75,9 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         registrants: registrants || [],
-        type: 'registrants'
+        type: 'registrants',
+        total_count: registrants?.length || 0,
+        note: registrants?.length === 10000 ? 'Results may be truncated. Consider using pagination for very large datasets.' : null
       });
     } else {
       // Original registrations export
@@ -94,6 +97,7 @@ export async function GET(request: NextRequest) {
         ),
         receipts(*)
       `)
+      .limit(5000) // Set limit for registrations as well
       .order('created_at', { ascending: false });
 
       if (registrationsError) {
@@ -102,7 +106,9 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         registrations: registrations || [],
-        type: type || 'registrations'
+        type: type || 'registrations',
+        total_count: registrations?.length || 0,
+        note: registrations?.length === 5000 ? 'Results may be truncated. Consider using pagination for very large datasets.' : null
       });
     }
 
