@@ -40,8 +40,6 @@ interface Team {
 
 interface ExportFilters {
   status: string;
-  dateFrom: string;
-  dateTo: string;
   search: string;
   includePersonalInfo: boolean;
   includePaymentInfo: boolean;
@@ -312,8 +310,6 @@ export default function ExportPage() {
     eventConfig: null,
     filters: {
       status: 'confirmed',
-      dateFrom: '',
-      dateTo: '',
       search: '',
       includePersonalInfo: true,
       includePaymentInfo: true,
@@ -429,6 +425,14 @@ export default function ExportPage() {
     // Filter registrations
     let filteredRegs = [...state.registrations];
     let filteredRegsts = [...state.registrants];
+    
+    // Debug: Log initial counts
+    console.log('Filtering Debug:', {
+      totalRegistrations: state.registrations.length,
+      totalRegistrants: state.registrants.length,
+      filters: state.filters
+    });
+    
     // Status filter
     if (state.filters.status !== 'all' && state.filters.status !== 'all_confirmed') {
       if (state.filters.status === 'checked_in') {
@@ -455,50 +459,45 @@ export default function ExportPage() {
       );
     }
 
-    // Date range
-    if (state.filters.dateFrom) {
-      const fromDate = new Date(state.filters.dateFrom);
-      filteredRegs = filteredRegs.filter(reg => new Date(reg.created_at) >= fromDate);
-      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.created_at && new Date(reg.registration.created_at) >= fromDate);
-    }
-    if (state.filters.dateTo) {
-      const toDate = new Date(state.filters.dateTo);
-      toDate.setHours(23, 59, 59, 999);
-      filteredRegs = filteredRegs.filter(reg => new Date(reg.created_at) <= toDate);
-      filteredRegsts = filteredRegsts.filter(reg => reg.registration?.created_at && new Date(reg.registration.created_at) <= toDate);
-    }
 
     // Search
     if (state.filters.search) {
       const searchTerm = state.filters.search.toLowerCase();
       filteredRegs = filteredRegs.filter(reg => 
-        reg.invoice_code.toLowerCase().includes(searchTerm) ||
-        reg.user?.full_name?.toLowerCase().includes(searchTerm) ||
-        reg.user?.email?.toLowerCase().includes(searchTerm) ||
-        reg.registrants?.some(r => r.full_name.toLowerCase().includes(searchTerm))
+        (reg.invoice_code || '').toLowerCase().includes(searchTerm) ||
+        (reg.user?.full_name || '').toLowerCase().includes(searchTerm) ||
+        (reg.user?.email || '').toLowerCase().includes(searchTerm) ||
+        reg.registrants?.some(r => (r.full_name || '').toLowerCase().includes(searchTerm))
       );
       filteredRegsts = filteredRegsts.filter(reg => 
-        reg.registration?.invoice_code?.toLowerCase().includes(searchTerm) ||
-        reg.registration?.user?.full_name?.toLowerCase().includes(searchTerm) ||
-        reg.registration?.user?.email?.toLowerCase().includes(searchTerm) ||
-        reg.full_name.toLowerCase().includes(searchTerm) ||
-        reg.email?.toLowerCase().includes(searchTerm)
+        (reg.registration?.invoice_code || '').toLowerCase().includes(searchTerm) ||
+        (reg.registration?.user?.full_name || '').toLowerCase().includes(searchTerm) ||
+        (reg.registration?.user?.email || '').toLowerCase().includes(searchTerm) ||
+        (reg.full_name || '').toLowerCase().includes(searchTerm) ||
+        (reg.email || '').toLowerCase().includes(searchTerm)
       );
     }
+    // Role name filtering
     if (state.filters.roleName !== 'all' && state.filters.roleName !== 'btc' && state.filters.roleName !== 'btc-no-team') {
       // Filter by specific role name
       filteredRegsts = filteredRegsts.filter(reg => reg.event_roles?.team_name === state.filters.roleName);
       filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_roles?.team_name === state.filters.roleName));
     }
     if (state.filters.roleName === 'btc') {
-      filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null);
-      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_role_id !== null));
+      filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null && reg.event_role_id !== undefined);
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_role_id !== null && r.event_role_id !== undefined));
     }
     if (state.filters.roleName === 'btc-no-team') {
-      filteredRegsts = filteredRegsts.filter(reg => reg.event_role_id !== null && reg.event_team_id === null);
-      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => r.event_role_id !== null && r.event_team_id === null));
+      filteredRegsts = filteredRegsts.filter(reg => 
+        (reg.event_role_id !== null && reg.event_role_id !== undefined) && 
+        (reg.event_team_id === null || reg.event_team_id === undefined)
+      );
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => 
+        (r.event_role_id !== null && r.event_role_id !== undefined) && 
+        (r.event_team_id === null || r.event_team_id === undefined)
+      ));
     }
-    // Team
+    // Team filtering
     if (state.filters.teamName !== 'all' && state.filters.teamName !== 'no-team') {
       // Filter by specific team ID
       filteredRegsts = filteredRegsts.filter(reg => reg.event_team_id === state.filters.teamName);
@@ -506,8 +505,14 @@ export default function ExportPage() {
     }
     if (state.filters.teamName === 'no-team') {
       // Filter for registrants without a team (not BTC)
-      filteredRegsts = filteredRegsts.filter(reg => !reg.event_team_id && !reg.event_role_id);
-      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => !r.event_team_id && !r.event_role_id));
+      filteredRegsts = filteredRegsts.filter(reg => 
+        (reg.event_team_id === null || reg.event_team_id === undefined) && 
+        (reg.event_role_id === null || reg.event_role_id === undefined)
+      );
+      filteredRegs = filteredRegs.filter(reg => reg.registrants?.some(r => 
+        (r.event_team_id === null || r.event_team_id === undefined) && 
+        (r.event_role_id === null || r.event_role_id === undefined)
+      ));
     }
     // Age group
     if (state.filters.ageGroup !== 'all') {
@@ -539,7 +544,6 @@ export default function ExportPage() {
       if (selectedDate === 'both') {
         // Show registrants attending both days:
         // - Those attending all days (!second_day_only)
-        // - Those who specifically selected both days
         filteredRegs = filteredRegs.filter(reg => 
           reg.registrants?.some(r => 
              r.second_day_only === false
@@ -548,20 +552,19 @@ export default function ExportPage() {
         filteredRegsts = filteredRegsts.filter(reg => 
           reg.second_day_only === false  
         );
-      }else{
+      } else {
         // Show registrants attending the selected day:
-        // - Those attending all days (!second_day_only)
+        // - Those attending all days (!second_day_only) OR
         // - Those who specifically selected this day
         filteredRegs = filteredRegs.filter(reg => 
           reg.registrants?.some(r => 
-            r.selected_attendance_day === selectedDate
+            r.second_day_only === false || r.selected_attendance_day === selectedDate
           )
         );
         filteredRegsts = filteredRegsts.filter(reg => 
-          reg.selected_attendance_day === selectedDate
+          reg.second_day_only === false || reg.selected_attendance_day === selectedDate
         );
       }
-      
     }
 
     // Sorting (registrants)
@@ -580,6 +583,13 @@ export default function ExportPage() {
         }
       });
     }
+
+    // Debug: Log final counts
+    console.log('Filtering Results:', {
+      filteredRegistrations: filteredRegs.length,
+      filteredRegistrants: filteredRegsts.length,
+      appliedFilters: state.filters
+    });
 
     setState(prev => ({
       ...prev,
