@@ -65,38 +65,45 @@ export async function GET(
       return NextResponse.json({ error: 'Status parameter is required' }, { status: 400 });
     }
 
-    // Get team members with all required information
-    const { data: members, error: membersError } = await supabase
+    // Get team members with all required information (dynamic status filtering)
+    let query = supabase
       .from("registrants")
       .select(`
+      id,
+      full_name,
+      gender,
+      age_group,
+      shirt_size,
+      province,
+      diocese,
+      email,
+      phone,
+      facebook_link,
+      selected_attendance_day,
+      second_day_only,
+      registration:registrations!inner(
         id,
-        full_name,
-        gender,
-        age_group,
-        shirt_size,
-        province,
-        diocese,
-        email,
-        phone,
-        facebook_link,
-        selected_attendance_day,
-        second_day_only,
-        registration:registrations!inner(
-          id,
-          invoice_code,
-          status,
-          created_at
-        ),
-        event_role:event_roles!registrants_event_role_id_fkey(
-          id,
-          name
-        ),
-        event_team:event_teams!registrants_event_team_id_fkey(name)
+        invoice_code,
+        status,
+        created_at
+      ),
+      event_role:event_roles!registrants_event_role_id_fkey(
+        id,
+        name
+      ),
+      event_team:event_teams!registrants_event_team_id_fkey(name)
       `)
-      .eq('registration.status', status) // all_confirmed (in ["confirmed", "temp_confirmed"])
-      .limit(10000) // Explicitly set high limit to get all data
+      .limit(10000) // High limit to fetch all
       .order("full_name", { ascending: true })
       .order("created_at", { ascending: true });
+
+    if (status === 'all_confirmed') {
+      query = query.in('registration.status', ['confirmed', 'temp_confirmed']);
+    } else if (status !== 'all') {
+      query = query.eq('registration.status', status);
+    }
+
+    const { data: members, error: membersError } = await query;
 
     if (membersError) {
       console.error("Members query error:", membersError);
