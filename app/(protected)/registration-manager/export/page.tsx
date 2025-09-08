@@ -804,6 +804,7 @@ export default function ExportPage() {
               phone: registrant.phone,
               shirt_size: registrant.shirt_size,
               event_team_id: registrant.event_team_id,
+              event_team: registrant.event_team,
               event_role_id: registrant.event_role_id,
               event_role: registrant.event_role || registrant.event_roles,
               portrait_url: registrant.portrait_url,
