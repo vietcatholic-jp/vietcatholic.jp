@@ -95,6 +95,7 @@ async function getMyTeamData(userId: string): Promise<MyTeamData | null> {
       .from("registrants")
       .select(`
         id,
+        saint_name,
         full_name,
         gender,
         age_group,

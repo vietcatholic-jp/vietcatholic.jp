@@ -23,6 +23,7 @@ export interface MyTeamInfo {
 
 export interface TeamMember {
   id: string;
+  saint_name?: string;
   full_name: string;
   gender: 'male' | 'female';
   age_group: 'under_18' | '18_25' | '26_35' | '36_50' | 'over_50';
