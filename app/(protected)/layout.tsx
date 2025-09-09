@@ -9,7 +9,7 @@ export default async function ProtectedLayout({
   children: React.ReactNode;
 }) {
   // Basic authentication check - specific role checks are done in sub-layouts
-  await requireRole(['participant', 'cashier_role', 'registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin']);
+  await requireRole(['participant', 'cashier_role','registration_staff', 'registration_manager', 'event_organizer', 'group_leader', 'regional_admin', 'super_admin']);
 
   return (
     <UserProvider>
