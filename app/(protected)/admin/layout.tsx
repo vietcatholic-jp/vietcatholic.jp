@@ -7,7 +7,7 @@ export default async function AdminLayoutPage({
   children: React.ReactNode;
 }) {
   // Allow access for various admin roles
-  await requireRole(['event_organizer','registration_manager', 'group_leader', 'regional_admin', 'super_admin']);
+  await requireRole(['registration_manager', 'super_admin','cashier_role']);
 
   return (
     <div className="min-h-screen bg-background">
