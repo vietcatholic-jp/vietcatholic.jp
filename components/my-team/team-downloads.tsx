@@ -477,6 +477,7 @@ export function TeamDownloads({ members, teamName }: TeamDownloadsProps) {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">{member.saint_name || ''}</span>
                     <span className="font-medium">{member.full_name}</span>
                     <Badge variant="outline" className="text-xs">
                       {member.registration?.invoice_code || 'N/A'}
