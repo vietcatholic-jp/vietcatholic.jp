@@ -109,7 +109,7 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
       id: member.id,
       registration_id: member.registration?.id || '',
       email: member.email,
-      saint_name: undefined,
+      saint_name: member.saint_name || '',
       full_name: member.full_name,
       gender: member.gender,
       age_group: member.age_group === 'under_18' ? 'under_12' : 
@@ -216,6 +216,7 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
           <div className="flex-1 min-w-0 ml-12">
             <div className="flex items-start justify-between flex-wrap gap-2 mb-2">
               <div>
+                <p className="text-sm text-muted-foreground mb-1">{member.saint_name || '-'}</p>
                 <h4 className="font-semibold text-lg truncate">{member.full_name}</h4>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {member.is_primary && (
