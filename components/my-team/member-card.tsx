@@ -93,7 +93,7 @@ const getAgeGroupText = (ageGroup: string) => {
 };
 
 
-export function MemberCard({ member, onViewDetails }: MemberCardProps) {
+export function MemberCard({ member,teamName,  onViewDetails }: MemberCardProps) {
   const [isDownloadingTicket, setIsDownloadingTicket] = useState(false);
   const [isDownloadingBadge, setIsDownloadingBadge] = useState(false);
 
@@ -123,6 +123,9 @@ export function MemberCard({ member, onViewDetails }: MemberCardProps) {
       phone: member.phone,
       shirt_size: 'M' as ShirtSizeType,
       event_team_id: undefined,
+      event_team: {
+        name: teamName || member.event_team?.name || ''
+      },
       event_role_id: member.event_role?.id,
       event_role: member.event_role,
       portrait_url: member.portrait_url,
