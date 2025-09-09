@@ -32,13 +32,15 @@ export function MemberEditModal({ member, isOpen, onClose, onSave }: MemberEditM
     full_name: "",
     phone: "",
     facebook_link: "",
-    portrait_url: null as string | null
+    portrait_url: null as string | null,
+    saint_name: ""
   });
 
   // Update form data when member changes
   useEffect(() => {
     if (member) {
       setFormData({
+        saint_name: member.saint_name || "",
         full_name: member.full_name || "",
         phone: member.phone || "",
         facebook_link: member.facebook_link || "",
@@ -60,6 +62,7 @@ export function MemberEditModal({ member, isOpen, onClose, onSave }: MemberEditM
       const { error } = await supabase
         .from('registrants')
         .update({
+          saint_name: formData.saint_name || null,
           full_name: formData.full_name,
           phone: formData.phone || null,
           facebook_link: formData.facebook_link || null,
@@ -172,8 +175,24 @@ export function MemberEditModal({ member, isOpen, onClose, onSave }: MemberEditM
           </div>
 
           {/* Basic Information */}
+          
           <div className="space-y-3">
             <h3 className="text-base font-semibold">Thông tin cơ bản</h3>
+            <div className="grid grid-cols-1 gap-3">
+              <div>
+                <Label htmlFor="saint_name" className="text-sm">
+                  Tên thánh
+                </Label>
+                <Input
+                  id="saint_name"
+                  value={formData.saint_name}
+                  onChange={(e) => handleFieldChange('saint_name', e.target.value)}
+                  placeholder="Tên thánh"
+                  className="text-sm"
+                  required
+                />
+              </div>
+            </div>
             <div className="grid grid-cols-1 gap-3">
               <div>
                 <Label htmlFor="full_name" className="text-sm">
