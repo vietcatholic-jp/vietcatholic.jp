@@ -124,7 +124,7 @@ export function MemberCard({ member,teamName,  onViewDetails }: MemberCardProps)
       shirt_size: 'M' as ShirtSizeType,
       event_team_id: undefined,
       event_team: {
-        name: teamName || 'test'
+        name: teamName || member.event_team?.name || ''
       },
       event_role_id: member.event_role?.id,
       event_role: member.event_role,
