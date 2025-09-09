@@ -12,7 +12,7 @@ import { MemberDetailModal } from "./member-detail-modal";
 import { MemberEditModal } from "./member-edit-modal";
 import { TeamMember, MemberListProps } from "@/lib/types/team-management";
 
-export function MemberList({ members, totalMembers, canEdit = false }: MemberListProps) {
+export function MemberList({ members, totalMembers, teamName, canEdit = false }: MemberListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -48,7 +48,7 @@ export function MemberList({ members, totalMembers, canEdit = false }: MemberLis
   const handleSaveEdit = () => {
     setIsEditModalOpen(false);
     setSelectedMember(null);
-    // Optionally refresh the list here
+    // TODO: refresh the list here
   };
 
   if (totalMembers === 0) {
@@ -110,6 +110,7 @@ export function MemberList({ members, totalMembers, canEdit = false }: MemberLis
                 key={member.id}
                 member={member}
                 onViewDetails={handleViewDetails}
+                teamName={teamName}
               />
             ))}
           </div>

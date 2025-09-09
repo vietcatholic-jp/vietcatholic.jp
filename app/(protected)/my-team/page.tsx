@@ -276,6 +276,7 @@ export default async function MyTeamPage() {
               members={teamData.members} 
               totalMembers={statistics.total_members}
               canEdit={canEdit}
+              teamName={team_info.name}
             />
           </TeamManagementErrorBoundary>
         </div>

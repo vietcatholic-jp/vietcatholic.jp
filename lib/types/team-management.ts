@@ -32,6 +32,8 @@ export interface TeamMember {
   email?: string;
   phone?: string;
   facebook_link?: string;
+  event_team ?: { id?: string | undefined;
+    name: string; };
   portrait_url?: string;
   selected_attendance_day?: string; // New field for attendance day
   second_day_only?: boolean; // New field for second day only
@@ -185,12 +187,14 @@ export interface MemberListProps {
   members: unknown[];
   totalMembers: number;
   onMemberSelect?: (member: TeamMember) => void;
+  teamName?: string;
   userRole?: string;
   canEdit?: boolean;
 }
 
 export interface MemberCardProps {
   member: TeamMember;
+  teamName?: string;
   onViewDetails?: (member: TeamMember) => void;
   onEdit?: (member: TeamMember) => void;
 }
