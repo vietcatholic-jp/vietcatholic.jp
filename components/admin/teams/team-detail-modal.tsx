@@ -49,6 +49,7 @@ interface TeamMember {
   email?: string;
   phone?: string;
   facebook_link?: string;
+  is_checked_in?: boolean;
   registration?: {
     id: string;
     status: string;
@@ -101,6 +102,7 @@ interface TeamStats {
   age: Array<{ age_group: string; count: number }>;
   province: Array<{ province: string; count: number }>;
   registration_status: Array<{ status: string; count: number }>;
+  checked_in_count: number;
 }
 
 interface TeamDetailModalProps {
@@ -155,7 +157,17 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
     }
   }, [isOpen, teamId, fetchTeamData]);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, is_checked_in?: boolean) => {
+    // Logic đặc biệt cho checked_in status
+    if (status === 'checked_in') {
+      if (is_checked_in === true) {
+        return <Badge variant="default" className="bg-green-600 text-white border-green-200">Đã checkin</Badge>;
+      } else {
+        return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Đã xác nhận</Badge>;
+      }
+    }
+
+    // Logic bình thường cho các status khác
     switch (status) {
       case 'confirmed':
         return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Đã xác nhận</Badge>;
@@ -373,7 +385,7 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
                         {stats.gender ? stats.gender.reduce((sum, item) => sum + item.count, 0) : 0}
@@ -397,6 +409,12 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                         {stats.registration_status?.find(s => s.status === "confirmed")?.count || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Đã xác nhận</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-emerald-600">
+                        {stats.checked_in_count || 0}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Đã checkin</div>
                     </div>
                   </div>
                 </CardContent>
@@ -477,7 +495,7 @@ export function TeamDetailModal({ teamId, isOpen, onClose }: TeamDetailModalProp
                           <div className="flex flex-col items-end gap-1">
                             {member.registration && (
                               <div className="flex items-center gap-2">
-                                {getStatusBadge(member.registration.status)}
+                                {getStatusBadge(member.registration.status, member.is_checked_in)}
                                 <span className="text-xs text-muted-foreground">
                                   #{member.registration.invoice_code}
                                 </span>

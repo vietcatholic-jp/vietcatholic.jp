@@ -46,6 +46,7 @@ export async function GET(
           diocese,
           email,
           phone,
+          is_checked_in,
           registration:registrations!registrants_registration_id_fkey(
             invoice_code,
             status,
@@ -104,6 +105,9 @@ export async function GET(
       .map(([status, count]) => ({ status, count }))
       .sort((a, b) => b.count - a.count);
 
+    // Calculate checked-in count
+    const checkedInCount = members.filter(member => member.is_checked_in === true).length;
+
     // Get leader and sub-leader info if they exist
     let leaderInfo = null;
     let subLeaderInfo = null;
@@ -140,7 +144,8 @@ export async function GET(
         gender: genderDistribution,
         age: ageDistribution,
         province: provinceDistribution,
-        registration_status: statusDistribution
+        registration_status: statusDistribution,
+        checked_in_count: checkedInCount
       },
       members: members.map(member => ({
         id: member.id,

@@ -75,6 +75,7 @@ interface TeamMember {
   email?: string;
   phone?: string;
   facebook_link?: string;
+  is_checked_in?: boolean;
   registration: {
     id: string;
     invoice_code?: string;
@@ -350,7 +351,17 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
     }, 500);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, is_checked_in?: boolean) => {
+    // Logic đặc biệt cho checked_in status
+    if (status === 'checked_in') {
+      if (is_checked_in === true) {
+        return <Badge variant="default" className="bg-green-600 text-white border-green-200">Đã checkin</Badge>;
+      } else {
+        return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Đã xác nhận</Badge>;
+      }
+    }
+
+    // Logic bình thường cho các status khác
     switch (status) {
       case 'confirmed':
         return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Đã xác nhận</Badge>;
@@ -440,7 +451,7 @@ export function ManageTeamMembersModal({ isOpen, onClose, onMemberCountChange, t
                         {member.full_name}
                         {member.registration.status && (
                           <span className="ml-2">
-                            {getStatusBadge(member.registration.status)}
+                            {getStatusBadge(member.registration.status, member.is_checked_in)}
                           </span>
                         )}
                       </div>
