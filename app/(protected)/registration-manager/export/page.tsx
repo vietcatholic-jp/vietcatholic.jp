@@ -1469,7 +1469,7 @@ export default function ExportPage() {
                     <th className="border border-gray-300 p-2 text-left">Size áo</th>
                     <th className="border border-gray-300 p-2 text-left">Ngày tham gia</th>
                     <th className="border border-gray-300 p-2 text-left">Vai trò</th>
-                    <th className="border border-gray-300 p-2 text-left">Nhóm</th>
+                    <th className="border border-gray-300 p-2 text-left">Đội/Ban</th>
                     <th className="border border-gray-300 p-2 text-left">Trạng thái đăng ký</th>
                   </tr>
                 </thead>
@@ -1533,10 +1533,7 @@ export default function ExportPage() {
                       </td>
                       <td className="border border-gray-300 p-2">
                         {(() => {
-                          const teamName = registrant.event_role?.team_name;
-                          if (!teamName) {
-                            return 'Tham dự viên';
-                          }
+                          const teamName = registrant.event_team?.name || registrant.event_role?.team_name || '';
                           return teamName;
                         })()}
                       </td>
