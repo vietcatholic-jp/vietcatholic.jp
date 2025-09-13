@@ -27,6 +27,8 @@ interface ScanResult {
     checked_in_at?: string;
   };
   message: string;
+  payment_pending?: boolean;
+  payment_instructions?: string;
 }
 
 export function CheckInScanner() {

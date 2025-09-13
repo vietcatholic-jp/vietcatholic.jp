@@ -27,7 +27,7 @@ const getStatusBadge = (status: string) => {
   switch (status) {
     case 'confirmed':
       return (
-        <Badge variant="default" className="text-xs">
+        <Badge variant="info" className="text-xs">
           <CheckCircle className="h-3 w-3 mr-1" />
           Đã xác nhận
         </Badge>
@@ -35,7 +35,7 @@ const getStatusBadge = (status: string) => {
     
     case 'temp_confirmed':
     return (
-      <Badge variant="default" className="text-xs">
+      <Badge variant="warning" className="text-xs">
         <CheckCircle className="h-3 w-3 mr-1" />
         Xác nhận tạm thời
       </Badge>
@@ -59,6 +59,13 @@ const getStatusBadge = (status: string) => {
         <Badge variant="default" className="text-xs">
           <CheckCircle className="h-3 w-3 mr-1" />
           Xác nhận thanh toán
+        </Badge>
+      );
+    case 'checked_in':
+      return (
+        <Badge variant="success" className="text-xs">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Đã check-in
         </Badge>
       );
     default:
@@ -236,6 +243,12 @@ export function MemberCard({ member,teamName,  onViewDetails }: MemberCardProps)
               
               <div className="flex flex-col items-end gap-1">
                 {member.registration && getStatusBadge(member.registration.status)}
+                {member.is_checked_in && (
+                  <Badge variant="success" className="text-xs">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Đã check-in
+                  </Badge>
+                )}
                 {member.event_role && (
                   <Badge variant="secondary" className="text-xs">
                     {member.event_role.name}
