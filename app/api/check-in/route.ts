@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (!profile || !['registration_manager', 'event_organizer', 'super_admin'].includes(profile.role)) {
+    if (!profile || !['registration_manager','registration_staff', 'super_admin'].includes(profile.role)) {
       return NextResponse.json(
         { 
           success: false, 
@@ -58,7 +58,11 @@ export async function POST(request: NextRequest) {
         diocese,
         is_checked_in,
         checked_in_at,
-        registration_id
+        registration_id,
+        event_team:event_team_id(
+          id,
+          name
+        )
       `)
       .eq('id', registrantId)
       .single();
@@ -122,6 +126,7 @@ export async function POST(request: NextRequest) {
           diocese: registrant.diocese,
           is_checked_in: registrant.is_checked_in,
           checked_in_at: registrant.checked_in_at,
+          event_team: registrant.event_team
         },
         message: `${registrant.full_name} đã check-in trước đó lúc ${new Date(registrant.checked_in_at || '').toLocaleString('vi-VN')}`
       });
@@ -167,12 +172,15 @@ export async function POST(request: NextRequest) {
           diocese: registrant.diocese,
           is_checked_in: true,
           checked_in_at: updatedRegistrant?.checked_in_at,
+          event_team: registrant.event_team
         },
         message: `${updatedRegistrant?.full_name || registrant.full_name} đã được check-in bởi người khác`
       });
     }
 
     // Update the registration status to 'checked_in' if it's not already checked_in
+    // Don't need to update registration to checked_in.
+    /*
     if (registration.status !== 'checked_in') {
       try {
         await supabase
@@ -187,7 +195,7 @@ export async function POST(request: NextRequest) {
         console.log('Registration status update failed (non-critical):', regUpdateError);
       }
     }
-
+    */
     // Optional: Log the check-in event (if event_logs table exists)
     try {
       await supabase
@@ -208,7 +216,11 @@ export async function POST(request: NextRequest) {
       // Ignore logging errors - check-in still succeeds
       console.log('Event logging failed (optional):', logError);
     }
-
+    // Build dynamic messaging & payment reminder
+    const isTempConfirmed = registration.status === 'temp_confirmed';
+    const message = isTempConfirmed
+  ? `Check-in thành công cho ${registrant.full_name}! Người tham gia CHƯA HOÀN TẤT PHÍ. Vui lòng hướng dẫn đến Quầy Thu Phí để thanh toán.`
+      : `Check-in thành công cho ${registrant.full_name}!`;
     // Return success response
     return NextResponse.json({
       success: true,
@@ -220,8 +232,13 @@ export async function POST(request: NextRequest) {
         diocese: registrant.diocese,
         is_checked_in: true,
         checked_in_at: currentTime,
+        event_team: registrant.event_team
       },
-      message: `Check-in thành công cho ${registrant.full_name}!`
+      message: message,
+      payment_pending: isTempConfirmed,
+      payment_instructions: isTempConfirmed
+  ? 'Chưa hoàn tất phí tham dự. Vui lòng đến Quầy Thu Phí để thanh toán và xác nhận hoàn tất.'
+        : undefined
     });
 
   } catch (error) {

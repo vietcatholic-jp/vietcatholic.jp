@@ -38,6 +38,8 @@ export interface TeamMember {
   selected_attendance_day?: string; // New field for attendance day
   second_day_only?: boolean; // New field for second day only
   is_primary: boolean;
+  is_checked_in: boolean; // New field for check-in status
+  checked_in_at?: string; // New field for check-in timestamp
   created_at: string;
   updated_at: string;
   registration?: TeamMemberRegistration;

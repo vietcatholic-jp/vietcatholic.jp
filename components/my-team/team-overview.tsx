@@ -43,10 +43,7 @@ interface TeamOverviewProps {
       over_50: number;
     };
     registration_status: {
-      confirmed: number;
-      pending: number;
-      report_paid: number;
-      confirm_paid: number;
+      checked_in: number;
     };
   };
 }
@@ -84,11 +81,11 @@ export function TeamOverview({ teamInfo, statistics }: TeamOverviewProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đã xác nhận</CardTitle>
+            <CardTitle className="text-sm font-medium">Đã check in</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{statistics.registration_status.confirmed}</div>
+            <div className="text-2xl font-bold">{statistics.registration_status.checked_in}</div>
             <p className="text-xs text-muted-foreground">
               thành viên
             </p>

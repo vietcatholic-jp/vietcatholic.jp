@@ -27,8 +27,14 @@ interface ScanResult {
     diocese: string;
     is_checked_in: boolean;
     checked_in_at?: string;
+    event_team?: {
+      id: string;
+      name: string;
+    } | null;
   };
   message: string;
+  payment_pending?: boolean;
+  payment_instructions?: string;
 }
 
 interface CheckInDialogProps {
@@ -60,12 +66,22 @@ export function CheckInDialog({ open, result, onClose }: CheckInDialogProps) {
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Result Message */}
-          <div className={`p-4 rounded-lg ${isSuccess ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-            <p className={`text-sm ${isSuccess ? 'text-green-800' : 'text-red-800'}`}>
-              {result.message}
-            </p>
-          </div>
+          {/* Result Message / Payment Pending */}
+          {isSuccess && result.payment_pending ? (
+            <div className="space-y-3">
+              <div className="p-4 rounded-lg border border-amber-300 bg-amber-50">
+                <p className="text-sm font-medium text-amber-800">
+                  {result.message}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className={`p-4 rounded-lg ${isSuccess ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+              <p className={`text-sm ${isSuccess ? 'text-green-800' : 'text-red-800'}`}>
+                {result.message}
+              </p>
+            </div>
+          )}
 
           {/* Registrant Information */}
           {registrant && (
@@ -79,17 +95,24 @@ export function CheckInDialog({ open, result, onClose }: CheckInDialogProps) {
                 {/* Name */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-lg">{registrant.full_name}</p>
                     {registrant.saint_name && (
                       <p className="text-sm text-muted-foreground">({registrant.saint_name})</p>
                     )}
+                    <p className="font-medium text-lg">{registrant.full_name}</p>
                   </div>
-                  <Badge 
-                    variant={registrant.is_checked_in ? "default" : "secondary"}
-                    className={registrant.is_checked_in ? "bg-green-600" : ""}
-                  >
-                    {registrant.is_checked_in ? "Đã check-in" : "Chưa check-in"}
-                  </Badge>
+                  {registrant.event_team && (
+                   <p className="font-medium text-lg text-green-600">
+                      {registrant.event_team.name}
+                    </p>
+                  )}
+                  <div className="flex flex-col items-end space-y-1">
+                    <Badge 
+                      variant={registrant.is_checked_in ? "default" : "secondary"}
+                      className={registrant.is_checked_in ? (result.payment_pending ? 'bg-amber-600' : 'bg-green-600') : ''}
+                    >
+                      {registrant.is_checked_in ? (result.payment_pending ? 'Chờ thanh toán' : 'Đã check-in') : 'Chưa check-in'}
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* Email */}

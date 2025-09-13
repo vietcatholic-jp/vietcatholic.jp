@@ -51,10 +51,7 @@ interface MyTeamData {
       over_50: number;
     };
     registration_status: {
-      confirmed: number;
-      pending: number;
-      report_paid: number;
-      confirm_paid: number;
+      checked_in: number;
     };
   };
   members: unknown[];
@@ -109,6 +106,7 @@ async function getMyTeamData(userId: string): Promise<MyTeamData | null> {
         created_at,
         selected_attendance_day,
         second_day_only,
+        is_checked_in,
         registration:registrations!registrants_registration_id_fkey(
           id,
           user_id,
@@ -143,10 +141,7 @@ async function getMyTeamData(userId: string): Promise<MyTeamData | null> {
 
     // Registration status statistics
     const statusStats = {
-      confirmed: members?.filter(m => m.registration?.[0]?.status === 'confirmed').length || 0,
-      pending: members?.filter(m => m.registration?.[0]?.status === 'pending').length || 0,
-      report_paid: members?.filter(m => m.registration?.[0]?.status === 'report_paid').length || 0,
-      confirm_paid: members?.filter(m => m.registration?.[0]?.status === 'confirm_paid').length || 0,
+      checked_in: members?.filter(m => m.is_checked_in).length || 0,
     };
 
     return {
@@ -259,16 +254,6 @@ export default async function MyTeamPage() {
           <TeamOverview teamInfo={team_info} statistics={statistics} />
         </TeamManagementErrorBoundary>
 
-        {/* Team Downloads Component */}
-        <div className="mt-8">
-          <TeamManagementErrorBoundary fallback={TeamOverviewErrorFallback}>
-            <TeamDownloads 
-              members={teamData.members as TeamMember[]} 
-              teamName={team_info.name}
-            />
-          </TeamManagementErrorBoundary>
-        </div>
-
         {/* Member List Component */}
         <div className="mt-8">
           <TeamManagementErrorBoundary fallback={MemberListErrorFallback}>
@@ -276,6 +261,15 @@ export default async function MyTeamPage() {
               members={teamData.members} 
               totalMembers={statistics.total_members}
               canEdit={canEdit}
+              teamName={team_info.name}
+            />
+          </TeamManagementErrorBoundary>
+        </div>
+        {/* Team Downloads Component */}
+        <div className="mt-8">
+          <TeamManagementErrorBoundary fallback={TeamOverviewErrorFallback}>
+            <TeamDownloads 
+              members={teamData.members as TeamMember[]} 
               teamName={team_info.name}
             />
           </TeamManagementErrorBoundary>
